@@ -1,0 +1,765 @@
+@import "@radix-ui/colors/black-alpha.css";
+@import "@radix-ui/colors/mauve.css";
+@import "@radix-ui/colors/violet.css";
+
+/* General Layout and Typography */
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif; /* A more modern font */
+    background-color: #f0f2f5;
+    color: #333;
+}
+
+.template-page-container.creative-design {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f0f2f5;
+}
+
+/* Main Header */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+}
+
+.app-logo {
+    height: 32px;
+    margin-right: 10px;
+}
+
+.app-title {
+    font-size: 1.6em;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.header-nav-tabs {
+    display: flex;
+    gap: 25px;
+}
+
+.header-nav-tabs .nav-tab {
+    padding: 10px 0;
+    cursor: pointer;
+    color: #7f8c8d;
+    font-weight: 500;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.header-nav-tabs .nav-tab::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: transparent;
+    transition: background-color 0.3s ease;
+}
+
+.header-nav-tabs .nav-tab:hover {
+    color: #34495e;
+}
+
+.header-nav-tabs .nav-tab.active {
+    color: #2980b9;
+    font-weight: 600;
+}
+
+.header-nav-tabs .nav-tab.active::after {
+    background-color: #2980b9;
+}
+
+.header-right {
+    display: flex;
+    gap: 15px;
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #7f8c8d;
+    font-size: 1em;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.icon-button:hover {
+    color: #2c3e50;
+}
+
+.icon-button .MuiSvgIcon-root {
+    font-size: 1.2em;
+}
+
+/* Main Layout Content */
+.main-layout-content {
+    display: flex;
+    flex: 1;
+    background-color: #f9fbfd;
+}
+
+/* Sidebar */
+.sidebar-creative {
+    width: 260px;
+    background-color: #ffffff;
+    padding: 25px;
+    border-right: 1px solid #e0e0e0;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.02);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.create-template-action {
+    display: flex;
+    margin-bottom: 25px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.2);
+}
+
+.create-button {
+    flex-grow: 1;
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    padding: 12px 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 1.1em;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+.create-button:hover {
+    background-color: #27ae60;
+}
+
+.dropdown-button {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.dropdown-button:hover {
+    background-color: #219d57;
+}
+
+.sidebar-section-creative {
+    padding: 12px 15px;
+    color: #555;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.sidebar-section-creative:hover {
+    background-color: #e8f5fd;
+    color: #2980b9;
+}
+
+.sidebar-section-creative.active {
+    background-color: #e8f5fd;
+    color: #2980b9;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(41, 128, 185, 0.1);
+}
+
+.sidebar-section-creative .MuiSvgIcon-root {
+    font-size: 1.3em;
+}
+
+.sidebar-section-creative.folder-section,
+.sidebar-section-creative.explore-section {
+    justify-content: space-between;
+    font-weight: 600;
+    font-size: 1em;
+    color: #7f8c8d;
+    margin-top: 10px;
+    padding: 12px 0;
+    background-color: transparent;
+    box-shadow: none;
+}
+
+.sidebar-section-creative.folder-section:hover,
+.sidebar-section-creative.explore-section:hover {
+    background-color: transparent;
+    color: #7f8c8d;
+}
+
+.template-gallery-link-creative {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #555;
+    font-weight: normal;
+}
+
+/* Content Area */
+.content-area-creative {
+    flex: 1;
+    padding: 30px;
+    background-color: #f9fbfd;
+    overflow-y: auto;
+}
+
+/* Hero Section */
+.hero-section-creative {
+    display: flex;
+    background: linear-gradient(135deg, #e6f0ff, #d9e7ff); /* Lighter, more modern gradient */
+    border-radius: 15px;
+    padding: 50px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    align-items: center;
+    justify-content: space-between;
+    overflow: hidden;
+    position: relative;
+}
+
+.hero-text-creative {
+    max-width: 60%;
+    z-index: 1;
+}
+
+.hero-text-creative h2 {
+    font-size: 3.2em;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.hero-text-creative p {
+    color: #5d6d7e;
+    line-height: 1.8;
+    font-size: 1.15em;
+    margin-bottom: 30px;
+}
+
+.hero-buttons-creative button {
+    padding: 14px 30px;
+    border-radius: 30px; /* Pill-shaped buttons */
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-transform: uppercase; /* Modern button text */
+    letter-spacing: 0.5px;
+}
+
+.primary-button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    margin-right: 20px;
+    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+}
+
+.primary-button:hover {
+    background-color: #2980b9;
+    box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+}
+
+.secondary-button {
+    background-color: #ecf0f1;
+    color: #34495e;
+    border: 1px solid #bdc3c7;
+}
+
+.secondary-button:hover {
+    background-color: #dfe4e6;
+    border-color: #aeb6bf;
+}
+
+.hero-image-creative {
+    width: 350px;
+    height: 250px;
+    background: linear-gradient(135deg, #a29bfe, #ffeaa7); /* Placeholder for visual flair */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px; /* More rounded corners */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    position: absolute;
+    right: 50px;
+    top: 50%;
+    transform: translateY(-50%) rotate(7deg); /* More pronounced rotation */
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.hero-image-creative:hover {
+    transform: translateY(-50%) rotate(0deg);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+}
+
+.doc-workflow-img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+}
+
+/* Templates List Section */
+.templates-list-section h3 {
+    font-size: 2em;
+    color: #2c3e50;
+    margin-bottom: 25px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.template-grid-creative {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+    padding: 20px;
+}
+
+.template-card-creative {
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    border: 1px solid #e0e0e0;
+}
+
+.template-card-creative:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.card-header-creative {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.template-checkbox {
+    margin-right: 15px;
+    transform: scale(1.3);
+    accent-color: #3498db; /* Custom checkbox color */
+}
+
+.card-icon {
+    font-size: 3em !important;
+    color: #3498db;
+    margin-right: 15px;
+}
+
+.card-title-group {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.card-title {
+    font-size: 1.25em;
+    font-weight: 700;
+    color: #34495e;
+    margin-bottom: 3px;
+}
+
+.card-subtitle {
+    font-size: 0.95em;
+    color: #7f8c8d;
+}
+
+.more-options-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #bdc3c7;
+    padding: 5px;
+    border-radius: 50%;
+    transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+.more-options-button:hover {
+    color: #34495e;
+    background-color: #f0f2f5;
+}
+
+.more-options-button .MuiSvgIcon-root {
+    font-size: 1.5em;
+}
+
+.card-details-creative {
+    border-top: 1px dashed #e0e0e0; /* Dashed line for a modern look */
+    padding-top: 20px;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1em;
+}
+
+.detail-label {
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #34495e;
+    font-weight: 600;
+}
+
+/* Existing styles from previous iterations (to be kept and potentially adjusted) */
+
+.ContextMenuContent,
+.ContextMenuSubContent {
+  min-width: 135px;
+  background-color: white;
+  border-radius: 6px;
+  overflow: hidden;
+  padding: 5px;
+  box-shadow:
+    0px 10px 38px -10px rgba(22, 23, 24, 0.35),
+    0px 10px 20px -15px rgba(22, 23, 24, 0.2);
+  z-index: 99;
+}
+
+.ContextMenuItem,
+.ContextMenuCheckboxItem,
+.ContextMenuRadioItem,
+.ContextMenuSubTrigger {
+  font-size: 13px;
+  line-height: 1;
+  color: var(--violet-11);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  height: 25px;
+  padding: 0 5px;
+  position: relative;
+  padding-left: 15px;
+  user-select: none;
+  outline: none;
+}
+
+.ContextMenuSubTrigger[data-state="open"] {
+  background-color: gray;
+  color: var(--violet-11);
+}
+
+.ContextMenuItem[data-disabled],
+.ContextMenuCheckboxItem[data-disabled],
+.ContextMenuRadioItem[data-disabled],
+.ContextMenuSubTrigger[data-disabled] {
+  color: var(--mauve-8);
+  pointer-events: "none";
+}
+
+.ContextMenuItem[data-highlighted],
+.ContextMenuCheckboxItem[data-highlighted],
+.ContextMenuRadioItem[data-highlighted],
+.ContextMenuSubTrigger[data-highlighted] {
+  background-color: #dad9db;
+  color: var(--violet-11);
+}
+
+.ContextMenuLabel {
+  padding-left: 25px;
+  font-size: 12px;
+  line-height: 25px;
+  color: var(--mauve-11);
+}
+
+.ContextMenuItemIndicator {
+  position: absolute;
+  left: 0;
+  width: 25px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.RightSlot {
+  margin-left: auto;
+  padding-left: 20px;
+  color: var(--mauve-11);
+}
+
+[data-highlighted] > .RightSlot {
+  color: white;
+}
+
+[data-disabled] .RightSlot {
+  color: var(--mauve-8);
+}
+
+.dropdown-menu {
+  min-width: 10rem;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.3rem 1.2rem;
+  clear: both;
+  font-weight: 400;
+  color: #393a39;
+  text-align: inherit;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #dad9db;
+  color: var(--violet-11);
+}
+
+.modal {
+  margin-top: 50px;
+}
+.pdfName {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+
+.hrStyle {
+  margin-top: 0rem !important;
+  margin-bottom: 0rem !important;
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.status-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #fff;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge i {
+  font-size: 12px;
+}
+
+/* Status-specific colors */
+.completed {
+  background-color: #4caf50;
+  color: #fff;
+}
+
+.in-progress {
+  background-color: #ffc107;
+  color: #fff;
+}
+
+.declined {
+  background-color: #f44336;
+  color: #fff;
+}
+
+.expired {
+  background-color: #9e9e9e;
+  color: #fff;
+}
+
+.draft {
+  background-color: #079cdc;
+  color: #fff;
+}
+
+
+.fileName {
+  display: inline-block;
+  width: 100px;
+  white-space: nowrap;
+  overflow: hidden !important;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  text-align: center;
+  font-weight: 480;
+}
+.select-none-cls{
+  -webkit-user-select: none;
+  /* Disable text selection in WebKit browsers */
+  -moz-user-select: none;
+  user-select: none;
+}
+
+a {
+  all: unset;
+}
+
+.HoverCardContent {
+  border-radius: 6px;
+  padding: 5px 10px;
+  width: 170px;
+  background-color: white;
+  box-shadow:
+    hsl(206 22% 7% / 35%) 0px 10px 38px -10px,
+    hsl(206 22% 7% / 20%) 0px 10px 20px -15px;
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+  text-align: center;
+  align-items: center;
+}
+
+.HoverCardContent[data-side="top"] {
+  animation-name: slideDownAndFade;
+}
+
+.HoverCardContent[data-side="right"] {
+  animation-name: slideLeftAndFade;
+}
+
+.HoverCardContent[data-side="bottom"] {
+  animation-name: slideUpAndFade;
+}
+
+.HoverCardContent[data-side="left"] {
+  animation-name: slideRightAndFade;
+}
+
+.HoverCardArrow {
+  fill: white;
+}
+
+@keyframes slideUpAndFade {
+  0% {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideRightAndFade {
+  0% {
+    opacity: 0;
+    transform: translateX(-2px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideDownAndFade {
+  0% {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideLeftAndFade {
+  0% {
+    opacity: 0;
+    transform: translateX(2px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* The previous template-page-container and related styles will be overridden or removed */
+.template-page-container {
+    /* Keeping this for safety, but new creative-design styles will take precedence */
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
+}
+
+.header-nav {
+    display: none; /* Hide old header */
+}
+
+.main-content-area {
+    display: none; /* Hide old content area */
+}
+
+/* Old sidebar styles will be mostly replaced by .sidebar-creative */
+.sidebar {
+    display: none;
+}
+
+/* Old hero section styles will be replaced by .hero-section-creative */
+.hero-section {
+    display: none;
+}
+
+/* Old template table styles will be replaced by .template-card-grid and .template-card-creative */
+.all-templates-table-section h3 {
+    display: none;
+}
+
+.template-table {
+    display: none;
+}
+
+.template-card-grid {
+    display: none; /* Hide old card grid */
+}
+
+.template-card {
+    display: none; /* Hide old template card */
+}

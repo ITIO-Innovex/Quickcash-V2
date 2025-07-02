@@ -1,0 +1,109 @@
+/* Currency Exchange Modal Styles */
+.currency-exchange-modal-content {
+  padding: 0;
+}
+.currency-exchange-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+.currency-exchange-amounts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.from-amount, .to-amount {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.to-amount {
+  color: #222;
+}
+.currency-exchange-flags {
+    height: 60px;
+    width: 100px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.currency-exchange-to-card {
+  margin-bottom: 12px;
+}
+.to-currency {
+  font-size: 1rem;
+  font-weight: 500;
+}
+.to-currency-name {
+  color: #1a4fff;
+  font-weight: bold;
+  margin-left: 2px;
+}
+.to-card-number {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+@media (max-width: 600px) {
+  .currency-exchange-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .currency-exchange-flags {
+    margin-top: 4px;
+  }
+}
+.currency-exchange-summary {
+  border-radius: 16px;
+  margin-bottom: 24px;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.currency-exchange-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+.currency-exchange-summary-row .label {
+  font-weight: bold;
+}
+.currency-exchange-summary-row .value {
+  font-weight: 400;
+}
+.currency-exchange-flag {
+    height: 30px !important;
+    width:35px !important;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+.currency-exchange-section {
+  border-radius: 16px;
+  margin-bottom: 24px;
+  padding: 20px 16px;
+  box-shadow: 0 2px 8px #0001;
+}
+.currency-exchange-section .account-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+@media (max-width: 600px) {
+  .currency-exchange-summary, .currency-exchange-section {
+    padding: 12px 4px;
+    font-size: 0.95rem;
+  }
+  .currency-exchange-summary-row {
+    font-size: 0.98rem;
+  }
+  .currency-exchange-flag {
+    width: 24px;
+    height: 24px;
+  }
+}

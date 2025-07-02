@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang=en>
+	<head>
+		<title>Quick Cash | Statement</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+		<style>
+			table { border: 1px solid #5c743d;
+					width: 100%;
+			  
+					border-spacing: 0; 
+					margin: auto; }
+			td, th { padding: 10px; 
+					 font-family: Arial, sans-serif;
+					 text-align: center;
+					} 
+			caption { font-family: Arial;
+					   font-size: 1.2em;
+					   font-weight: bold; 
+					   padding-bottom: 5px;}
+			tr:nth-of-type(even) { background-color:#eaeaea; } 
+			tr:nth-of-type(6) { background-color: blue; 
+							   color: #eaeaea; }
+		</style>
+	</head>
+	<body>
+		<table summary="A description of the specialty coffee menu items with one item listed in each row. The first column contains the name of the menu item. The second column describes the specialty coffee. The third column contains the price.">
+			<caption>Transaction Statement</caption><img src=""  >
+			 <tr style="background-color: transparent;">
+				<td colspan="7" style="text-align:left">Name : <%= userDetails[0].name %></td>
+			 </tr>
+			 <tr style="background-color: transparent;">
+				<td colspan="7" style="text-align:left">Email: <%= userDetails[0].email %></td>
+			 </tr>
+			 <tr style="background-color: transparent;">
+				<td colspan="7" style="text-align:left">Mobile: <%= userDetails[0].mobile %></td>
+			 </tr>
+			 <tr style="background-color: transparent;">
+				<td colspan="7" style="text-align:left">Address: <%= userDetails[0].address %> , <%= userDetails[0].city %> , <%= userDetails[0].country %></td>
+			 </tr>
+			 <tr style="background-color: transparent;"><td colspan="7" style="background-color: transparent;"></td></tr>
+			  <tr>
+				<th>Date</th>
+				<th>Description</th>
+				<th>Transaction Type</th>
+				<th>Transfer Currency</th>
+				<th>Received Currency</th>
+				<th>Amount</th>
+				<th>Status</th>
+			 </tr>
+			 <% item.forEach(function(result) { %>
+				<tr>
+					<td><%= result.createdAt %></td>
+					<td><%= result.info %></td>
+					<td><%= result.trans_type %></td>
+					<td><%= result.currency %></td>
+					<td><%= result.rec_currency %></td>
+					<td><%= result.amountText %></td>
+					<td><%= result.status %></td>
+				</tr>
+			 <% }); %>
+		   </table>
+	</body>
+</html>	

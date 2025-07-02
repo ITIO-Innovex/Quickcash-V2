@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang=en>
+	<head>
+		<title>Quick Cash | Reminder Invoice</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+		<style>
+			.wrapper {
+			  padding: 50px;
+			  border: 1px solid silver;
+			  background: rgb(7, 158, 209);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="wrappera">
+		  <div>
+			<table border="1" width="60%" align="center" style="color: rgb(0, 0, 0);border-color: white; border-collapse: collapse;">
+			<tr>
+			  <td colspan="2" align="center" style="background-color: rgb(169, 77, 231);">
+				<center style="font-size: 26px; color: white;margin-bottom: 30px;">
+			 	  REMINDER
+				</center>
+			  </td>
+			  <td colspan="2" align="center" style="background-color: rgb(169, 77, 231);">
+			   <center style="font-size: 20px; color: white;margin-bottom: 30px;">
+				  Quick Cash <br />
+				  Quick Cash has sent you a payment link for <%= `${amounttext}` %><%= `${amount}` %>
+				</center>
+			  </td>
+			</tr>
+			<tr align="left" style="background-color: white;">
+			  <td style="padding: 20px;" colspan="2">PAYMENT FOR <br /><%= `${title}` %></td>
+			</tr>
+			<tr align="left" style="background-color: white;">
+			  <td style="padding: 20px;" colspan="2">ISSUED TO <br /> <%= `${email}` %></td>
+			</tr>
+			<tr align="left" style="background-color: white;">
+			  <td style="padding: 20px;" colspan="2">EXPIRES ON <br /> <%= `${duedate}` %></td>
+			</tr>
+			<tr align="left" style="background-color: white;">
+			  <td style="padding: 20px;" >
+				AMOUNT PAYABLE<br />
+				<%= `${amounttext}` %><%= `${amount}` %>
+			  </td>
+			  <td align="right" style="padding: 20px;" style="background-color: white;"><a href="<%= `${urlLink}` %>"><button type="button" style="width: 160px; cursor: pointer; padding: 16px;margin-top: 15px;border-radius: 10px; background-color: blueviolet; color: white; border: 1px solid silver;">PRCOEED TO PAY</button></a></td>
+			</tr>
+		  </table>
+		</div>
+		</div>
+	</body>
+</html>	

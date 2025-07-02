@@ -1,0 +1,174 @@
+
+.transfer-method-step {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.step-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.step-description {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.transfer-methods {
+  margin-bottom: 32px;
+}
+
+.transfer-method-card {
+  background-color: transparent;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  height: 140px;
+}
+
+.transfer-method-card:hover {
+  transform: translateY(-2px);
+}
+
+.transfer-method-card.selected {
+  box-shadow: 0 8px 24px rgba(72, 53, 148, 0.2);
+}
+
+.method-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.method-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+.transfer-forms-section {
+  background-color: transparent;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 24px;
+}
+
+.transfer-tabs {
+  margin-bottom: 24px;
+  color:white;
+}
+
+.form-container-transfer {
+  border-radius: 8px;
+  padding: 2rem;
+}
+
+.transfer-form {
+  background-color: transparent !important;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.form-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-subtitle {
+  margin-bottom: 24px;
+  font-style: italic;
+}
+
+.sepa-form .form-title::before {
+  content: "🇪🇺";
+}
+
+.swift-form .form-title::before {
+  content: "🌍";
+}
+
+.ach-form .form-title::before {
+  content: "🇺🇸";
+}
+
+.step-actions {
+  margin-top: 32px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.back-button {
+  border-color: #666;
+  color: #666;
+}
+
+.back-button:hover {
+  border-color: #483594;
+  color: #483594;
+}
+
+.continue-button {
+  background-color: #483594;
+  color: white;
+}
+
+.continue-button:hover {
+  background-color: #3a2875;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .transfer-method-step {
+    padding: 16px;
+  }
+  
+  .transfer-methods {
+    margin-bottom: 24px;
+  }
+  
+  .transfer-method-card {
+    height: 120px;
+  }
+  
+  .method-content {
+    padding: 12px;
+  }
+  
+  .form-container-transfer {
+    padding: 16px;
+  }
+  
+  .transfer-forms-section {
+    padding: 16px;
+  }
+}
+
+/* Form Field Styling */
+.MuiTextField-root {
+  margin-bottom: 8px;
+}
+
+.MuiFormControl-root {
+  margin-bottom: 8px;
+}
+
+.MuiInputLabel-root {
+  font-weight: 500;
+}
+
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #483594;
+}
+
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #483594;
+}

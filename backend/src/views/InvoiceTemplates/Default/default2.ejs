@@ -1,0 +1,225 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice | <%= details[0].invoice_number %> </title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background:#EFF3F7;
+        font-family: 'Helvetica Neue';
+      }
+    </style>
+</head>
+<body>
+  <div id="myDiv" style="display: flex; flex-direction: row; justify-content: space-between;padding: 5%">
+    <div style="width:75%; background: white;padding: 2%; border-top-left-radius: 2%; border-bottom-left-radius: 2%;">
+      <table width="100%">
+        <tr>
+          <td align="center"><img src="<%= baseUrl %>setting/<%= details[0].settingsDetails[0].user %>/<%= details[0].settingsDetails[0].logo %>" width="120px" height="100px" /></td>
+          <td align="left">
+            Invoice <br>
+            #<%= details[0].invoice_number %>
+          </td>
+          <td align="center">
+            Invoice Date: <br>
+            <%= details[0].invoice_date %>
+          </td>
+          <td align="center">
+            Due Date: <br>
+            <%= details[0].due_date %>
+          </td>
+         <td align="right">
+          <button onClick="window.open('<%= baseUrl %>invoices/<%= details[0].invoice_number %>/Invoice_<%= details[0].invoice_number %>.pdf','_blank')" type="button" style="cursor:pointer; background: #2FC989;color: white; padding: 15px; border-radius: 10px; border: 1px solid #2FC989;">Print Invoice</button>
+        </td>
+        </tr>
+
+        <tr>
+          <td align="center" style="padding-top: 5%">
+           Issue For:
+          </td>
+          <td></td>
+          <td align="center" style="padding-top: 5%">
+            Issued By:
+          </td>
+          <td colspan="2" align="center" style="padding-top: 5%">Payment QR Code</td>
+         </tr>
+         <tr>
+           <td align="center">
+            <%= details[0].userDetails[0].name %>
+           </td>
+           <td></td>
+           <td align="center">
+            <%= details[0].settingsDetails[0].company_name %>
+           </td>
+           <td colspan="2" rowspan="3" align="center">
+             <% if(details[0].payment_qr_code != "") { %>
+              <% details[0].qrcodeDetails.forEach((qr,index) => { %>
+                <% if(qr._id == details[0].payment_qr_code) { %>
+                  <img src="<%= baseUrl %>/qrcode/<%= qr.image %>" width="140px" height="120px"/>
+                <% } %>
+              <% }); %>  
+             <% } else { %>  
+              <h5>N/A</h5>
+             <% } %>
+           </td>
+          </tr>
+          <tr>
+            <td align="center">
+              <%= details[0].userDetails[0].address %>, <br/>
+              <%= details[0].userDetails[0].city %>,
+              <%= details[0].userDetails[0].state %>,
+              <%= details[0].userDetails[0].country %>,
+              <%= details[0].userDetails[0].postalcode %>
+            </td>
+            <td></td>
+            <td align="center">
+              <%= details[0].settingsDetails[0].address %>, <br/>
+              <%= details[0].settingsDetails[0].city %>,
+              <%= details[0].settingsDetails[0].state %>,
+              <%= details[0].settingsDetails[0].invoice_country %>,
+              <%= details[0].settingsDetails[0].zipcode %>
+            </td>
+            <td colspan="2" align="center"></td>
+          </tr>
+      </table>
+           
+      <table width="100%" style=" border: 1px solid silver; margin-top: 50px; border-collapse: collapse;">
+        <thead style="background: #673AB7;color: white">
+          <tr>
+            <td style="padding: 12px;" align="center">SR NO.</td>
+            <td style="padding: 12px;" align="center">PRODUCT</td>
+            <td style="padding: 12px;"  align="center">QTY</td>
+            <td style="padding: 12px;"  align="center">PRICE</td>
+            <td style="padding: 12px;"  align="center">AMOUNT</td>
+          </tr>
+        </thead>
+        <tbody>
+         <% details[0].productsInfo.forEach((product,index) => {%>
+            <tr>
+              <td style="padding: 12px;border:1px solid black;" align="center"><%= index+1 %></td>
+              <td style="padding: 12px;border:1px solid black;" align="center"><%= product.productName %></td>
+              <td style="padding: 12px;border:1px solid black;" align="center"><%= product.qty %></td>
+              <td style="padding: 12px;border:1px solid black;" align="center"><%= details[0].currency_text %><%= product.price %></td>
+              <td style="padding: 12px;border:1px solid black;" align="center"><%= details[0].currency_text %><%= product.amount %></td>
+            </tr>
+         <% }); %>
+        </tbody>
+        </thead>
+      </table>
+           
+      <table width="100%" style="margin-top: 50px;">
+        <tr>
+          <td><% if(details[0].tax.length > 0) { %> Tax Information: (%) <% } %></td>
+        </tr>
+        <tr>
+          <td>
+            <% details[0].tax.forEach((tx,index) => {%>
+            <%= tx %> <br />
+            <% }); %>
+          </td>
+          <td>
+           <tr>
+              <td style="padding: 5px;" align="right">Sub Total:</td><td align="right"><%= details[0].currency_text %><%= details[0].subTotal %></td>
+           </tr>
+           <tr>
+              <td style="padding: 5px" align="right">Discount:</td><td align="right"><%= details[0].currency_text %><%= details[0].sub_discount %></td>
+           </tr>
+           <tr>
+             <td style="padding: 5px" align="right">Tax:</td><td align="right"><%= details[0].currency_text %><%= details[0].sub_tax %></td>
+           </tr>
+           <tr>
+             <td style="padding: 5px" align="right">Total:</td><td align="right"><%= details[0].currency_text %><%= details[0].total %></td>
+           </tr>
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <div style="width:25%; background: white;padding: 2%; border-top-right-radius: 2%; border-bottom-right-radius: 2%;">
+      <div style="background: #F8F9FA; width:200px; min-height: 70vh; padding: 30px;">
+        <div style="display: flex;flex-direction: column; justify-content: start; gap: 20px;color: black;">
+            <% if(details[0].status == "unpaid") { %>
+              <span style=" color: white; font-weight: 700; text-align: center; padding: 15px;  background: red; min-width: 120px; border-radius: 2%;">Unpaid</span>
+            <% } else if(details[0].status == "paid") { %>
+              <span style=" color: white; font-weight: 700; text-align: center; padding: 15px; background: #2FC989; min-width: 120px; border-radius: 2%;">Paid</span>
+            <% } else if(details[0].status == "partial") { %>
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 15px; background: rgb(15, 126, 206); min-width: 120px; border-radius: 2%;">Partial Paid</span>
+            <% } else { %>
+              <span style=" color: white; font-weight: 700; text-align: center; padding: 15px; background: red; min-width: 120px; border-radius: 2%;">Unpaid</span>
+          <% } %>  
+
+          <span style="font-weight: 700;">CLIENT OVERVIEW</span>
+          <span>Client Name</span>
+          <span><%= details[0].userDetails[0].name %></span>
+          <span>Client Email</span>
+          <span><%= details[0].userDetails[0].email %></span>
+          <span>Paid Amount</span>
+          <span><%= details[0].currency_text %><%= details[0].paidAmount %></span>
+          <span>Remaining Amount</span>
+          <span><%= details[0].currency_text %><%= details[0].dueAmount %></span>
+          <span></span>
+          <span></span>
+          <span></span>
+
+          <% if(details[0].status == "unpaid") { %>
+            <span><button onClick="window.open('<%= details[0].url %>','_blank')" type="button" style="border: 1px solid #FFC342; background-color: #FFC342; padding: 12px;width:100%;border-radius: 12px;cursor: pointer" target="_blank">Make Payment</button></span>
+          <% } else if(details[0].status == "partial") { %>
+            <span><button onClick="window.open('<%= details[0].url %>','_blank')" type="button" style="border: 1px solid #FFC342; background-color: #FFC342; padding: 12px;width:100%;border-radius: 12px;cursor: pointer" target="_blank">Make Payment</button></span>
+          <% } else { %> 
+            
+          <% } %>  
+
+          <!-- <% if(details[0].transactionStatus == "unpaid") { %>
+            <span><button onClick="window.open('<%= details[0].url %>','_blank')" type="button" style="border: 1px solid #FFC342; background-color: #FFC342; padding: 12px;width:100%;border-radius: 12px;cursor: pointer" target="_blank">Make Payment</button></span>
+          <% } else if(details[0].transactionStatus == "0") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Pending</span> 
+          <% } else if(details[0].transactionStatus == "1") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Approved</span>
+          <% } else if(details[0].transactionStatus == "2") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Declined</span>
+          <% } else if(details[0].transactionStatus == "3") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Refunded</span>
+          <% } else if(details[0].transactionStatus == "5") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Chargeback</span>
+          <% } else if(details[0].transactionStatus == "7") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Reversed</span>
+          <% } else if(details[0].transactionStatus == "8") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Refund Pending</span>
+          <% } else if(details[0].transactionStatus == "9") { %>  
+            <span>Transaction Status:</span>
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: #2FC989; min-width: 120px; border-radius: 2%;">Approved</span>
+          <% } else if(details[0].transactionStatus == "10") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Scrubbed</span>
+          <% } else if(details[0].transactionStatus == "11") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Predispute</span>
+          <% } else if(details[0].transactionStatus == "12") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Partial Refund</span>
+          <% } else if(details[0].transactionStatus == "13") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Withdraw Requested</span> 
+          <% } else if(details[0].transactionStatus == "14") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Withdraw Rolling</span>
+          <% } else if(details[0].transactionStatus == "20") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Frozen Balance</span>
+          <% } else if(details[0].transactionStatus == "21") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Frozen Rolling</span>
+          <% } else if(details[0].transactionStatus == "22") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Expired</span>
+          <% } else if(details[0].transactionStatus == "23") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Cancelled</span>
+          <% } else if(details[0].transactionStatus == "24") { %>  
+            <span style=" color: white; font-weight: 700; text-align: center; padding: 5px;  background: red; min-width: 120px; border-radius: 2%;">Failed</span>
+          <% } else { %>
+            <span><button onClick="window.open('<%= details[0].url %>','_blank')" type="button" style="border: 1px solid #FFC342; background-color: #FFC342; padding: 12px;width:100%;border-radius: 12px;cursor: pointer" target="_blank">Make Payment</button></span>
+          <% } %>   -->
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

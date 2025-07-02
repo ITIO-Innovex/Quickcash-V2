@@ -1,0 +1,136 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice <%= inv %></title>
+    <style>
+      @media print {
+       body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+       .bg {background: <%= byDefaultPrintColor %>}
+      }
+      html { -webkit-print-color-adjust: exact; }
+    </style>
+</head>
+<body style="padding: 5%">
+  <table width="100%">
+    <tr>
+      <td align="left"><img src="<%= logoInvoice %>" width="100px" height="70px"/></td>
+      <td style="font-size: 41px;font-weight: 900;" align="right" colspan="3">INVOICE</td>
+     </tr>
+     <tr></tr>
+     <tr></tr>
+     <tr>
+      <td><% if(invoiceData[0].company_name) { %> <%= invoiceData[0].company_name %> <% } %></td>
+      <td align="right" style="font-weight: 900;">Invoice ID:</td>
+      <td align="right" style="max-width: 90px;">#<%= inv %></td>
+     </tr>
+     <tr>
+      <td><span style="font-weight: 900;">Address: </span><% if(invoiceData[0].address) { %> <%= invoiceData[0].address %> <% } %></td>
+      <td align="right" style="font-weight: 900;">Invoice Date:</td>
+      <td align="right" style="max-width: 90px;"><%= item.invoice_date %></td>
+     </tr>
+     <tr>
+      <td><span style="font-weight: 900;">Phone:</span><% if(invoiceData[0].mobile) { %> <%= invoiceData[0].mobile %> <% } %></td>
+      <td align="right" style="font-weight: 900;">Due Date:</td>
+      <td align="right" style="max-width: 90px;"><%= item.due_date %></td>
+     </tr>
+  </table> 
+  
+  <table width="100%" style="margin-top: 30px"> 
+    <tr>
+      <td style="font-weight: 900;">To</td>
+      <td colspan="4" style="font-weight: 900;" align="right"><% if(qrCode) { %> Payment QR Code <% } %></td>
+     </tr>
+     <tr>
+      <td><span style="font-weight: 900;">Name:</span><%= name %></td>
+      <td align="right" colspan="4" rowspan="4"><% if(qrCode) { %> <img src="<%= qrCode %>" width="140px" height="120px"/> <% } %></td>
+     </tr>
+     <tr>
+       <td><span style="font-weight: 900;">Email:</span><%= email %></td>
+     </tr>
+     <tr>
+      <td><span style="font-weight: 900;">Address:</span><%= address %></td>
+     </tr>
+  </table>
+
+  <table width="100%" style="margin-top : 20px; border-collapse: collapse;" border="1">
+    <thead>
+      <tr style="background: black;color: white;">
+        <td align="center" style="padding: 12px;">#</td>
+        <td align="center" style="padding: 12px;">PRODUCT</td>
+        <td align="center" style="padding: 12px;">Qty</td>
+        <td align="center" style="padding: 12px;">UNIT PRICE</td>
+        <td align="center" style="padding: 12px;">AMOUNT</td>
+      </tr>
+    </thead>
+      <tbody>
+        <% item.productsInfo.forEach((product,index) => {%>
+          <tr>
+            <td style="padding: 12px;border:1px solid black;" align="center"><%= index+1 %></td>
+            <td style="padding: 12px;border:1px solid black;" align="center"><%= product.productName %></td>
+            <td style="padding: 12px;border:1px solid black;" align="center"><%= product.qty %></td>
+            <td style="padding: 12px;border:1px solid black;" align="center"><%= item.currency_text %><%= product.price %></td>
+            <td style="padding: 12px;border:1px solid black;" align="center"><%= item.currency_text %><%= product.amount %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+  </table>
+
+  <table width="100%" style="margin-top: 30px;">
+    <tr>
+      <td colspan="4" rowspan="6">
+        <span style="font-weight: 900;"><% if(item.tax.length > 0) { %> Tax Information (In %): <% } %></span><br />
+        <% item.tax.forEach((tx,index) => {%>
+          <span><%= tx %> </span> <br />
+        <% }); %>
+      </td>
+      <td align="right" colspan="5" style="font-weight: 900;">AMOUNT:</td>
+      <td align="right" style="max-width: 100px;"><%= item.currency_text %><%= item.subTotal %></td>
+    </tr>
+    <tr>
+      <td align="right" style="font-weight: 900;" colspan="5">DISCOUNT:</td>
+      <td align="right" style="max-width: 100px;"><%= item.currency_text %><%= item.sub_discount %></td>
+    </tr>
+    <tr>
+      <td align="right" style="font-weight: 900;" colspan="5">TAX:</td>
+      <td align="right" style="max-width: 100px;"><%= item.currency_text %><%= item.sub_tax %></td>
+    </tr>
+    <tr>
+      <td align="right" style="font-weight: 900;" colspan="5">TOTAL:</td>
+      <td align="right" style="max-width: 100px;"><%= item.currency_text %><%= item.total %></td>
+    </tr>
+    <tr>
+      <td align="right" style="font-weight: 900; text-align: right;" colspan="5">TOTAL DUE:</td>
+      <td align="right" style="max-width: 100px;" colspan="5"><%= item.currency_text %><%= item.dueAmount %></td>
+    </tr>
+    <tr>
+      <td align="right" style="font-weight: 900;text-align: right;" colspan="5">TOTAL PAID:</td>
+      <td align="right" style="max-width: 100px;" colspan="5"><%= item.currency_text %><%= item.paidAmount %></td>
+    </tr>
+  </table>
+
+  <div style="font-weight: 900;margin-top: 30px;">Notes:</div>
+  <div>
+    <% if(item.note){ %>
+      <h5><%- item.note %></h5>
+    <% } else { %>  
+      <h5>N/A</h5>
+    <% } %>
+  </div>
+
+  <div style="font-weight: 900;margin-top: 10px;">Terms:</div>
+  <div>
+    <% if(item.terms){ %>
+      <h5><%- item.terms %></h5>
+    <% } else { %>  
+      <h5>N/A</h5>
+    <% } %>
+  </div>
+
+  <div style="font-weight: 900;margin-top: 20px;">Regards:</div>
+  <div><% if(invoiceData[0].regardstext) { %> <%= invoiceData[0].regardstext %> <% } %></div>
+</body>
+</html>

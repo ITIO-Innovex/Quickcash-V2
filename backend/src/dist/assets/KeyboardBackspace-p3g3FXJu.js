@@ -1,0 +1,1 @@
+import{i as r}from"./App-CFR6fik0.js";import{r as a}from"./createSvgIcon-BUt4voxn.js";import{j as t}from"./index-B9qwR40S.js";var e={},o=r;Object.defineProperty(e,"__esModule",{value:!0});var u=e.default=void 0,i=o(a()),p=t;u=e.default=(0,i.default)((0,p.jsx)("path",{d:"M21 11H6.83l3.58-3.59L9 6l-6 6 6 6 1.41-1.41L6.83 13H21z"}),"KeyboardBackspace");export{u as d};

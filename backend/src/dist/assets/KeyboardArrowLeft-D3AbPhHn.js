@@ -1,0 +1,1 @@
+import{i as r}from"./App-DrtOZD42.js";import{r as t}from"./createSvgIcon-j2CwpMz4.js";import{j as a}from"./index-DWLfyV7i.js";var e={},o=r;Object.defineProperty(e,"__esModule",{value:!0});var u=e.default=void 0,i=o(t()),f=a;u=e.default=(0,i.default)((0,f.jsx)("path",{d:"M15.41 16.59 10.83 12l4.58-4.59L14 6l-6 6 6 6z"}),"KeyboardArrowLeft");export{u as d};

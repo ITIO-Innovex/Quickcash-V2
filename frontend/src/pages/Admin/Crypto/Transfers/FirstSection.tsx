@@ -1,0 +1,220 @@
+import { MenuItem, Select } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material'; 
+import ReactCountryFlag from 'react-country-flag';
+import jsPDF from 'jspdf';
+import * as XLSX from 'xlsx';
+import React, { useEffect, useState } from 'react';
+import autoTable from 'jspdf-autotable';
+import { FileSpreadsheet, FileText } from 'lucide-react';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import CustomModal from '../../../../components/CustomModal';
+import GenericTable from '../../../../components/common/genericTable';
+
+import CustomButton from '@/components/CustomButton';
+import admin from '@/helpers/adminApiHelper';
+const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
+
+const FirstSection = () => {
+  const theme = useTheme();
+  const [open, setOpen] = useState(false);
+  const [modalStatus, setModalStatus] = useState('completed');
+  const [selectedRow, setSelectedRow] = useState<any | null>(null);
+  const [list,setList] = useState<any>();
+ const [currentData, setCurrentData] = useState<any[]>([]);
+ const accountsList = selectedRow?.accountsList?.length
+  ? selectedRow.accountsList
+  : [
+      {
+        accNo: '123456789',
+        country: 'US',
+        currency: 'USD',
+        label: 'Primary Account',
+        amount: '$1,500.00',
+      },
+      {
+        accNo: '987654321',
+        country: 'IN',
+        currency: 'INR',
+        label: 'Savings Account',
+        amount: '₹95,000.00',
+      },
+    ];
+
+  const handleOpen = (row: any) => {
+    setSelectedRow(row);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedRow(null);
+  };
+
+  const translist = async () => {
+    await admin.get(`/${url}/v1/crypto/translist`,
+   )
+    .then(result => {
+      if(result?.data?.status == 201) {
+        setList(result?.data?.data);
+        setCurrentData(result.data.data);
+
+      }
+    })
+    .catch(error => {
+      console.log(error);
+    });
+  }
+
+ useEffect(() => {
+      translist();
+    }, [])
+  const columns = [
+     {
+      field: 'createdAt',
+      headerName: 'Date',
+      render: (row: any) => row.createdAt ? row.createdAt.slice(0, 10) : '',
+    },
+   {
+      field: 'userDetails?.name',
+      headerName: 'Username',
+      render: (row: any) => row.userDetails?.[0]?.name || 'N/A',
+    },
+    {
+      field: 'userDetails?.email',
+      headerName: 'Email',
+      render: (row: any) => row.userDetails?.[0]?.name || 'N/A',
+    },
+    { field: 'side', headerName: 'Type' },
+     {
+         field: 'coin',
+         headerName: 'Coin',
+         render: (row: any) => (
+           <Box display="flex" alignItems="center" gap={1}>
+             <img
+               src={`https://assets.coincap.io/assets/icons/${ row?.coin?.split("_")[0].replace("_TEST","").toLowerCase()}@2x.png`}
+               alt={row.coin}
+               width={20}
+               height={20}
+               style={{ objectFit: 'contain' }}
+               onError={(e) => (e.currentTarget.style.display = 'none')}
+             />
+             <span>{row?.coin?.replace("_TEST","")}</span>
+           </Box>
+         )
+       },
+    { field: 'amount', headerName: 'Amount' },
+     {
+      field: 'status',
+      headerName: 'Status',
+      render: (row: any) => (
+        <span className={`status-chip ${row.status.toLowerCase()}`}>
+          {row.status}
+        </span>
+      )
+    },
+    {
+      field: 'action',
+      headerName: 'Action',
+      render: (row: any) => (
+        <VisibilityIcon
+          sx={{ cursor: 'pointer' }} 
+          onClick={() => handleOpen(row)}
+        />
+      )
+    }
+  ];
+
+  return (
+    <Box>
+    
+       {currentData ? (
+        <GenericTable columns={columns} data={currentData} />
+      ) : (
+        <Typography variant="body1" sx={{ mt: 2 }}>
+          No data found.
+        </Typography>
+      )}
+      {/* Modal */}
+      <CustomModal
+        open={open}
+        onClose={handleClose}
+        title="Transaction Details"
+        sx={{ backgroundColor: theme.palette.background.default }}
+      >
+        <Box className="header-Boxusernameer" />
+        {selectedRow && (
+          <>
+            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
+              <Typography><strong>Date:</strong></Typography>
+              <Typography>{selectedRow.createdAt.slice(0, 10)}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2}>
+              <Typography><strong>Username:</strong></Typography>
+              <Typography>{selectedRow.userDetails?.[0]?.name}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2}>
+              <Typography><strong>email:</strong></Typography>
+              <Typography>{selectedRow.userDetails?.[0]?.email}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2}>
+              <Typography><strong>Type:</strong></Typography>
+              <Typography>{selectedRow.side}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2}>
+              <Typography><strong>Coin:</strong></Typography>
+              <Typography>{selectedRow.coin?.replace("_TEST","")}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2}>
+              <Typography><strong>Amount:</strong></Typography>
+              <Typography>{selectedRow.amount}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2}>
+              <Typography><strong>Status:</strong></Typography>
+              <Typography>{selectedRow.status}</Typography>
+            </Box>
+          {/* Account Cards section */}
+            <Box className="accounts-list-section">
+             <Box className="accounts-list-header">Accounts List</Box>
+              <Box className="accounts-list-grid">
+                {accountsList.map((acc) => (
+                  <Box className="account-card" key={acc.accNo} sx={{backgroundColor:theme.palette.background.gray}} >
+                    <Box className="account-card-header">
+                      <ReactCountryFlag countryCode={acc.country} svg className="account-flag" />
+                      <span className="account-currency">{acc.currency}</span>
+                    </Box>
+                    <Box className="account-label">{acc.label}</Box>
+                    <Box className="account-amount">{acc.amount}</Box>
+                    <Box className="account-no">{acc.accNo}</Box>
+                  </Box>
+                ))}
+              </Box>
+              <Box className="accounts-status-row">
+                <span>Status</span>
+                <Select
+                  value={modalStatus}
+                  onChange={(e) => setModalStatus(e.target.value)}
+                  size="small"
+                  className="accounts-status-select"
+                >
+                  <MenuItem value="completed">Completed</MenuItem>
+                  <MenuItem value="declined">Declined</MenuItem>
+                </Select>
+              </Box>
+            </Box>
+             <Box display="flex" justifyContent="flex-end" gap={2} >
+            <CustomButton onClick={handleClose}>Close</CustomButton>
+            </Box>
+          </>
+        )}
+      </CustomModal>
+    </Box>
+  );
+};
+
+export default FirstSection;

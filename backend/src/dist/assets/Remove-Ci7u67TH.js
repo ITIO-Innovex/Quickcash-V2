@@ -1,0 +1,1 @@
+import{i as r}from"./App-C5vhFMem.js";import{r as t}from"./createSvgIcon-B8UspgM4.js";import{j as a}from"./index-D-Z3PEJc.js";var e={},o=r;Object.defineProperty(e,"__esModule",{value:!0});var u=e.default=void 0,i=o(t()),v=a;u=e.default=(0,i.default)((0,v.jsx)("path",{d:"M19 13H5v-2h14z"}),"Remove");export{u as d};
