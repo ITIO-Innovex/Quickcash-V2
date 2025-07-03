@@ -4,55 +4,26 @@ import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/common/pageHeader';
 import GenericTable from '../../../components/common/genericTable';
 import { Box, Typography, useTheme } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import api from '@/helpers/apiHelper';
+import { jwtDecode } from 'jwt-decode';
+import { JwtPayload } from '@/types/jwt';
+import getSymbolFromCurrency from 'currency-symbol-map';
 
 const BuySellSwapContent = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  
-
-  const handleBuySellSwap = () => {
-    navigate('/buy-sell-swap');
-  };
-
-  const transactionData = [
-    {
-      date: '2025-01-30',
-      coin: 'BTC',
-      paymentType: 'Bank Transfer',
-      noOfCoins: '0.000353',
-      side: 'BUY',
-      amount: '$100.00',
-      status: 'SUCCESS',
-    },
-    {
-      date: '2025-01-29',
-      coin: 'ETH',
-      paymentType: 'Credit Card',
-      noOfCoins: '0.025',
-      side: 'SELL',
-      amount: '$85.50',
-      status: 'PENDING',
-    },
-    {
-      date: '2025-01-28',
-      coin: 'SOL',
-      paymentType: 'Bank Transfer',
-      noOfCoins: '0.5',
-      side: 'BUY',
-      amount: '$120.00',
-      status: 'SUCCESS',
-    },
-  ];
+  const [transactionData, setTransactionData] = useState([]);
 
   const columns = [
-    { field: 'date', headerName: 'DATE' },
+    { field: 'createdAt', headerName: 'DATE' },
     {
       field: 'coin',
       headerName: 'COIN',
       render: (row: any) => (
         <Box className="coin-display">
           <img
-            src={`https://assets.coincap.io/assets/icons/${row.coin.toLowerCase()}@2x.png`}
+           src={`https://assets.coincap.io/assets/icons/${row.coin.split('_')[0].toLowerCase()}@2x.png`}
             alt={row.coin}
             className="coin-icon"
           />
@@ -71,17 +42,20 @@ const BuySellSwapContent = () => {
         </Typography>
       ),
     },
-    { field: 'amount', headerName: 'AMOUNT' },
+    {
+      field: 'amount',
+      headerName: 'AMOUNT',
+      render: (row: any) => (
+        <>
+          {getSymbolFromCurrency(row.currencyType)} {row.amount}
+        </>
+      ),
+    },
     {
       field: 'status',
       headerName: 'STATUS',
       render: (row: any) => {
-        const statusClass =
-          row.status === 'SUCCESS'
-            ? 'success'
-            : row.status === 'PENDING'
-              ? 'pending'
-              : 'failed';
+      const statusClass = row.status?.toLowerCase();
         return (
           <span className={`status-chip ${statusClass}`}>{row.status}</span>
         );
@@ -89,26 +63,46 @@ const BuySellSwapContent = () => {
     },
   ];
 
+  const fetchTransactions = async (userId: string) => {
+    try {
+      const res = await api.get(`/api/v1/crypto/list/${userId}`);
+      if (res.data.status === 201) {
+        //  console.log("✅ Data Found:", res.data.data);
+        const transformedData = res.data.data.map((item: any) => ({
+          ...item,
+          id: item._id,
+          createdAt: new Date(item.createdAt).toLocaleDateString(),
+          side: item.side?.toUpperCase(),
+          status: item.status?.toUpperCase(),
+        }));
+        setTransactionData(transformedData);
+      }
+    } catch (err) {
+      console.error("❌ Error fetching transaction data", err);
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const decoded = jwtDecode<JwtPayload>(token);
+      const userId = decoded.data.id;
+      fetchTransactions(userId);
+    }
+  }, []);
+
   return (
-    <Box
-      className="dashboard-container" sx={{ backgroundColor: theme.palette.background.default }}>
-      <PageHeader title="Crypto Buy-Sell-Swap"/>
+    <Box className="dashboard-container" sx={{ backgroundColor: theme.palette.background.default }}>
+      <PageHeader title="Crypto Buy-Sell-Swap" />
+      <SecondSection />
+      <FirstSection />
 
-      <SecondSection/>
-      <FirstSection/>
-      
-      {/* Transaction History Table */}
-        <Typography
-          variant="h6"
-          className="buysellswap-section-title"
-          sx={{ color: theme.palette.text.primary }}
-        >
-          Recent Transactions
-        </Typography>
+      <Typography variant="h6" className="buysellswap-section-title" sx={{ color: theme.palette.text.primary }}>
+        Recent Transactions
+      </Typography>
 
-        <GenericTable columns={columns} data={transactionData} />
-      </Box>
-
+      <GenericTable columns={columns} data={transactionData} />
+    </Box>
   );
 };
 

@@ -1,40 +1,267 @@
-import React, { useState } from 'react';
+import api from '@/helpers/apiHelper';
+import { jwtDecode } from "jwt-decode";
+import { JwtPayload } from '@/types/jwt';
+import { useAppToast } from "@/utils/toast";
+import { useEffect, useState } from 'react';
+import CountdownTimer from '@/components/CountDownTimer';
 import { useLocation, useNavigate } from 'react-router-dom';
 import CustomButton from '../../../components/CustomButton';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CustomDropdown from '../../../components/CustomDropdown';
 import CustomInputField from '../../../components/CustomInputField';
+const url = import.meta.env.VITE_NODE_ENV === 'production' ? 'api' : 'api';
 import { Box, Card, CardContent, Typography, useTheme, LinearProgress, Stepper, Step, StepLabel, useMediaQuery, Checkbox, FormControlLabel, Radio, RadioGroup } from '@mui/material';
+
+interface CustomJwtPayload {
+  data: {
+    id: string;
+    email: string;
+  };
+  iat?: number;
+  exp?: number;
+}
 
 const ProceedPage = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const toast = useAppToast();
   const location = useLocation();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [transferType, setTransferType] = useState('Bank Transfer');
-  const [walletAddress, setWalletAddress] = useState('7hDWjpConT3b7nfitwkS3Qq4ipclisPcobFJ9Y8SNSfT2');
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [walletAddress, setWalletAddress] = useState('');
+  const [walletNotFound, setWalletNotFound] = useState(false);
+  const [showRequestBtn, setShowRequestBtn] = useState(false);
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [transferType, setTransferType] = useState('Bank Transfer');
+  const [buyWalletNotFound, setBuyWalletNotFound] = useState(false);
+  const calculationData = JSON.parse(localStorage.getItem("calculationData") || '{}');
+  const sellCalculationData = JSON.parse(localStorage.getItem("sellCalculationData") || '{}');
+  console.log(sellCalculationData);
 
-  const transactionData = location.state || {
-    type: 'buy',
-    amount: '200',
-    currency: 'USD',
-    coin: 'SOL',
-    youReceive: '1.002958728248335'
-  };
-
-  console.log('ProceedPage - Transaction data:', transactionData);
   console.log('ProceedPage - Current step:', currentStep);
   console.log('ProceedPage - Is confirmed:', isConfirmed);
+  console.log("ProceedPage - Checking if continue is disabled, step:", currentStep, "confirmed:", isConfirmed);
 
   const steps = ['Details', 'Confirm', 'Complete'];
   
+  const transactionType = location.state?.type || 'buy';
+
   const transferOptions = [
     { label: 'Bank Transfer', value: 'Bank Transfer' },
-    { label: 'Credit Card', value: 'Credit Card' },
-    { label: 'Debit Card', value: 'Debit Card' },
   ];
+
+  const cryptoFees = transactionType === 'sell'
+  ? Number(sellCalculationData.cryptoFees || 0)
+  : Number(calculationData.cryptoFees || 0);
+
+const exchangeFees = transactionType === 'sell'
+  ? Number(sellCalculationData.exchangeFees || 0)
+  : Number(calculationData.exchangeFees || 0);
+
+const currency = transactionType === 'sell'
+  ? sellCalculationData.currency
+  : calculationData.currency;
+
+const totalFees = cryptoFees + exchangeFees;
+
+useEffect(() => {
+  const fetchWalletAddress = async () => {
+    const token = localStorage.getItem('token');
+    const calculationData = JSON.parse(localStorage.getItem('calculationData') || '{}');
+    const localCoin = calculationData.coin;
+
+    if (!token || !localCoin) {
+      console.warn("Token or Coin missing in localStorage");
+      setBuyWalletNotFound(true); // ✅ Trigger button show
+      return;
+    }
+
+    const coinWithTest = `${localCoin}_TEST`;
+
+    try {
+      const response = await api.get(
+        `/${url}/v1/walletaddressrequest/fetch?coin=${coinWithTest}`
+      );
+
+      const address = response.data?.data;
+
+      if (address) {
+        setWalletAddress(address);
+        localStorage.setItem('cwalletAddress', address);
+        setBuyWalletNotFound(false);
+      } else {
+        console.warn("⚠️ Wallet address not found for coin:", coinWithTest);
+        setBuyWalletNotFound(true); // ✅ Trigger button show
+      }
+    } catch (error) {
+      console.error("❌ Error fetching wallet address:", error);
+      setBuyWalletNotFound(true); // ✅ Trigger button show
+    }
+  };
+
+  fetchWalletAddress();
+}, []);
+
+// Fetch Wallet for Sell
+useEffect(() => {
+  const fetchSellWalletAddress = async () => {
+    const token = localStorage.getItem('token');
+    const sellData = JSON.parse(localStorage.getItem('sellCalculationData') || '{}');
+    const sellCoin = sellData.coin;
+
+    if (!token || !sellCoin) {
+      console.warn("Token or Coin missing for SELL in localStorage");
+      return;
+    }
+
+    const sellCoinWithTest = `${sellCoin}_TEST`;
+
+    try {
+      const response = await api.get(
+        `/${url}/v1/walletaddressrequest/fetch?coin=${sellCoinWithTest}`
+      );
+
+      const walletAddr = response.data?.data;
+
+      if (walletAddr) {
+        setWalletAddress(walletAddr);
+        localStorage.setItem('sellwalletAddress', walletAddr);
+        setWalletNotFound(false); // ✅ found
+      } else {
+        console.warn("⚠️ Wallet address not found for sellCoin:", sellCoinWithTest);
+        setWalletNotFound(true);  // ✅ not found
+      }
+    } catch (error) {
+      console.error("❌ Error fetching SELL wallet address:", error);
+      setWalletNotFound(true);
+    }
+  };
+
+  fetchSellWalletAddress();
+}, []);
+
+// request new wallet address
+const HandleWalletRequest = async () => {
+  setLoading(true);
+
+  try {
+   const calculationData = JSON.parse(localStorage.getItem("calculationData") || '{}');
+      const token = localStorage.getItem('token');
+      const decoded = jwtDecode<JwtPayload>(token || '');
+      const userId = decoded?.data?.id;
+      const email = decoded?.data?.email;
+      const coin = `${calculationData.coin}_TEST`;
+
+    const response = await api.post(
+      `/${url}/v1/walletaddressrequest/add`,
+      {
+        user: userId,
+        coin,
+        email,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.data.status === 201) {
+      const walletAddr = response.data.data;
+      console.log("✅ Wallet created:", walletAddr);
+
+      setWalletAddress(walletAddr);
+      localStorage.setItem('cwalletAddress', walletAddr);
+    } else {
+      console.warn("⚠️ Unexpected response:", response.data);
+    }
+  } catch (error: any) {
+    console.error("❌ Error in HandleWalletRequest:", error);
+    toast.error(error?.response?.data?.message || 'Wallet request failed');
+  } finally {
+    setLoading(false);
+  }
+};
+
+const proceedBuyCrypto = async () => {
+  setLoading(true);
+  try {
+    const token = localStorage.getItem("token");
+    const accountId = jwtDecode<JwtPayload>(token as string);
+    const data = JSON.parse(localStorage.getItem("calculationData") || '{}');
+    const walletAddress = localStorage.getItem("cwalletAddress");
+
+    const payload = {
+      user: accountId?.data?.id,
+      coin: `${data.coin}_TEST`,
+      paymentType: transferType,
+      amount: data.amount,
+      noOfCoins: parseFloat(data.numberofCoins).toFixed(7),
+      side: data.type,
+      walletAddress,
+      currencyType: data.currency,
+      fee: parseFloat(data.cryptoFees) + parseFloat(data.exchangeFees),
+      status: "pending"
+    };
+    const response = await api.post(`/${url}/v1/crypto/add`, payload);
+    console.log("✅ API Response:", response);
+    console.log("👉 response.status:", response.status);
+    if (response.data.status === 201) {
+      handleNext(); // ✅ call your function directly
+    }
+
+  } catch (error: any) {
+    console.error("❌ Buy Crypto Error:", error?.response?.data || error);
+    toast.error(error?.response?.data?.message || "Buy failed");
+  } finally {
+    setLoading(false); // ensure spinner stops in all cases
+  }
+};
+
+const proceedSellCrypto = async () => {
+  setLoading(true);
+  try {
+    const token = localStorage.getItem("token");
+    const accountId = jwtDecode<JwtPayload>(token as string);
+    const sellData = JSON.parse(localStorage.getItem("sellCalculationData") || "{}");
+    const walletAddress = localStorage.getItem("sellwalletAddress");
+
+    const payload = {
+      user: accountId?.data?.id,
+      coin: `${sellData.coin}_TEST`,
+      amount: parseFloat(sellData.amount || '0'),
+      noOfCoins: parseFloat(sellData.youSell || '0'),
+      side: "sell",
+      currencyType: sellData.currency,
+      walletAddress,
+      fee: parseFloat(sellData.cryptoFees || '0') + parseFloat(sellData.exchangeFees || '0'),
+      status: "pending"
+    };
+
+    const amountCheck = payload.amount - payload.fee;
+
+    if (Math.sign(amountCheck) === -1) {
+      toast.error("Amount should not be negative");
+      return;
+    }
+
+    const response = await api.post(`/${url}/v1/crypto/sell`, payload);
+
+    // console.log("✅ Sell API Response:", response);
+    if (response.data.status === 201) {
+      handleNext();
+      localStorage.removeItem('sellCalculationData');
+      localStorage.removeItem('sellwalletAddress'); 
+    }
+
+  } catch (error: any) {
+    console.error("❌ Sell Crypto Error:", error?.response?.data || error);
+    toast.error(error?.response?.data?.message || "Sell failed");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -42,17 +269,22 @@ const ProceedPage = () => {
     }
   };
 
-  const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    } else {
-      navigate('/buysellswap');
-    }
-  };
+ const handleBack = () => {
+  if (currentStep > 0) {
+    setCurrentStep(currentStep - 1);
+  } else {
+    navigate('/buysellswap', {
+      state: { tab: transactionType }, // 👈 active tab info pass
+    });
+  }
+};
+
 
   const handleComplete = () => {
-    navigate('/buysellswap');
-  };
+  localStorage.removeItem('calculationData');
+  localStorage.removeItem('cwalletAddress');
+  navigate('/buysellswap'); // 👈 Navigate after clearing
+};
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -60,37 +292,79 @@ const ProceedPage = () => {
         return (
           <Box className="proceed-content">
             <Typography variant="h6" className="proceed-title" sx={{ color: theme.palette.text.primary }}>
-               {transactionData.type.toUpperCase()} Details
+              {calculationData?.type?.toUpperCase?.() || 'TRANSACTION'} Details
             </Typography>
             
             <Box className="proceed-grid" >
-              <Box 
-                className="proceed-amount-card"
-              >
-                <Typography variant="subtitle2" sx={{ mb: 1, }}>
-                  Amount
+              <Box className="proceed-amount-card">
+               <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  {transactionType === 'sell' ? 'Number of Coins' : 'Amount'}
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 'bold', }}>
-                  {transactionData.amount} {transactionData.currency}
+                  {transactionType === 'sell'
+                  ? `${sellCalculationData.youSell} `
+                  : `${calculationData.amount} ${calculationData.currency}`}
                 </Typography>
                 <Typography variant="caption" >
-                  Fees = 20 {transactionData.currency}
+                 Fees =  {totalFees} {currency}
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                  Total Amount = {parseInt(transactionData.amount) + 20} {transactionData.currency}
-                </Typography>
+               <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                {transactionType === 'sell' ? 'Amount You Recieve' : 'Total Amount'} = {
+                  transactionType === 'sell'
+                    ? sellCalculationData.amount
+                    : parseFloat(calculationData.amount || '0') +
+                      Number(calculationData.cryptoFees || 0) +
+                      Number(calculationData.exchangeFees || 0)
+                }{' '}
+                {transactionType === 'sell'
+                  ? sellCalculationData.currency
+                  : calculationData.currency}
+              </Typography>
+
               </Box>
 
               <Box className="proceed-crypto-card" sx={{ backgroundColor: '#483594' }}>
                 <Typography variant="subtitle2" className="proceed-crypto-subtitle">
                   You will get
                 </Typography>
-                <Typography variant="h6" className="proceed-crypto-amount">
-                  {transactionData.youReceive} {transactionData.coin}
+               {transactionType === 'sell' ? (
+                  <Typography variant="h6" className="proceed-crypto-amount">
+                    Total Amount = Amount - Fees
+                  </Typography>
+                ) : (
+                  <Typography variant="h6" className="proceed-crypto-amount">
+                    {calculationData.numberofCoins} {calculationData.coin}
+                  </Typography>
+                )}
+              {transactionType === 'buy' ? (
+                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                  1 {calculationData.currency} = {calculationData.rate} {calculationData.coin}
                 </Typography>
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
-                  1USD = 0.0050+09256+021663 {transactionData.coin}
-                </Typography>
+              ) : (
+               (() => {
+                const amount = parseFloat(sellCalculationData.amount || '0');
+                const cryptoFees = parseFloat(sellCalculationData.cryptoFees || '0');
+                const exchangeFees = parseFloat(sellCalculationData.exchangeFees || '0');
+                const totalFees = cryptoFees + exchangeFees;
+                const netAmount = amount - totalFees;
+                const isNegative = netAmount < 0;
+                const sign = isNegative ? '-' : '+';
+
+                return (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: isNegative ? 'error.main' : 'rgba(12, 50, 20, 0.8)',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {`Total = ${amount} - ${totalFees} = ${sign}${Math.abs(netAmount).toFixed(2)} ${sellCalculationData.currency}`}
+                  </Typography>
+                );
+              })()
+
+              )}
+
               </Box>
             </Box>
 
@@ -106,41 +380,76 @@ const ProceedPage = () => {
               />
             </Box>
 
-            <Box className="proceed-field">
-              <Typography variant="subtitle2" className="proceed-field-label" sx={{ color: theme.palette.text.primary }}>
-                WALLET ADDRESS
-              </Typography>
-              <CustomInputField
-                value={walletAddress}
-                onChange={(e) => setWalletAddress(e.target.value)}
-                placeholder="Enter wallet address"
-              />
-            </Box>
+              <Box className="proceed-field">
+                <Typography variant="subtitle2" className="proceed-field-label">
+                  WALLET ADDRESS
+                </Typography>
+
+                <CustomInputField
+                  value={
+                    transactionType === 'sell'
+                      ? walletAddress || localStorage.getItem('sellwalletAddress') || ''
+                      : walletAddress || localStorage.getItem('cwalletAddress') || ''
+                  }
+                  onChange={(e) => setWalletAddress(e.target.value)}
+                  disabled
+                  placeholder="Wallet Address"
+                />
+
+                {transactionType === 'buy' && buyWalletNotFound && (
+                  <CustomButton
+                      variant="contained"
+                      size="small"
+                      sx={{ mt: 1 }}
+                      disabled={loading}
+                      onClick={HandleWalletRequest}
+                  >
+                      {loading ? 'Requesting...' : 'Request Wallet Address'}
+                  </CustomButton> 
+                )}
+              </Box>
 
             {/* Confirmation checkbox for all transaction types */}
             <Box className="proceed-field">
               <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={isConfirmed}
-                    onChange={(e) => {
-                      console.log('ProceedPage - Checkbox changed to:', e.target.checked);
-                      setIsConfirmed(e.target.checked);
-                    }}
-                    sx={{
-                      color: theme.palette.text.secondary,
-                      '&.Mui-checked': {
-                        color: '#483594',
-                      },
-                    }}
-                  />
-                }
-                label={
-                  <Typography variant="body2" sx={{ color: theme.palette.text.primary, mt:0.4}}>
-                    I confirm the above details are correct
-                  </Typography>
-                }
-              />
+              control={
+                <Checkbox
+                  checked={isConfirmed}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+
+                    if (currentStep === 0 && transactionType === 'sell') {
+                      const sellData = JSON.parse(localStorage.getItem("sellCalculationData") || "{}");
+                      const amount = parseFloat(sellData.amount || '0');
+                      const cryptoFees = parseFloat(sellData.cryptoFees || '0');
+                      const exchangeFees = parseFloat(sellData.exchangeFees || '0');
+                      const totalFees = cryptoFees + exchangeFees;
+                      const netAmount = amount - totalFees;
+
+                      if (netAmount < 0) {
+                        toast.error("❌ Amount should not be negative");
+                        return; // ⛔ Stop from checking the box
+                      }
+                    }
+
+                    console.log('✅ Checkbox changed to:', checked);
+                    setIsConfirmed(checked);
+                  }}
+                  sx={{
+                    color: theme.palette.text.secondary,
+                    '&.Mui-checked': {
+                      color: '#483594',
+                    },
+                  }}
+                />
+              }
+              label={
+                <Typography variant="body2" sx={{ color: theme.palette.text.primary, mt: 0.4 }}>
+                  I confirm the above details are correct
+                </Typography>
+              }
+            />
+
             </Box>
           </Box>
         );
@@ -149,52 +458,84 @@ const ProceedPage = () => {
         return (
           <Box className="proceed-confirm-container">
             <Typography variant="h6" className="proceed-confirm-title" sx={{ color: theme.palette.text.primary }}>
-              Confirm {transactionData.type.toUpperCase()}
+              Confirm {calculationData.type.toUpperCase()}
             </Typography>
             <Typography variant="body2" className="proceed-confirm-timer" sx={{ color: theme.palette.text.gray }}>
-              Time Remaining: 08:35
+              <span><CountdownTimer /></span>
             </Typography>
-            <LinearProgress 
-              variant="determinate" 
-              value={65} 
-              className="proceed-progress"
-              sx={{ 
-                backgroundColor: theme.palette.mode === 'dark' ? '#444' : '#e0e0e0',
-                '& .MuiLinearProgress-bar': {
-                  backgroundColor: '#483594'
-                }
-              }} 
-            />
             
             <Box className="proceed-grid">
               <Box 
                 className="proceed-amount-card"
               >
                 <Typography variant="subtitle2" sx={{ mb: 1, color: theme.palette.text.secondary }}>
-                  Amount
+                   {transactionType === 'sell' ? 'Number of Coins' : 'Amount'}
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 'bold', color: theme.palette.text.primary }}>
-                  {transactionData.amount} {transactionData.currency}
+                 {transactionType === 'sell'
+                  ? `${sellCalculationData.youSell} ${sellCalculationData.coin} `
+                  : `${calculationData.amount} ${calculationData.currency}`}
                 </Typography>
                 <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-                  Fees = 20 {transactionData.currency}
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 'bold', color: theme.palette.text.primary }}>
-                  Total Amount = {parseInt(transactionData.amount) + 20} {transactionData.currency}
+                   Fees =  {totalFees} {currency}
                 </Typography>
               </Box>
 
               <Box className="proceed-crypto-card" sx={{ backgroundColor: '#483594' }}>
-                <Typography variant="subtitle2" className="proceed-crypto-subtitle">
-                  You will get
+                {transactionType === 'buy' && (
+                  <>
+                    <Typography variant="subtitle2" className="proceed-crypto-subtitle">
+                      You will get
+                    </Typography>
+                    <Typography variant="h6" className="proceed-crypto-amount">
+                      {calculationData.numberofCoins} {calculationData.coin}
+                    </Typography>
+                     <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  1 {calculationData.currency} = {calculationData.rate} {calculationData.coin}
                 </Typography>
-                <Typography variant="h6" className="proceed-crypto-amount">
-                  {transactionData.youReceive} {transactionData.coin}
+                  </>
+                )}
+               <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 'bold', color: theme.palette.text.primary }}
+                >
+                  {transactionType === 'sell' ? 'Amount You Recieve' : 'Total Amount'} = {
+                    transactionType === 'sell'
+                      ? sellCalculationData.amount
+                      : parseFloat(calculationData.amount || '0') +
+                        Number(calculationData.cryptoFees || 0) +
+                        Number(calculationData.exchangeFees || 0)
+                  }{' '}
+                  {transactionType === 'sell'
+                    ? sellCalculationData.currency
+                    : calculationData.currency}
                 </Typography>
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
-                  1USD = 0.0050+09256+021663 {transactionData.coin}
-                </Typography>
+
+                {/* ✅ This shows only in SELL and goes right below */}
+                {transactionType === 'sell' && (() => {
+                  const amount = parseFloat(sellCalculationData.amount || '0');
+                  const cryptoFees = parseFloat(sellCalculationData.cryptoFees || '0');
+                  const exchangeFees = parseFloat(sellCalculationData.exchangeFees || '0');
+                  const totalFees = cryptoFees + exchangeFees;
+                  const netAmount = amount - totalFees;
+                  const isNegative = netAmount < 0;
+                  const sign = isNegative ? '-' : '+';
+
+                  return (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: isNegative ? 'error.main' : 'rgba(12, 50, 20, 0.8)',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {`Total = ${amount} - ${totalFees} = ${sign}${Math.abs(netAmount).toFixed(2)} ${sellCalculationData.currency}`}
+                    </Typography>
+                  );
+                })()}
+
               </Box>
+              
             </Box>
 
             <Box className="proceed-field">
@@ -210,9 +551,16 @@ const ProceedPage = () => {
               <Typography variant="subtitle2" className="proceed-field-label" sx={{ color: theme.palette.text.primary }}>
                 WALLET ADDRESS
               </Typography>
-              <Typography variant="body2" className="proceed-address-text" sx={{ color: theme.palette.text.primary }}>
-                {walletAddress}
-              </Typography>
+            <Typography
+            variant="body2"
+            className="proceed-address-text"
+            sx={{ color: theme.palette.text.primary }}
+          >
+            {transactionType === 'sell'
+              ? walletAddress || localStorage.getItem('sellwalletAddress') || ''
+              : walletAddress || localStorage.getItem('cwalletAddress') || ''}
+          </Typography>
+
             </Box>
           </Box>
         );
@@ -225,7 +573,7 @@ const ProceedPage = () => {
             </Typography>
             
             <Box className="proceed-complete-icon">
-              <CheckCircleIcon sx={{ fontSize: 64, color: '#483594', mb: 2 }} />
+              <CheckCircleIcon sx={{ fontSize: 64, color: '#483594', mb: 1 }} />
               <Typography variant="body1" className="proceed-complete-status" sx={{ color: theme.palette.text.primary }}>
                 Wait for Admin Approval
               </Typography>
@@ -234,12 +582,18 @@ const ProceedPage = () => {
             <Box 
               className="proceed-total-card"
             >
-              <Typography variant="subtitle2" className="proceed-total-label" sx={{ color: theme.palette.text.primary }}>
-                TOTAL
+             <Typography variant="subtitle2" className="proceed-total-label" sx={{ color: theme.palette.text.primary }}>
+                {transactionType === 'sell' ? 'TOTAL AMOUNT RECEIVED' : 'TOTAL AMOUNT PAID'}
               </Typography>
+
+              {transactionType === 'sell' ? (
+                <Typography variant="h5" className="proceed-total-amount" sx={{ color: theme.palette.text.gray }}>
+                  {sellCalculationData.amount} {sellCalculationData.currency}
+                </Typography>
+              ) : (
               <Typography variant="h5" className="proceed-total-amount" sx={{ color: theme.palette.text.gray }}>
-                {parseInt(transactionData.amount) + 20} {transactionData.currency}
-              </Typography>
+                 {parseFloat(calculationData.amount) + calculationData.cryptoFees + calculationData.exchangeFees} {calculationData.currency}
+              </Typography>)}
             </Box>
 
             <Box className="proceed-arrow-container">
@@ -255,10 +609,12 @@ const ProceedPage = () => {
               className="proceed-total-card"
             >
               <Typography variant="subtitle2" className="proceed-total-label" sx={{ color: theme.palette.text.primary }}>
-                GETTING COIN
+               {transactionType === 'sell' ? 'TOTAL COINS SELL' : 'GETTING COIN'}
               </Typography>
               <Typography variant="h6" className="proceed-total-amount" sx={{ color: theme.palette.text.gray }}>
-                {transactionData.youReceive} {transactionData.coin}
+              {transactionType === 'sell'
+              ? `${calculationData.amount} ${calculationData.currency}`
+              : `${calculationData.numberofCoins} ${calculationData.coin}`}
               </Typography>
             </Box>
           </Box>
@@ -318,6 +674,7 @@ const ProceedPage = () => {
           {renderStepContent()}
 
           <Box className="proceed-buttons">
+           {currentStep > 0 && (
             <CustomButton
               onClick={handleBack}
               sx={{
@@ -325,45 +682,57 @@ const ProceedPage = () => {
                 color: theme.palette.text.primary,
                 border: `1px solid ${theme.palette.text.primary}`,
                 '&:hover': {
-                  backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5'
+                  backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
                 },
-                flex: isMobile ? 1 : 'none'
+                flex: isMobile ? 1 : 'none',
               }}
             >
               ← Back
             </CustomButton>
+          )}
 
-            {currentStep === steps.length - 1 ? (
-              <CustomButton
-                onClick={handleComplete}
-                sx={{
-                  backgroundColor: '#483594',
-                  '&:hover': {
-                    backgroundColor: '#3d2a7a'
-                  },
-                  flex: isMobile ? 1 : 'none'
-                }}
-              >
-                Back to Crypto
-              </CustomButton>
+           {currentStep === steps.length - 1 ? (
+            <CustomButton
+              onClick={handleComplete}
+              sx={{
+                backgroundColor: '#483594',
+                '&:hover': {
+                  backgroundColor: '#3d2a7a'
+                },
+                flex: isMobile ? 1 : 'none'
+              }}
+            >
+              BACK TO CRYPTO
+            </CustomButton>
             ) : (
               <CustomButton
-                onClick={handleNext}
+              onClick={() => {
+                if (currentStep === 1) {
+                  if (transactionType === 'sell') {
+                    proceedSellCrypto(); // ✅ SELL flow
+                  } else {
+                    proceedBuyCrypto();  // ✅ BUY flow
+                  }
+                } else {
+                  handleNext();           // ✅ Normal next step
+                }
+              }}
                 disabled={isContinueDisabled()}
-                sx={{
-                  backgroundColor: '#483594',
-                  '&:hover': {
-                    backgroundColor: '#3d2a7a'
-                  },
-                  '&:disabled': {
-                    backgroundColor: theme.palette.action.disabledBackground,
-                    color: theme.palette.action.disabled
-                  },
-                  flex: isMobile ? 1 : 'none'
-                }}
-              >
-                {currentStep === 1 ? 'Confirm →' : 'Continue →'}
-              </CustomButton>
+              sx={{
+                backgroundColor: '#483594',
+                '&:hover': {
+                  backgroundColor: '#3d2a7a'
+                },
+                '&:disabled': {
+                  backgroundColor: theme.palette.action.disabledBackground,
+                  color: theme.palette.action.disabled
+                },
+                flex: isMobile ? 1 : 'none'
+              }}
+            >
+              {currentStep === 1 ? 'Confirm →' : 'Continue →'}
+            </CustomButton>
+
             )}
           </Box>
         </CardContent>
