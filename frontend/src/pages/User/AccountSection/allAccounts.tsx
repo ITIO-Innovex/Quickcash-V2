@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -8,34 +8,44 @@ import {
   Stack,
   TextField,
   Typography,
+  CircularProgress,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { ChevronLeft, Plus, Search } from 'lucide-react';
 import AccountCard from './AccountCards';
 import AddAccountModal from './AddAccount';
 import AccountDetailsModal from './AccountDetail';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+import api from '@/helpers/apiHelper';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface Account {
-  id: string;
+  _id: string;
   currency: string;
-  balance: string;
-  flag: string;
+  amount: string;
+  country: string;
+  name: string;
+  iban: string;
+  bic_code: string;
   isDefault?: boolean;
-  accountNumber?: string;
-  ifscCode?: string;
   accountHolding?: string;
 }
 
-// 💡 Move currencyFlags OUTSIDE of component or at top level inside the component
-const currencyFlags: { [key: string]: string } = {
-  USD: '/flags/usa.png',
-  INR: '/flags/india.png',
-  EUR: '/flags/eu.png',
-  GBP: '/flags/uk.png',
-  AWG: '/flags/aruba.png',
-  AUD: '/flags/australia.png',
-};
-
+interface JwtPayload {
+  sub: string;
+  role: string;
+  iat: number;
+  exp: number;
+  data: {
+    defaultcurr: string;
+    email: string;
+    id: string;
+    name: string;
+    type: string;
+  };
+}
 const currencySymbols: { [key: string]: string } = {
   USD: '$',
   INR: '₹',
@@ -51,90 +61,114 @@ const AllAccounts: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [defaultAccountId, setDefaultAccountId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  // Get user id from JWT
+  const getUserId = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    try {
+      const decoded: any = jwtDecode(token);
+      return decoded?.data?.id;
+    } catch {
+      return null;
+    }
+  };
 
-  const [accounts, setAccounts] = useState<Account[]>([
-    {
-      id: '1',
-      currency: 'USD',
-      balance: '$4552.83',
-      flag: currencyFlags['USD'],
-      isDefault: true,
-      accountNumber: 'US1000000014',
-      ifscCode: '200014',
-      accountHolding: 'Currency Exchange',
-    },
-    {
-      id: '2',
-      currency: 'INR',
-      balance: '₹85861.63',
-      flag: currencyFlags['INR'],
-      accountNumber: 'IN1000000015',
-      ifscCode: '200015',
-      accountHolding: 'Currency Exchange',
-    },
-    {
-      id: '3',
-      currency: 'EUR',
-      balance: '€468.00',
-      flag: currencyFlags['USD'],
-      accountNumber: 'EU1000000016',
-      ifscCode: '200016',
-      accountHolding: 'Currency Exchange',
-    },
-    {
-      id: '4',
-      currency: 'GBP',
-      balance: '£3189.76',
-      flag: currencyFlags['INR'],
-      accountNumber: 'GB1000000017',
-      ifscCode: '200017',
-      accountHolding: 'Currency Exchange',
-    },
-    {
-      id: '5',
-      currency: 'AWG',
-      balance: 'ƒ0.00',
-      flag: currencyFlags['USD'],
-      accountNumber: 'AW1000000018',
-      ifscCode: '200018',
-      accountHolding: 'Currency Exchange',
-    },
-    {
-      id: '6',
-      currency: 'AUD',
-      balance: '$0.00',
-      flag: currencyFlags['INR'],
-      accountNumber: 'AU1000000019',
-      ifscCode: '200019',
-      accountHolding: 'Currency Exchange',
-    },
-  ]);
+  const fetchAccounts = async (search = '') => {
+    setLoading(true);
+    setError(null);
+    const userId = getUserId();
+    if (!userId) {
+      setError('User not authenticated');
+      setLoading(false);
+      return;
+    }
+    try {
+      const url = import.meta.env.VITE_NODE_ENV === 'production' ? 'api' : 'api';
+      const res = await api.get(`/${url}/v1/account/list/${userId}?title=${search}`);
+      if (res.data.status === 201) {
+        setAccounts(res.data.data);
+        fetchDefaultAccount(userId);
+      } else {
+        setAccounts([]);
+      }
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Failed to fetch accounts');
+      setAccounts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filteredAccounts = accounts.filter(account =>
-    account.currency.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const fetchDefaultAccount = async (userId: string) => {
+    try {
+      const url = import.meta.env.VITE_NODE_ENV === 'production' ? 'api' : 'api';
+      const res = await api.get(`/${url}/v1/account/default/${userId}`);
+      if (res.data.status === 201 && res.data.data[0]?.accountDetails?._id) {
+        setDefaultAccountId(res.data.data[0].accountDetails._id);
+      } else {
+        setDefaultAccountId(null);
+      }
+    } catch {
+      setDefaultAccountId(null);
+    }
+  };
 
-  const handleAddAccount = (currency: string) => {
-    const newAccount: Account = {
-      id: Date.now().toString(),
-      currency,
-      balance: `${currencySymbols[currency] || '$'}0.00`,
-      flag: currencyFlags[currency] || '/flags/default.png',
-      accountNumber: `${currency}${Math.floor(Math.random() * 1000000000)}`,
-      ifscCode: `2000${Math.floor(Math.random() * 100)}`,
-      accountHolding: 'Currency Exchange',
-    };
+  useEffect(() => {
+    fetchAccounts();
+    // eslint-disable-next-line
+  }, []);
 
-    setAccounts([...accounts, newAccount]);
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    fetchAccounts(e.target.value);
+  };
+
+  const handleAddAccount = async (currency: string) => {
+    const url = import.meta.env.VITE_NODE_ENV === 'production' ? 'api' : 'api';
+    const accountId = jwtDecode<any>(localStorage.getItem('token') as string);
+    try {
+      const result = await api.post(
+        `/${url}/v1/account/add`,
+        {
+          user: accountId?.data?.id,
+          currency,
+          amount: 0,
+        }
+      );
+      if (result.data.status == 201) {
+        // Optionally, refresh accounts or handle success
+        fetchAccounts();
+      }
+    } catch (error: any) {
+      // Optionally, handle error
+      console.log(error);
+    }
   };
 
   const handleViewAccount = (account: Account) => {
     setSelectedAccount(account);
     setIsDetailsModalOpen(true);
   };
-const handleBack = () => {
-    navigate("/dashboard");
+  const handleBack = () => {
+    navigate('/dashboard');
   };
+
+  const mapApiAccountToUi = (account: any, defaultAccountId: string | null) => ({
+    id: account._id,
+    currency: account.currency,
+    balance: `${currencySymbols[account.currency] || ''}${parseFloat(account.amount).toFixed(2)}`,
+    country: account.country,
+    isDefault: account._id === defaultAccountId,
+    accountNumber: account.iban,
+    ifscCode: account.bic_code,
+    accountHolding: 'Currency Exchange',
+    name: account.name,
+  });
 
   return (
     <Box p={3}>
@@ -163,7 +197,7 @@ const handleBack = () => {
           variant="outlined"
           size="small"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleSearch}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -175,16 +209,25 @@ const handleBack = () => {
       </Box>
 
       {/* Accounts Grid */}
-      <Grid container spacing={2}>
-        {filteredAccounts.map((account) => (
-          <Grid item xs={12} sm={6} md={6} lg={6} key={account.id}>
-            <AccountCard account={account} onViewAccount={handleViewAccount} />
-          </Grid>
-        ))}
-      </Grid>
+      {loading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <Grid container spacing={2}>
+          {accounts.map((account) => (
+            <Grid item xs={12} sm={6} md={6} lg={6} key={account._id}>
+              <AccountCard
+                account={mapApiAccountToUi(account, defaultAccountId)}
+                onViewAccount={() => handleViewAccount(account)}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       {/* Empty State */}
-      {filteredAccounts.length === 0 && (
+      {!loading && accounts.length === 0 && (
         <Box mt={4} textAlign="center">
           <Typography variant="body1" color="text.secondary">
             No accounts found matching your search.
@@ -202,8 +245,19 @@ const handleBack = () => {
       <AccountDetailsModal
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
-        account={selectedAccount}
+        account={selectedAccount ? mapApiAccountToUi(selectedAccount, defaultAccountId) : undefined}
       />
+
+      <Snackbar open={!!error} autoHideDuration={4000} onClose={() => setError(null)} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Alert onClose={() => setError(null)} severity="error" sx={{ width: '100%' }}>
+          {error}
+        </Alert>
+      </Snackbar>
+      <Snackbar open={!!success} autoHideDuration={3000} onClose={() => setSuccess(null)} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Alert onClose={() => setSuccess(null)} severity="success" sx={{ width: '100%' }}>
+          {success}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
