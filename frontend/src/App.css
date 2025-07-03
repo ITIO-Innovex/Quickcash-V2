@@ -1437,7 +1437,17 @@ body {
   transform: translateY(-50%);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
 }
-
+.modal-container2 {
+  width: 40%;
+  padding: 2.5rem;
+  max-width: 500px;
+  margin: auto;
+  border-radius: 12px;
+  position: relative;
+  top: 50%;
+  /* transform: translateY(-50%); */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
 .modal-close {
   position: absolute;
   top: 12px;
@@ -3493,6 +3503,13 @@ margin: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.circular-flag {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  display: inline-block !important;
 }
 
 .account-flag-name {
