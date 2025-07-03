@@ -2,15 +2,30 @@ import { Box, Typography, useTheme } from '@mui/material';
 import CustomModal from '@/components/CustomModal';
 import CustomButton from '@/components/CustomButton';
 import GenericTable from '../../../components/common/genericTable';
+import moment from 'moment';
 
 const invoiceColumns = [
-  { field: 'date', headerName: 'Date' },
-  { field: 'invoiceNo', headerName: 'Invoice No' },
-  { field: 'invoiceDate', headerName: 'Invoice Date' },
-  { field: 'dueDate', headerName: 'Due Date' },
-  { field: 'amount', headerName: 'Amount' },
+ {
+     field: 'createdAt',
+     headerName: 'Date',
+     render: (row) => moment(row.createdAt).format('MMMM Do YYYY, h:mm:ss A'), 
+   },
+  { field: 'invoice_number', headerName: 'Invoice No' },
+  { field: 'invoice_date', headerName: 'Invoice Date' },
+  {
+  field: 'due_date',
+  headerName: 'Due Date',
+  render: (row) =>
+    moment(row.due_date).format('ddd MMM DD YYYY'),
+},
+  { field: 'total', headerName: 'Amount' },
   { field: 'currency', headerName: 'Currency' },
-  { field: 'tax', headerName: 'Tax' },
+  {
+    field: 'sub_tax',
+    headerName: 'Tax',
+    render: (item) => item?.sub_tax ?? '—', // fallback to '—' if undefined
+  }
+
 ];
 
 // ✅ Exported so you can use this in the handler or for testing

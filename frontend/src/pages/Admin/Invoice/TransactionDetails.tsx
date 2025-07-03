@@ -4,42 +4,14 @@ import CustomButton from '@/components/CustomButton';
 import GenericTable from '../../../components/common/genericTable';
 
 const invoiceColumns = [
-  { field: 'date', headerName: 'Transaction Date' },
-  { field: 'invoiceNo', headerName: 'Transaction Id' },
-  { field: 'amount', headerName: 'Paid Amount' },
-  { field: 'currency', headerName: 'Payment Mode' },
+  { field: 'dateadded', headerName: 'Transaction Date' },
+  { field: '_id', headerName: 'Transaction Id' },
+  { field: 'amount', headerName: 'Amount' },
+  { field: 'convertAmount', headerName: 'Paid Amount' },
+  { field: 'trans_type', headerName: 'Payment Mode' },
 ];
 
 // ✅ Exported so you can use this in the handler or for testing
-export const dummyInvoiceData = [
-  {
-    date: '2025-06-18 10:45 AM',
-    invoiceNo: 'INV-001',
-    invoiceDate: '2025-06-15',
-    dueDate: '2025-06-22',
-    amount: '$1200.00',
-    currency: 'USD',
-    tax: '18%',
-  },
-  {
-    date: '2025-06-18 11:00 AM',
-    invoiceNo: 'INV-002',
-    invoiceDate: '2025-06-16',
-    dueDate: '2025-06-23',
-    amount: '$750.50',
-    currency: 'EUR',
-    tax: '10%',
-  },
-  {
-    date: '2025-06-18 11:15 AM',
-    invoiceNo: 'INV-003',
-    invoiceDate: '2025-06-17',
-    dueDate: '2025-06-24',
-    amount: '$2100.00',
-    currency: 'INR',
-    tax: '0%',
-  },
-];
 
 const InvoiceGeneratedListModal = ({ open, onClose, data }) => {
   const theme = useTheme();

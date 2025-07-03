@@ -1,14 +1,29 @@
-
 import { useEffect, useState } from 'react';
 import CustomModal from '@/components/CustomModal';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import GenericTable from '../../../components/common/genericTable';
-import { Box, Typography, useTheme, TextField, Button } from '@mui/material';
+import { Box, Typography, useTheme, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, OutlinedInput } from '@mui/material';
 import CustomButton from '@/components/CustomButton';
 import CustomInput from '@/components/CustomInputField';
 import admin from '@/helpers/adminApiHelper';
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
+import { showToast } from '@/utils/toastContainer';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
+ interface JwtPayload {
+    sub: string;
+    role: string;
+    iat: number;
+    exp: number;
+    data: {
+      defaultcurr: string;
+      email: string;
+      id: string;
+      name: string;
+      type: string;
+    };
+  }  
 
 const FirstSection = () => {
   const theme = useTheme();
@@ -18,11 +33,11 @@ const FirstSection = () => {
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [list, setList] = useState<any>();
 
-  const [formData, setFormData] = useState({
-  type: editRow?.type || '',
-  commissionType: 'Fixed',
-  taxRate: editRow?.taxRate || '',
-});
+  // Edit modal fields
+  const [type, setType] = useState('');
+  const [commissionType, setCType] = useState('');
+  const [taxRate, setValue] = useState('');
+  const [minimumValue, setMinimumValue] = useState('');
 
   const getListData = async () => {
     await admin.get(`/${url}/v1/admin/feetype/list`)
@@ -51,7 +66,63 @@ const FirstSection = () => {
   const handleEdit = (row: any) => {
     setEditRow(row);
     setEditOpen(true);
+    getDataById(row.feedetails?.[0]?._id);
   };
+
+  // Fetch previous values for editing
+  const getDataById = async (val: any) => {
+    if (val !== 'undefined') {
+      await admin.get(`/${url}/v1/admin/fee/fees/${val}`
+        )
+        .then(result => {
+          if (result.data.status == 201) {
+            setType(result.data.data.type || '');
+            setCType((result.data.data.commissionType || '').toLowerCase());
+            // console.log('Commission Type set to:', (result.data.data.commissionType || '').toLowerCase());  
+            setValue(result.data.data.value || '');
+            setMinimumValue(result.data.data.minimumValue || '');
+            setEditOpen(true);
+          }
+        })
+        .catch(error => {
+          console.log("error", error);
+        })
+    }
+  };
+
+  // Save edited values
+ const handleSave = async () => {
+    const accountId = jwtDecode<JwtPayload>(localStorage.getItem('admin') as string);
+    await admin.post(`/${url}/v1/admin/fee/add`,{
+      user:accountId?.data?.id,
+      type,
+      commissionType,
+      value: taxRate,
+      minimumValue: commissionType == "fixed" ? 0 : minimumValue
+    },
+   )
+    .then(result => {
+      if(result.data.status == 201) {
+        showToast(result.data.message,"success");
+        getListData();
+        setEditOpen(false);
+      }
+    })
+   .catch(error => {
+     console.log("error", error);
+     showToast(error.response.data.message,"error");
+    }) 
+  }
+  // Reset edit modal state on close
+  const handleEditClose = () => {
+    setEditOpen(false);
+    setEditRow(null);
+    setType('');
+    setCType('');
+    setValue('');
+    setMinimumValue('');
+  };
+
   const columns = [
     {
       field: 'createdAt',
@@ -85,6 +156,7 @@ const FirstSection = () => {
     },
   ];
 
+  // console.log('Commission Type in render:', commissionType);
   return (
     <Box>
       {list ? (
@@ -124,28 +196,63 @@ const FirstSection = () => {
       </CustomModal>
 
       {/* Edit Modal */}
-      <CustomModal open={editOpen} onClose={() => setEditOpen(false)} title="Add Fee Structure Details" sx={{ backgroundColor: theme.palette.background.default }}
- >
+      <CustomModal open={editOpen} onClose={handleEditClose} title="Add Fee Structure Details" sx={{ backgroundColor: theme.palette.background.default }}>
         <div className="header-divider" />
         <Box sx={{ mt: 2 }}>
-          <Box mb={2}>
-            <CustomInput label="Fee Type" value={formData.type}  onChange={(e) => setFormData({ ...formData, type: e.target.value })} fullWidth margin="normal" />
-          </Box>
-          <Box mb={2}>
-            <CustomInput label="Commission Type"  value={formData.commissionType} onChange={(e) => setFormData({ ...formData, commissionType: e.target.value })} fullWidth margin="normal" />
-          </Box>
-          <Box mb={2}>
-            <CustomInput label="Tax Rate" value={formData.taxRate} onChange={(e) => setFormData({ ...formData, taxRate: e.target.value })} fullWidth margin="normal" />
-          </Box>
-          <Box display="flex" justifyContent="flex-end" gap={2}>
-            <CustomButton onClick={() => {
-                /* handle save logic here */
-              }}
-              sx={{ mt: 2 }}
-            >
-              save
+          <label className={`${theme ? 'avatarDarkSecondaryExtra' : 'avatarLight'}`}>Fee Type</label>
+          <Select value={editRow?.title || ''} fullWidth style={{marginBottom: '10px',border: `${theme ? '1px solid white': ''}`}}>
+            {editRow?.title && <MenuItem value={editRow.title}>{editRow.title}</MenuItem>}
+          </Select>
+          <label className={`${theme ? 'avatarDarkSecondaryExtra' : 'avatarLight'}`}>Commission Type</label>
+          <Select
+            value={commissionType}
+            onChange={(e) => setCType(e.target.value)}
+            fullWidth
+            sx={{
+              color: theme.palette.text.primary,
+              backgroundColor: theme.palette.background.paper,
+              mb: 1,
+              border: theme.palette.mode === 'dark' ? '1px solid white' : undefined
+            }}
+          >
+            <MenuItem value="fixed">Fixed</MenuItem>
+            <MenuItem value="percentage">Percentage</MenuItem>
+          </Select>
+          <label className={`${theme ? 'avatarDarkSecondaryExtra' : 'avatarLight'}`}>Tax Rate</label>
+          <OutlinedInput
+            id="outlined-adornment-weight"
+            aria-describedby="outlined-weight-helper-text"
+            inputProps={{
+              'aria-label': 'weight'
+            }}
+            fullWidth
+            value={taxRate}
+            type='number'
+            sx={{ border: `${theme ? '1px solid white': ''}` }}
+            onChange={(e) => setValue(e.target.value)}
+          />
+          {commissionType === "percentage" && (
+            <>
+              <label className={`${theme ? 'avatarDarkSecondaryExtra' : 'avatarLight'}`}>Minimum Value</label>
+              <OutlinedInput
+                id="outlined-adornment-weight"
+                aria-describedby="outlined-weight-helper-text"
+                inputProps={{
+                  'aria-label': 'weight'
+                }}
+                fullWidth
+                value={minimumValue}
+                type='number'
+                sx={{ border: `${theme ? '1px solid white': ''}` }}
+                onChange={(e) => setMinimumValue(e.target.value)}
+              />
+            </>
+          )}
+          <Box display="flex" justifyContent="flex-end" gap={2} mt={2}>
+            <CustomButton onClick={handleSave} sx={{ mt: 2 }}>
+              Save
             </CustomButton>
-            <Button  className="custom-button" onClick={() => setEditOpen(false)} > Close </Button>
+            <Button className="custom-button" onClick={handleEditClose}>Close</Button>
           </Box>
         </Box>
       </CustomModal>

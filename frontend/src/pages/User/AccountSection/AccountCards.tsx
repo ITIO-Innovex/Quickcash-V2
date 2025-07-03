@@ -1,13 +1,18 @@
 import React from 'react';
 import { Box, Button, useTheme } from '@mui/material';
 import CustomButton from '@/components/CustomButton';
+import ReactCountryFlag from 'react-country-flag';
 
 interface Account {
   id: string;
   currency: string;
   balance: string;
-  flag: string;
+  country: string;
   isDefault?: boolean;
+  accountNumber?: string;
+  ifscCode?: string;
+  accountHolding?: string;
+  name?: string;
 }
 
 interface AccountCardProps {
@@ -21,14 +26,12 @@ const AccountCard: React.FC<AccountCardProps> = ({ account, onViewAccount }) => 
     <Box className="account-card" sx={{backgroundColor:theme.palette.background.default}}>
       <Box className="account-card-header">
         <Box className="account-card-info">
-          <Box
-            className='img-round'
-            component="img"
-            src={account.flag}
-            alt={`${account.currency} flag`}
-            sx={{ width: 24, height: 16, borderRadius: 1, objectFit: 'cover' }}
+          <ReactCountryFlag
+            countryCode={account.country}
+            svg
+            style={{ width: 24, height: 16, borderRadius: 1, objectFit: 'cover' }}
+            title={account.country}
           />
-
           <Box>
             <h3 className="account-title" style={{color:theme.palette.text.primary}}>
               {account.currency} account
@@ -39,11 +42,9 @@ const AccountCard: React.FC<AccountCardProps> = ({ account, onViewAccount }) => 
           </Box>
         </Box>
       </Box>
-
       <Box className="account-balance" >
         <p style={{color:theme.palette.text.gray}}>{account.balance}</p>
       </Box>
-
       <CustomButton
         onClick={() => onViewAccount(account)}
       >

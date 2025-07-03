@@ -2,13 +2,25 @@ import { Box, Typography, useTheme } from '@mui/material';
 import CustomModal from '@/components/CustomModal';
 import CustomButton from '@/components/CustomButton';
 import GenericTable from '../../../components/common/genericTable';
+import moment from 'moment';
 
 const sessionColumns = [
-  { field: 'date', headerName: 'Date' },
+{
+    field: 'createdAt',
+    headerName: 'Date',
+    render: (row) => moment(row.createdAt).format('MMMM Do YYYY, h:mm:ss A'), 
+  },
   { field: 'device', headerName: 'Device' },
-  { field: 'os', headerName: 'OS' },
-  { field: 'ip', headerName: 'Ip Address' },
-  { field: 'active', headerName: 'Is Active?' },
+  { field: 'OS', headerName: 'OS' },
+  { field: 'ipAddress', headerName: 'Ip Address' },
+  {
+    field: 'isActiveNow',
+    headerName: 'Status',
+    render: (row) =>
+      typeof row.isActiveNow === 'boolean'
+        ? row.isActiveNow ? 'LoggedIN' : 'LoggedOUT'
+        : String(row.isActiveNow),
+  }
 ];
 
 export const dummySessionData = [

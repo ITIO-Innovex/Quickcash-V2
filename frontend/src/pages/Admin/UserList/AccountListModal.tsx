@@ -2,14 +2,26 @@ import { Box, Typography, useTheme } from '@mui/material';
 import CustomModal from '@/components/CustomModal';
 import CustomButton from '@/components/CustomButton';
 import GenericTable from '../../../components/common/genericTable';
+import moment from 'moment';
 
 export const accountColumns = [
-  { field: 'date', headerName: 'Date' },
+  {
+    field: 'createdAt',
+    headerName: 'Date',
+    render: (row) => moment(row.createdAt).format('MMMM Do YYYY, h:mm:ss A'), 
+  },
   { field: 'name', headerName: 'Name' },
   { field: 'currency', headerName: 'Currency' },
-  { field: 'accountNo', headerName: 'IBAN/Account No' },
-  { field: 'bicCode', headerName: 'BIC/IFC Code' },
-  { field: 'status', headerName: 'Status' },
+  { field: 'iban', headerName: 'IBAN/Account No' },
+  { field: 'bic_code', headerName: 'BIC/IFC Code' },
+  {
+    field: 'status',
+    headerName: 'Status',
+    render: (row) =>
+      typeof row.status === 'boolean'
+        ? row.status ? 'Active' : 'Inactive'
+        : String(row.status),
+  }
 ];
 
 // ✅ You can import this in your handler to test or use

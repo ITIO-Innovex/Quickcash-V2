@@ -12,6 +12,7 @@ import GenericTable from '../../../../components/common/genericTable';
 
 import CustomButton from '@/components/CustomButton';
 import admin from '@/helpers/adminApiHelper';
+import axios from 'axios';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 const FirstSection = () => {
@@ -21,33 +22,22 @@ const FirstSection = () => {
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [list,setList] = useState<any>();
  const [currentData, setCurrentData] = useState<any[]>([]);
- const accountsList = selectedRow?.accountsList?.length
-  ? selectedRow.accountsList
-  : [
-      {
-        accNo: '123456789',
-        country: 'US',
-        currency: 'USD',
-        label: 'Primary Account',
-        amount: '$1,500.00',
-      },
-      {
-        accNo: '987654321',
-        country: 'IN',
-        currency: 'INR',
-        label: 'Savings Account',
-        amount: '₹95,000.00',
-      },
-    ];
+ const [accountsList, setAccountsList] = useState<any[]>([]);
 
   const handleOpen = (row: any) => {
     setSelectedRow(row);
     setOpen(true);
+    if (row.user) {
+      getAllAccountsListOfUser(row.user);
+    } else if (row.userDetails?.[0]?._id) {
+      getAllAccountsListOfUser(row.userDetails[0]._id);
+    }
   };
 
   const handleClose = () => {
     setOpen(false);
     setSelectedRow(null);
+    setAccountsList([]);
   };
 
   const translist = async () => {
@@ -68,6 +58,19 @@ const FirstSection = () => {
  useEffect(() => {
       translist();
     }, [])
+
+  const getAllAccountsListOfUser = async (id: any) => {
+    await admin.get(`/${url}/v1/admin/accountslist/${id}`)
+      .then(result => {
+        if (result.data.status == 201) {
+          setAccountsList(result?.data?.data);
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  };
+
   const columns = [
      {
       field: 'createdAt',
@@ -124,6 +127,7 @@ const FirstSection = () => {
     }
   ];
 
+  const accountsToShow = accountsList;
   return (
     <Box>
     
@@ -182,17 +186,21 @@ const FirstSection = () => {
             <Box className="accounts-list-section">
              <Box className="accounts-list-header">Accounts List</Box>
               <Box className="accounts-list-grid">
-                {accountsList.map((acc) => (
-                  <Box className="account-card" key={acc.accNo} sx={{backgroundColor:theme.palette.background.gray}} >
-                    <Box className="account-card-header">
-                      <ReactCountryFlag countryCode={acc.country} svg className="account-flag" />
-                      <span className="account-currency">{acc.currency}</span>
+                {accountsToShow.length === 0 ? (
+                  <Typography>No accounts found.</Typography>
+                ) : (
+                  accountsToShow.map((acc) => (
+                    <Box className="account-card" key={acc._id} sx={{backgroundColor:theme.palette.background.gray}} >
+                      <Box className="account-card-header">
+                        <ReactCountryFlag countryCode={acc.country} svg className="account-flag" />
+                        <span className="account-currency">{acc.currency}</span>
+                      </Box>
+                      <Box className="account-label">{acc.name || '-'}</Box>
+                      <Box className="account-amount">${acc.amount !== undefined ? acc.amount.toFixed(2) : '-'}</Box>
+                      <Box className="account-no">{acc.iban || '-'}</Box>
                     </Box>
-                    <Box className="account-label">{acc.label}</Box>
-                    <Box className="account-amount">{acc.amount}</Box>
-                    <Box className="account-no">{acc.accNo}</Box>
-                  </Box>
-                ))}
+                  ))
+                )}
               </Box>
               <Box className="accounts-status-row">
                 <span>Status</span>
