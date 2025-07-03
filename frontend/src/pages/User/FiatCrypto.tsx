@@ -23,7 +23,7 @@ import { Box, Button,Tooltip, Card, CardContent, Tab, Tabs, Typography, useTheme
 import getSymbolFromCurrency from "currency-symbol-map";
 import { Grid } from 'lucide-react';
 import { toast } from 'react-toastify';
-
+import 'react-toastify/dist/ReactToastify.css';
 interface ActiveAccDetails {
   _id: string;
   amount: any;
@@ -190,6 +190,7 @@ const FiatCrypto = () => {
         setIsCurrencyExchnageOpen(true);
       }, 100);
     } else {
+        console.log("Error");
         toast.error("Default account has 0 amount, please add amount in default account otherwise switch account");
     }
     };
@@ -518,7 +519,12 @@ const FiatCrypto = () => {
             </CustomModal>
 
             <CustomModal open={isCurrencyExchnageOpen} onClose={handleCurrencyExchangeClose} title="Exchange USD Currency" sx={{backgroundColor:theme.palette.background.default, color:theme.palette.text.primary}}>
-                <CurrencyExchangeForm onClose={handleCurrencyExchangeClose} />
+                <CurrencyExchangeForm onClose={handleCurrencyExchangeClose}
+                    activeAccount={ActiveAccountDetails?._id}
+                    accountBalance={ActiveAccountDetails?.amount}
+                    acctDetails={ActiveAccountDetails}
+                    accountList={fiatAccounts}
+                />
             </CustomModal>
 
                 <SelectCryptoModal
