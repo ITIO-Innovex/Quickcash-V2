@@ -48,9 +48,9 @@ const FirstSection = () => {
   }, []);
 
   const handleInvoiceModalOpen = () => {
-    setSelectedRow(dummyInvoiceData);   // set invoice data
-    setInvoiceModalOpen(true);          // open modal
-    handleMenuClose();                  // close menu if needed
+    setSelectedRow(dummyInvoiceData);   
+    setInvoiceModalOpen(true);          
+    handleMenuClose();                  
   };
   const getTransactionsList = async (id: any) => {
     await admin.get(`/${url}/v1/admin/invoice/list/${id}`)

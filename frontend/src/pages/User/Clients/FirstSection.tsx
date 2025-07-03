@@ -13,6 +13,8 @@ import CustomFormModal from '@/components/CustomFormModal';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Box, Button, Typography, useTheme } from '@mui/material';
 import GenericTable from '../../../components/common/genericTable';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const url = import.meta.env.VITE_NODE_ENV == 'production' ? 'api' : 'api';
 
 const FirstSection = () => {
@@ -72,24 +74,45 @@ const FirstSection = () => {
 
   const handleSubmit = async (formValues: any) => {
     try {
+      const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
       const clientId = selectedRow?._id;
+      // Prepare form data for multipart/form-data
+      const formData = new FormData();
+      formData.append('user', accountId?.data?.id);
+      formData.append('firstName', formValues.firstName || '');
+      formData.append('lastName', formValues.lastName || '');
+      formData.append('email', formValues.email || '');
+      formData.append('mobile', formValues.mobile || '');
+      formData.append('postalCode', formValues.postalCode || '');
+      formData.append('country', formValues.country || '');
+      formData.append('city', formValues.city || '');
+      formData.append('state', formValues.state || '');
+      formData.append('address', formValues.address || '');
+      formData.append('notes', formValues.notes || '');
+      if (formValues.profilePhoto && formValues.profilePhoto.raw) {
+        formData.append('profilePhoto', formValues.profilePhoto.raw);
+      }
 
-      const result = await api.put(
+      const result = await api.patch(
         `/${url}/v1/client/update/${clientId}`,
-        formValues
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
       );
 
-      if (result.data.status === 200) {
-        console.log('Client updated successfully');
+      if (result.data.status == "201") {
+        toast.success("Client data has been updated successfully");
         setEditModalOpen(false);
-
-        const accountId = jwtDecode<JwtPayload>(
-          localStorage.getItem('token') as string
-        );
-        getClientsList(accountId.data.id);
+        const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
+        getClientsList(accountId?.data?.id);
       }
-    } catch (error) {
-      console.error('Error updating client:', error);
+    } catch (error: any) {
+      console.log("error", error);
+      toast.error(error?.response?.data?.message || 'Error updating client');
     }
   };
 
@@ -120,6 +143,29 @@ const FirstSection = () => {
   const handleClose = () => {
     setOpen(false);
     setSelectedRow(null);
+  };
+
+  const handleDeleteClient = async () => {
+    try {
+      const clientId = rowToDelete?._id;
+      const result = await api.delete(
+        `/${url}/v1/client/delete/${clientId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+      if (result.data.status == "201") {
+        toast.success("Selected Client has been deleted Successfully");
+        setDeleteModalOpen(false);
+        const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
+        getClientsList(accountId.data.id);
+      }
+    } catch (error: any) {
+      console.log("error", error);
+      toast.error(error?.response?.data?.message || 'Error deleting client');
+    }
   };
 
   const columns = [
@@ -260,7 +306,7 @@ const FirstSection = () => {
           {/* <Button variant="outlined" onClick={() => setDeleteModalOpen(false)}>
             Cancel
           </Button> */}
-          <Button variant="contained" color="error" onClick={() => { console.log('Deleted row:', rowToDelete); setDeleteModalOpen(false); }} >
+          <Button variant="contained" color="error" onClick={handleDeleteClient} >
             Yes, Delete
           </Button>
         </Box>

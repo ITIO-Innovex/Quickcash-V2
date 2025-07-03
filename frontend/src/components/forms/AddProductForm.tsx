@@ -1,9 +1,14 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
 import CustomButton from '../CustomButton';
 import CustomInputField from '../CustomInputField';
 import CustomDropdown from '../CustomDropdown';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import SyncIcon from '@mui/icons-material/Sync';
+import { useAuth } from '@/contexts/authContext';
+import api from '@/helpers/apiHelper';
+const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 interface AddProductFormProps {
   onSubmit: (data: { 
@@ -17,6 +22,7 @@ interface AddProductFormProps {
 
 const AddProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
   const theme = useTheme();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     productCode: '',
@@ -24,17 +30,35 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
     unitPrice: '',
     description: ''
   });
+  const [categories, setCategories] = useState<{ label: string; value: string }[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
-  const categoryOptions = [
-    { label: 'Electronics', value: 'electronics' },
-    { label: 'Software', value: 'software' },
-    { label: 'Services', value: 'services' },
-    { label: 'Hardware', value: 'hardware' }
-  ];
+  useEffect(() => {
+    const fetchCategories = async () => {
+      if (!user?.id) return;
+      try {
+        const res = await api.get(`/${url}/v1/category/list/${user.id}`);
+        const data = res.data?.data || [];
+        setCategories(data.map((cat: any) => ({ label: cat.name, value: cat._id })));
+      } catch (err) {
+        setCategories([]);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    fetchCategories();
+  }, [user]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
+  };
+
+  const handleGenerateProductCode = () => {
+    setFormData({
+      ...formData,
+      productCode: Math.random().toString(36).slice(2, 10).toUpperCase()
+    });
   };
 
   const isFormValid = formData.name && formData.productCode && formData.category && formData.unitPrice;
@@ -58,6 +82,20 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
           onChange={(e) => setFormData({ ...formData, productCode: e.target.value })}
           placeholder="Enter product code"
           fullWidth
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="generate product code"
+                  edge="end"
+                  sx={{ color: theme.palette.mode === 'dark' ? 'white' : 'black' }}
+                  onClick={handleGenerateProductCode}
+                >
+                  <SyncIcon />
+                </IconButton>
+              </InputAdornment>
+            )
+          }}
         />
       </Box>
 
@@ -66,8 +104,9 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
           label="Category"
           value={formData.category}
           onChange={(e) => setFormData({ ...formData, category: e.target.value as string })}
-          options={categoryOptions}
+          options={categories}
           fullWidth
+          disabled={loadingCategories}
         />
       </Box>
 
