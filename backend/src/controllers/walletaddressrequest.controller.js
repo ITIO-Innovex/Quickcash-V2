@@ -422,6 +422,37 @@ if (!addressData || addressData.error) {
       });
     }
   },
+  fetchWalletAddress: async (req, res) => {
+  try {
+    const userId = req.user?.id; 
+    const { coin } = req.query;
+
+    if (!userId || !coin) {
+      return res.status(400).json({ status: 400, message: "User or coin missing" });
+    }
+
+    const existingWallet = await WalletAddressRequest.findOne({
+      user: userId,
+      coin: coin,
+    });
+
+    if (!existingWallet) {
+      return res.status(404).json({ status: 404, message: "Wallet not found" });
+    }
+
+    return res.status(200).json({
+      status: 200,
+      message: "Wallet found successfully",
+      data: existingWallet.walletAddress,
+    });
+  } catch (error) {
+    console.error("❌ Error in fetchWalletAddress:", error.message);
+    return res.status(500).json({
+      status: 500,
+      message: error.message || "Something went wrong",
+    });
+  }
+},
   // This function is used for update history and save details to the table
   updateHistory: async (req, res) => {
     try {

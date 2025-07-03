@@ -3,7 +3,7 @@ import api from '@/helpers/apiHelper';
 export const fetchCoins = async () => {
   try {
      const res = await api.get(`/api/v1/wallet/fetchcoins`);
-      console.log('API RESPONSE:', res.data);
+      // console.log('API RESPONSE:', res.data);
     return res.data;
   } catch (error) {
     console.error('❌ Error in fetchCoins:', error);
@@ -24,7 +24,7 @@ export const fetchCalculation = async (
       amount,
       side,
     });
-    console.log("✅ fetchCalculation Response:", res.data);
+    // console.log("✅ fetchCalculation Response:", res.data);
     return res.data;
   } catch (error) {
     console.error("❌ fetchCalculation error:", error);
