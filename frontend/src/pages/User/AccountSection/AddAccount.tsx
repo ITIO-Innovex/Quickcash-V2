@@ -16,21 +16,14 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CustomButton from '@/components/CustomButton';
+import ReactCountryFlag from 'react-country-flag';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface AddAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (currency: string) => void;
 }
-
-const currencies = [
-  { code: 'USD', name: 'USD', flag: '🇺🇸' },
-  { code: 'INR', name: 'INR', flag: '🇮🇳' },
-  { code: 'EUR', name: 'EUR', flag: '🇪🇺' },
-  { code: 'GBP', name: 'GBP', flag: '🇬🇧' },
-  { code: 'AWG', name: 'AWG', flag: '🇦🇼' },
-  { code: 'AUD', name: 'AUD', flag: '🇦🇺' },
-];
 
 const AddAccountModal: React.FC<AddAccountModalProps> = ({
   isOpen,
@@ -39,6 +32,7 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({
 }) => {
   const theme = useTheme();
   const [selectedCurrency, setSelectedCurrency] = useState<string>('');
+  const { currencyList } = useCurrency();
 
   const handleChange = (event: SelectChangeEvent) => {
     setSelectedCurrency(event.target.value);
@@ -78,11 +72,22 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({
               onChange={handleChange}
               label="Select currency"
             >
-              {currencies.map((currency) => (
-                <MenuItem key={currency.code} value={currency.code}>
+              {currencyList?.map((item: any, index: number) => (
+                <MenuItem value={item?.base_code} key={index}>
                   <Box display="flex" alignItems="center" gap={1}>
-                    <span>{currency.flag}</span>
-                    <span>{currency.name}</span>
+                    <ReactCountryFlag
+                      countryCode={item?.base_code?.slice(0, 2).toUpperCase()}
+                      svg
+                      style={{
+                        width: '2em',
+                        height: '2em',
+                        borderRadius: '50%',
+                      }}
+                      cdnUrl="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.4.3/flags/1x1/"
+                      cdnSuffix="svg"
+                      title={item?.base_code?.slice(0, 2).toUpperCase()}
+                    />
+                    <span>{item?.base_code}</span>
                   </Box>
                 </MenuItem>
               ))}
