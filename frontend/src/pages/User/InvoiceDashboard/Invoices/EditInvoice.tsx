@@ -4,12 +4,18 @@ import api from '@/helpers/apiHelper';
 import 'quill/dist/quill.snow.css';
 import { Box, Grid, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PageHeader from '@/components/common/pageHeader';
 import CustomInput from '@/components/CustomInputField';
 import GenericTable from '@/components/common/genericTable';
 import CustomButton from '@/components/CustomButton';
+import { jwtDecode } from 'jwt-decode';
+import { JwtPayload } from '@/types/jwt';
+import axios from 'axios';
+import getSymbolFromCurrency from 'currency-symbol-map';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const EditInvoice = () => {
   const theme = useTheme();
@@ -21,6 +27,7 @@ const EditInvoice = () => {
   const [discountType, setDiscountType] = useState<'Fixed' | 'Percentage'>( 'Fixed');
   const [discountValue, setDiscountValue] = useState(0);
   const url = import.meta.env.VITE_NODE_ENV === 'production' ? 'api' : 'api';
+  const navigate = useNavigate();
 
   //  After all useState declarations
   const [selectedTax, setSelectedTax] = useState({ name: 'Ganesh', rate: 35 });
@@ -49,7 +56,7 @@ const EditInvoice = () => {
     const updated = [...items];
     const lastItem = updated[updated.length - 1];
     if (!lastItem.product || !lastItem.qty || !lastItem.unitPrice) {
-      alert('Please fill in all fields before adding.');
+      toast.error('Please fill in all fields before adding.');
       return;
     }
     lastItem.isAdded = true;
@@ -119,6 +126,52 @@ const EditInvoice = () => {
   const handleDeleteRow = (id) => {
     const updated = items.filter((item) => item.id !== id);
     setItems(updated);
+  };
+
+  const HandleUpdateInvoice = async () => {
+    try {
+      const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
+      // Fallbacks for missing fields
+      const invoice_number = invoiceData?.invoice_number || '';
+      const invoice_country = invoiceData?.invoice_country || '';
+      const invoice_date = invoiceData?.invoice_date || '';
+      const due_date = invoiceData?.due_date || '';
+      const payment_qr_code = invoiceData?.payment_qr_code || '';
+      const currency = invoiceData?.currency || '';
+      const currency_text = invoiceData?.currency_text || getSymbolFromCurrency(invoiceData?.currency || '');
+      const status = invoiceData?.status || '';
+      // Use items as productsInfo
+      const productsInfo = items.filter(i => i.isAdded);
+      // Use discountValue, discountType, selectedTax, subtotal, taxAmount, total, note, terms from state
+      await axios.patch(`/${url}/v1/invoice/update/${id}`, {
+        user: accountId?.data?.id,
+        invoice_number,
+        invoice_country,
+        invoice_date,
+        due_date,
+        payment_qr_code,
+        currency,
+        currency_text,
+        productsInfo,
+        discount: discountValue,
+        discount_type: discountType,
+        tax: selectedTax.rate,
+        subTotal: subtotal,
+        total: total,
+        status,
+        note,
+        terms,
+      }, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      toast.success('Invoice updated successfully!');
+      navigate('/invoice-section');
+    } catch (error: any) {
+      console.error('Error updating invoice:', error);
+      toast.error(error?.response?.data?.message || 'Error updating invoice');
+    }
   };
 
   return (
@@ -335,8 +388,11 @@ const EditInvoice = () => {
               </Box>
             )}
           </Box>
+
+          <CustomButton onClick={HandleUpdateInvoice}>Save</CustomButton>
         </>
       )}
+      
     </Box>
   );
 };

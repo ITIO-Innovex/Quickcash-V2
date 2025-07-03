@@ -11,6 +11,9 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import GenericTable from '../../../../components/common/genericTable';
 import { Box, Button, Typography, useTheme, TextField } from '@mui/material';
 import CustomFormModal from '@/components/CustomFormModal';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const FirstSection = () => {
   const theme = useTheme();
@@ -128,14 +131,14 @@ const FirstSection = () => {
         </span>
       ),
     },
-     {
+    {
       field: 'action',
       headerName: 'Actions',
       render: (row: any) => (
         <Box display="flex" gap={1}>
           <VisibilityIcon
             sx={{ cursor: 'pointer', color: 'blue' }}
-             onClick={() => handleActionClick(row)}
+            onClick={() => handleActionClick(row)}
           />
           <EditIcon
             sx={{ cursor: 'pointer', color: 'green' }} // optional color
@@ -150,69 +153,146 @@ const FirstSection = () => {
     },
   ];
 
-   const handleDelete = (row: any) => {
+  const handleDelete = (row: any) => {
     setRowToDelete(row);
     setDeleteModalOpen(true);
     console.log('Trying to delete:', row);
   };
 
- const handleEdit = (row: any) => {
-  const category = categoriesList.find((cat) => cat._id === row.category);
+  const handleEdit = (row: any) => {
+    const initialValues = {
+      ...row,
+      product: row.productDetails?.length?.toString() || '0',
+      category: row.category,
+    };
 
-  const initialValues = {
-    ...row,
-    product: row.productDetails?.length?.toString() || '0',
-    category: category?.name || 'Unknown',
+    setSelectedRow(initialValues);
+    setEditModalOpen(true);
   };
 
-  setSelectedRow(initialValues);
-  setEditModalOpen(true);
-};
-
-   const editFields = [
+  const editFields = [
     { name: 'createdAt', label: 'Created Date', type: 'text', required: true },
-    { name: 'name', label: 'Product Name', type: 'text' ,required: true},
-    { name: 'category', label: 'Category', type: 'text', required: true },
-    { name: 'unitPrice', label: 'Price', type: 'text',required: true },
-    { name: 'status', label: 'Status', type: 'text',required: true },
+    { name: 'name', label: 'Product Name', type: 'text', required: true },
+    {
+      name: 'productCode',
+      label: 'Product Code',
+      type: 'text',
+      required: true,
+    },
+    {
+      name: 'category',
+      label: 'Category',
+      type: 'select',
+      required: true,
+      options: categoriesList.map((cat) => ({
+        label: cat.name,
+        value: cat._id,
+      })),
+    },
+    { name: 'unitPrice', label: 'Price', type: 'text', required: true },
+    {
+      name: 'description',
+      label: 'Description',
+      type: 'text',
+      required: false,
+    },
+    { name: 'status', label: 'Status', type: 'text', required: true },
   ];
 
- const handleSubmit = async (formValues: any) => {
+  const handleSubmit = async (formValues: any) => {
     try {
-      const clientId = selectedRow?._id;
-
-      const result = await api.put(
-        `/${url}/v1/client/update/${clientId}`,
-        formValues
+      const accountId = jwtDecode<JwtPayload>(
+        localStorage.getItem('token') as string
       );
-
-      if (result.data.status === 200) {
-        console.log('Products updated successfully');
-        setEditModalOpen(false);
-
-        const accountId = jwtDecode<JwtPayload>(
-          localStorage.getItem('token') as string
-        );
-        getProduct(accountId.data.id);
-      }
+      const editFlag = selectedRow?._id;
+      await axios
+        .patch(
+          `/${url}/v1/product/update/${editFlag}`,
+          {
+            user_id: accountId?.data?.id,
+            name: formValues.name,
+            productCode: formValues.productCode,
+            category: formValues.category,
+            unitPrice: formValues.unitPrice,
+            description: formValues.description,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          }
+        )
+        .then((result) => {
+          if (result.data.status == '201') {
+            toast.success('Product data has been updated successfully');
+            setEditModalOpen(false);
+            setSelectedRow(null);
+            const accountId = jwtDecode<JwtPayload>(
+              localStorage.getItem('token') as string
+            );
+            getProduct(accountId.data.id);
+          }
+        })
+        .catch((error) => {
+          console.log('error', error);
+          toast.error(
+            error.response?.data?.message || 'Error updating product'
+          );
+        });
     } catch (error) {
-      console.error('Error updating client:', error);
+      console.error('Error updating product:', error);
+      toast.error('Error updating product');
+    }
+  };
+
+  const HandleDeleteProduct = async (val: any) => {
+    try {
+      await axios.delete(`/${url}/v1/product/delete/${val}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const accountId = jwtDecode<JwtPayload>(
+        localStorage.getItem('token') as string
+      );
+      toast.success('Selected Product has been deleted Successfully');
+      setDeleteModalOpen(false);
+      getProduct(accountId.data.id);
+    } catch (error: any) {
+      console.log('error', error);
+      toast.error(error?.response?.data?.message || 'Error deleting product');
     }
   };
 
   return (
     <Box>
       {/* Action Buttons */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center', }}
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 2,
+          mb: 3,
+          flexWrap: 'wrap',
+          alignItems: 'center',
+        }}
       >
-        <Button startIcon={<Filter size={20} />} onClick={handleFilter} sx={{ color: theme.palette.navbar.text }}>
+        <Button
+          startIcon={<Filter size={20} />}
+          onClick={handleFilter}
+          sx={{ color: theme.palette.navbar.text }}
+        >
           {' '}
           Filter{' '}
         </Button>
       </Box>
 
       {showFilter && (
-        <CommonFilter label="Search any field" value={filterText} onChange={handleGlobalSearch} width="200px" />
+        <CommonFilter
+          label="Search any field"
+          value={filterText}
+          onChange={handleGlobalSearch}
+          width="200px"
+        />
       )}
 
       {currentData.length ? (
@@ -224,7 +304,12 @@ const FirstSection = () => {
       )}
 
       {/* View Modal */}
-      <CustomModal open={open} onClose={handleClose} title="Product Details" sx={{ backgroundColor: theme.palette.background.default }} >
+      <CustomModal
+        open={open}
+        onClose={handleClose}
+        title="Product Details"
+        sx={{ backgroundColor: theme.palette.background.default }}
+      >
         <div className="header-divider" />
 
         <Box sx={{ mt: 2 }}>
@@ -280,17 +365,33 @@ const FirstSection = () => {
         </Box>
       </CustomModal>
 
-       {/* Edit Modal */}
-      <CustomFormModal open={editModalOpen} title="Edit Client" onClose={() => setEditModalOpen(false)} onSubmit={handleSubmit} initialValues={selectedRow} fields={editFields}/>
-      
+      {/* Edit Modal */}
+      <CustomFormModal
+        open={editModalOpen}
+        title="Edit Product"
+        onClose={() => setEditModalOpen(false)}
+        onSubmit={handleSubmit}
+        initialValues={selectedRow}
+        fields={editFields}
+      />
+
       {/* Delete Modal */}
-      <CustomModal open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Confirm Delete" sx={{backgroundColor:theme.palette.background.default}} >
+      <CustomModal
+        open={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Confirm Delete"
+        sx={{ backgroundColor: theme.palette.background.default }}
+      >
         <Typography>
           Are you sure you want to delete this client's data?
         </Typography>
 
         <Box display="flex" justifyContent="flex-end" gap={2} mt={3}>
-          <Button variant="contained" color="error" onClick={() => { console.log('Deleted row:', rowToDelete); setDeleteModalOpen(false); }} >
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => rowToDelete && HandleDeleteProduct(rowToDelete._id)}
+          >
             Yes, Delete
           </Button>
         </Box>

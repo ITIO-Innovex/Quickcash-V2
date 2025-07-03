@@ -13,14 +13,14 @@ const FirstSection = () => {
   
   // Log the activeTab for debugging
   useEffect(() => {
-    console.log('FirstSection - Current Active Tab:', activeTab);
-    console.log('FirstSection - Location State:', location.state);
-    console.log('FirstSection - Full Location Object:', location);
+    // console.log('FirstSection - Current Active Tab:', activeTab);
+    // console.log('FirstSection - Location State:', location.state);
+    // console.log('FirstSection - Full Location Object:', location);
   }, [activeTab, location.state, location]);
 
   // Log whenever location changes
   useEffect(() => {
-    console.log('FirstSection - Location Changed, New activeTab:', activeTab);
+    // console.log('FirstSection - Location Changed, New activeTab:', activeTab);
   }, [location]);
 
   return (

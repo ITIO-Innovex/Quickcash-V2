@@ -1,4 +1,3 @@
-
 import api from '@/helpers/apiHelper';
 import Menu from '@mui/material/Menu';
 import { Filter } from 'lucide-react';
@@ -15,9 +14,10 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Box, Button, Typography, useTheme, } from '@mui/material';
 import GenericTable from '../../../components/common/genericTable';
 import SessionHistoryModal, { dummySessionData } from './SessionHistoryModal';
-import InvoiceGeneratedListModal, { dummyInvoiceData } from './InvoiceListModal';
+import InvoiceGeneratedListModal from './InvoiceListModal';
 import AccountListModal, { dummyAccountData } from './AccountListModal';
-import RecipientListModal,{dummyRecipientData} from './RecipientListModal';
+import RecipientListModal, { dummyRecipientData } from './RecipientListModal';
+import axios from 'axios';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 const FirstSection = () => {
@@ -33,15 +33,21 @@ const FirstSection = () => {
   const [recipientModalOpen, setRecipientModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [sessionList, setSessionList] = useState<any[]>([]);
+  const [accountsList, setAccountList] = useState<any[]>([]);
+  const [receipintsList, setReceipintList] = useState<any[]>([]);
+  const [invoicesList, setInvoiceList] = useState<any[]>([]);
 
   const handleMenuOpen = (event: React.MouseEvent<Element>, row: any) => {
     setMenuAnchorEl(event.currentTarget as HTMLElement);
     setMenuRow(row);
   };
   const handleViewClick = () => {
-  handleMenuClose();      // menu close
-  navigate('/admin/user/:id');  // redirect
-};
+    handleMenuClose();
+    if (menuRow?._id) {
+      navigate(`/admin/user/${menuRow._id}`);
+    }
+  };
   const handleMenuClose = () => {
     setMenuAnchorEl(null);
     setMenuRow(null);
@@ -50,29 +56,114 @@ const FirstSection = () => {
     setShowFilter((prev) => !prev);
   };
 
-  const handleSessionHistoryOpen = () => {
-    setSelectedRow(dummySessionData);
-  setSessionModalOpen(true);
-  handleMenuClose(); // This will close the menu
-};
+  // Fetch session history for the selected user and open modal
+  const handleSessionHistoryOpen = async () => {
+    if (menuRow?._id) {
+      await getUserSessionHistory(menuRow._id);
+    } else {
+      setSessionList([]);
+    }
+    setSessionModalOpen(true);
+    handleMenuClose();
+  };
 
-const handleInvoiceModalOpen = () => {
-  setSelectedRow(dummyInvoiceData);   // set invoice data
-  setInvoiceModalOpen(true);          // open modal
-  handleMenuClose();                  // close menu if needed
-};
+  // API to fetch session history for a user
+  const getUserSessionHistory = async (id: any) => {
+    await admin.get(`/${url}/v1/session/getusersession/${id}`)
+      .then(result => {
+        if (result.data.status == 201) {
+          setSessionList(result.data.data);
+        } else {
+          setSessionList([]);
+        }
+      })
+      .catch(error => {
+        console.log("error", error);
+        setSessionList([]);
+      })
+  }
 
-const handleAccountModalOpen = () => {
-  setSelectedRow(dummyAccountData);   // set account data
-  setAccountModalOpen(true);          // open modal
-  handleMenuClose();                  // close menu if needed
-};
+  // Fetch invoice list for the selected user and open modal
+  const handleInvoiceModalOpen = async () => {
+    if (menuRow?._id) {
+      await getInvoiceLists(menuRow._id);
+    } else {
+      setInvoiceList([]);
+    }
+    setInvoiceModalOpen(true);
+    handleMenuClose();
+  };
 
-const handleRecipientModalOpen = () => {
-  setSelectedRow(dummyRecipientData);   // set account data
-  setRecipientModalOpen(true);          // open modal
-  handleMenuClose();                  // close menu if needed
-};
+  // API to fetch invoice list for a user
+  const getInvoiceLists = async (moreVal: any) => {
+    await admin.get(`/${url}/v1/invoice/adminlist/${moreVal}`)
+      .then(result => {
+        if (result.data.status == 201) {
+          setInvoiceList(result.data.data);
+        } else {
+          setInvoiceList([]);
+        }
+      })
+      .catch(error => {
+        console.log("error", error);
+        setInvoiceList([]);
+      })
+  }
+
+  // Fetch account list for the selected user and open modal
+  const handleAccountModalOpen = async () => {
+    if (menuRow?._id) {
+      await getAccountLists(menuRow._id);
+    } else {
+      setAccountList([]);
+    }
+    setAccountModalOpen(true);
+    handleMenuClose();
+  };
+
+  // API to fetch account list for a user
+  const getAccountLists = async (moreVal: any) => {
+    await admin.get(`/${url}/v1/account/adminlist/${moreVal}`)
+      .then(result => {
+        if (result.data.status == 201) {
+          setAccountList(result.data.data);
+        } else {
+          setAccountList([]);
+        }
+      })
+      .catch(error => {
+        console.log("error", error);
+        setAccountList([]);
+      })
+  }
+
+  // Fetch recipient list for the selected user and open modal
+  const handleRecipientModalOpen = async () => {
+    if (menuRow?._id) {
+      await getReceipintLists(menuRow._id);
+    } else {
+      setReceipintList([]);
+    }
+    setRecipientModalOpen(true);
+    handleMenuClose();
+  };
+
+  // API to fetch recipient list for a user
+  const getReceipintLists = async (moreVal: any) => {
+    await admin.get(`/${url}/v1/receipient/adminlist/${moreVal}`)
+      .then(result => {
+        if (result.data.status == 201) {
+          setReceipintList(result.data.data);
+        } else {
+          setReceipintList([]);
+        }
+      })
+      .catch(error => {
+        console.log("error", error);
+        setReceipintList([]);
+      })
+  }
+
   const userData = [
     {
       date: '2025-05-01',
@@ -113,7 +204,7 @@ const handleRecipientModalOpen = () => {
   const getListData = async () => {
     await admin
       .get(`/${url}/v1/admin/userslist`, {
-       
+
       })
       .then((result) => {
         if (result.data.status == 201) {
@@ -156,22 +247,22 @@ const handleRecipientModalOpen = () => {
   };
 
   // Update user status via API
-  const handleChange = async (event: React.ChangeEvent<HTMLInputElement> , val:any) => {
+  const handleChange = async (event: React.ChangeEvent<HTMLInputElement>, val: any) => {
     console.log("val", val);
     await admin.patch(`/${url}/v1/user/updateuseradmin`, {
       user: val,
       status: event.target.checked
     },)
-    .then(result => {
-      if(result.data.status == 201) {
-        showToast(result.data.message,"success");
-        getListData();
-      }
-    })    
-    .catch(error => {
-      console.log("error", error);
-      showToast(error.response.data.message,"error");
-    })
+      .then(result => {
+        if (result.data.status == 201) {
+          showToast(result.data.message, "success");
+          getListData();
+        }
+      })
+      .catch(error => {
+        console.log("error", error);
+        showToast(error.response.data.message, "error");
+      })
   };
 
   // Update user suspend via API
@@ -218,7 +309,7 @@ const handleRecipientModalOpen = () => {
           <input
             type="checkbox"
             checked={row.status}
-            onChange={(e) => handleChange(e,row?._id)}
+            onChange={(e) => handleChange(e, row?._id)}
           />
           <span className="slider"></span>
         </label>
@@ -232,24 +323,24 @@ const handleRecipientModalOpen = () => {
           <input
             type="checkbox"
             checked={row.suspend}
-            onChange={(e) => handleChangeSuspend(e,row?._id)}
+            onChange={(e) => handleChangeSuspend(e, row?._id)}
           />
           <span className="slider"></span>
         </label>
       ),
     },
-   {
-  field: 'action',
-  headerName: 'Action',
-  render: (row: any) => (
-    <Box className="action-icons-wrapper">
-      <MoreVertIcon
-        className="action-icon"
-        onClick={(e) => handleMenuOpen(e, row)}
-      />
-    </Box>
-  ),
-},
+    {
+      field: 'action',
+      headerName: 'Action',
+      render: (row: any) => (
+        <Box className="action-icons-wrapper">
+          <MoreVertIcon
+            className="action-icon"
+            onClick={(e) => handleMenuOpen(e, row)}
+          />
+        </Box>
+      ),
+    },
   ];
 
   return (
@@ -293,19 +384,19 @@ const handleRecipientModalOpen = () => {
         <MenuItem onClick={handleRecipientModalOpen}>Recipient List</MenuItem>
       </Menu>
 
-      <SessionHistoryModal open={sessionModalOpen} data={dummySessionData}onClose={() => setSessionModalOpen(false)} />
-        
-      <InvoiceGeneratedListModal open={invoiceModalOpen} onClose={() => setInvoiceModalOpen(false)} data={dummyInvoiceData}/>
+      <SessionHistoryModal open={sessionModalOpen} data={sessionList} onClose={() => setSessionModalOpen(false)} />
 
-      <AccountListModal open={accountModalOpen} onClose={() => setAccountModalOpen(false)} data={dummyAccountData}/>
+      <InvoiceGeneratedListModal open={invoiceModalOpen} onClose={() => setInvoiceModalOpen(false)} data={invoicesList} />
 
-      <RecipientListModal open={recipientModalOpen} onClose={() => setRecipientModalOpen(false)} data={dummyRecipientData}/>
+      <AccountListModal open={accountModalOpen} onClose={() => setAccountModalOpen(false)} data={accountsList} />
 
-        <CustomModal
-          open={open}
-          onClose={handleClose}
-          title="User Details"
-        >
+      <RecipientListModal open={recipientModalOpen} onClose={() => setRecipientModalOpen(false)} data={receipintsList} />
+
+      <CustomModal
+        open={open}
+        onClose={handleClose}
+        title="User Details"
+      >
         <div className="header-divider" />
 
         <Box sx={{ mt: 2 }}>

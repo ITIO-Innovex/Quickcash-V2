@@ -19,6 +19,7 @@ import { downloadExcel } from '../../../../utils/downloadExcel';
 import { Box, Button, Typography, useTheme} from '@mui/material';
 import { Filter, FileSpreadsheet, FileText } from 'lucide-react';
 import GenericTable from '../../../../components/common/genericTable';
+import axios from 'axios';
 
 const FirstSection = () => {
   const theme = useTheme();
@@ -122,7 +123,57 @@ const FirstSection = () => {
     setCurrentData(filtered.length ? filtered : []);
     console.log('Filtering by:', text, '→ Found:', filtered.length, 'items');
   };
+
   
+  
+  // Temporary alertnotify if not globally available
+  const alertnotify = (text: string, type: string) => {
+    if (type === 'success') window.alert(text);
+    else window.alert(text);
+  };
+
+  const HandleReminder = async (id: any) => {
+    await axios.get(`/${url}/v1/invoice/reminder-inv/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+      .then(result => {
+        if (result.data.status == "201") {
+          alertnotify("Remider has been sent on email address", "success");
+        }
+      })
+      .catch(error => {
+        alertnotify(error?.response?.data?.message || 'Error sending reminder', "error");
+        console.log("error", error);
+      });
+  };
+
+  const HandleDeleteInvoice = async (val: any) => {
+    var r = confirm("Are you sure?");
+    if (r == true) {
+      await axios.delete(`/${url}/v1/invoice/delete/${val}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+        .then(result => {
+          if (result.data.status == "201") {
+            const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
+            getInvoiceList(accountId.data.id);
+            alertnotify("Selected Invoice has been deleted Successfully", "success");
+          }
+        })
+        .catch(error => {
+          console.log("error", error);
+          alertnotify(error?.response?.data?.message || 'Error deleting invoice', "error");
+        });
+      setDeleteModalOpen(false);
+    } else {
+      setDeleteModalOpen(false);
+      return false;
+    }
+  };
 
   const columns = [{
   field: 'invoice_number',
@@ -198,7 +249,7 @@ const FirstSection = () => {
        { field: 'reminders', headerName: 'Reminders', render: (row: any) => (
     <Box display="flex" gap={1}>
       <CommonTooltip title="Click to send reminder on email" arrow>
-        <SendIcon sx={{ cursor: 'pointer', color: '#1976d2' }} onClick={() => {/* send reminder logic here */}} />
+        <SendIcon sx={{ cursor: 'pointer', color: '#1976d2' }} onClick={() => HandleReminder(row._id)} />
       </CommonTooltip>
       <CommonTooltip title="Overdue" arrow>
         <AccessAlarmsIcon sx={{ color: 'red' }} />
@@ -261,38 +312,21 @@ const FirstSection = () => {
 
       <CustomModal open={open} onClose={handleClose} title="Invoice-Section Details" sx={{backgroundColor: theme.palette.background.default }}>
         <div className="header-divider" />
-        
         <Box sx={{ mt: 2 }}>
-          <Box display="flex" justifyContent="space-between" mb={2}>
-            <Typography><strong>Date:</strong></Typography>
-            <Typography>{selectedRow?.date}</Typography>
-          </Box>
-
-          <Box display="flex" justifyContent="space-between" mb={2}>
-            <Typography><strong>Transaction ID:</strong></Typography>
-            <Typography>{selectedRow?.id}</Typography>
-          </Box>
-
-          <Box display="flex" justifyContent="space-between" mb={2}>
-            <Typography><strong>Type:</strong></Typography>
-            <Typography>{selectedRow?.type}</Typography>
-          </Box>
-
-          <Box display="flex" justifyContent="space-between" mb={2}>
-            <Typography><strong>Amount:</strong></Typography>
-            <Typography>${selectedRow?.amount}</Typography>
-          </Box>
-
-          <Box display="flex" justifyContent="space-between" mb={2}>
-            <Typography><strong>Balance:</strong></Typography>
-            <Typography>${selectedRow?.balance}</Typography>
-          </Box>
-
-          <Box display="flex" justifyContent="space-between" mb={2}>
-            <Typography><strong>Status:</strong></Typography>
-            <Typography>{selectedRow?.status}</Typography>
-          </Box>
-
+          {selectedRow && (
+            <Box>
+              {Object.entries(selectedRow)
+                .filter(([key, value]) => !['_id', '__v', 'url', 'othersInfo', 'productsInfo', 'user', 'account', 'userid'].includes(key) && value !== undefined && value !== null && value !== '')
+                .map(([key, value]) => (
+                  <Box display="flex" justifyContent="space-between" mb={2} key={key}>
+                    <Typography><strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong></Typography>
+                    <Typography>
+                      {Array.isArray(value) ? JSON.stringify(value) : String(value)}
+                    </Typography>
+                  </Box>
+                ))}
+            </Box>
+          )}
           <Button
             className="custom-button"
             onClick={handleClose}
@@ -313,10 +347,7 @@ const FirstSection = () => {
           <Button
             variant="contained"
             color="error"
-            onClick={() => {
-              console.log('Deleted row:', rowToDelete); 
-              setDeleteModalOpen(false);
-            }}
+            onClick={() => HandleDeleteInvoice(rowToDelete?._id)}
           >
             Yes, Delete
           </Button>

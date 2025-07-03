@@ -15,6 +15,9 @@ import { Filter, FileSpreadsheet, FileText} from 'lucide-react';
 import { downloadExcel } from '../../../../utils/downloadExcel';
 import { Box, Button, Typography, useTheme } from '@mui/material';
 import GenericTable from '../../../../components/common/genericTable';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const FirstSection = () => {
   const theme = useTheme();
@@ -113,6 +116,36 @@ const FirstSection = () => {
     setSelectedRow(null);
   };
 
+  // Temporary alertnotify if not globally available
+  const alertnotify = (text: string, type: string) => {
+    if (type === 'success') window.alert(text);
+    else window.alert(text);
+  };
+
+  const HandleDeleteQuote = async (val: any) => {
+    var r = confirm("Are you sure?");
+    if (r == true) {
+      await axios.delete(`/${url}/v1/quote/delete/${val}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        }
+      })
+        .then(result => {
+          if (result.data.status == "201") {
+            const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
+            getQuoteList(accountId.data.id);
+            toast.success("Selected Quote has been deleted Successfully");
+            setDeleteModalOpen(false);
+          }
+        })
+        .catch(error => {
+          console.log("error", error);
+          toast.error(error?.response?.data?.message || 'Error deleting quote');
+        });
+    } else {
+      return false;
+    }
+  };
 
   const columns = [
    {
@@ -305,10 +338,7 @@ const FirstSection = () => {
           <Button
             variant="contained"
             color="error"
-            onClick={() => {
-              console.log('Deleted row:', rowToDelete); 
-              setDeleteModalOpen(false);
-            }}
+            onClick={() => HandleDeleteQuote(rowToDelete?._id)}
           >
             Yes, Delete
           </Button>

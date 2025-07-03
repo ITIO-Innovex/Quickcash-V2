@@ -104,11 +104,19 @@ const FirstSection = forwardRef((props, ref) => {
           <>
           <Typography className="section-title">Notification Details</Typography>
             <KeyValueDisplay
-              data={{ 'Date': selectedRow.date, 'Title': 'Wallet Request Status', 'Message': 'XXXX','Message Type': 'users', 'Attachment': 'N/A',}}/>
+              data={{
+                'Date': selectedRow.createdAt ? selectedRow.createdAt.slice(0, 10) : '-',
+                'Title': selectedRow.title || '-',
+                'Message': selectedRow.message || '-',
+                'Message Type': selectedRow.notifyType || '-',
+                'Attachment': selectedRow.attachment || 'N/A',
+                // 'Read': selectedRow.read !== undefined ? (selectedRow.read ? 'Yes' : 'No') : '-',
+              }}
+            />
 
             <Typography className="section-title">Tags</Typography>
             <KeyValueDisplay
-              data={{ 'Coin': 'DOGE ,SOL', }}/>
+              data={{ 'Tags': selectedRow.tags ? selectedRow.tags.join(', ') : '-' }}/>
 
             <Box display="flex" justifyContent="flex-end" gap={2} >
               <CustomButton onClick={handleClose}>Close</CustomButton>

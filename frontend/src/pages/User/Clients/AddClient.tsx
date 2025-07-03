@@ -5,12 +5,18 @@ import CustomButton from '../../../components/CustomButton';
 import CustomSelect from '../../../components/CustomDropdown';
 import CustomInput from '../../../components/CustomInputField';
 import { Box, Typography, Grid, useTheme } from '@mui/material';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
+const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 const AddClient = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null); // 👈 file input ref
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageProfile, setImageProfile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -57,11 +63,47 @@ const AddClient = () => {
 
   const handleSubmit = async () => {
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No token found');
+      const accountId = jwtDecode<{ data: { id: string } }>(token);
+      const form = new FormData();
+      form.append('user', accountId?.data?.id || '');
+      form.append('firstName', formData.firstName);
+      form.append('lastName', formData.lastName);
+      form.append('email', formData.email);
+      form.append('mobile', formData.mobile);
+      form.append('postalCode', formData.postalCode);
+      form.append('country', formData.country);
+      form.append('city', formData.city);
+      form.append('state', formData.state);
+      form.append('address', formData.address);
+      form.append('notes', formData.notes);
+      if (imageProfile) {
+        form.append('profilePhoto', imageProfile);
+      }
+      const response = await axios.post(
+        `/${url}/v1/client/add`,
+        form,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.data.status === "201") {
+        toast.success('Client added successfully!');
+        navigate('/clients');
+      } else {
+        toast.error(response.data.message || 'Unexpected response');
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error.message || 'Error occurred');
+      console.error(error);
+    } finally {
       setLoading(false);
-      console.log('Client data:', formData);
-      navigate('/clients');
-    }, 2000);
+    }
   };
 
   const handleEditClick = () => {
@@ -71,8 +113,7 @@ const AddClient = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      console.log('Selected image:', file);
-
+      setImageProfile(file);
     }
   };
 

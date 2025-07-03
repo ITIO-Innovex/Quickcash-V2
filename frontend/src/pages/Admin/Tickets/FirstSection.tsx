@@ -10,14 +10,18 @@ import { Box, Button, Typography, useTheme } from '@mui/material';
 import GenericTable from '../../../components/common/genericTable';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import admin from '@/helpers/adminApiHelper';
-const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
+import { showToast } from '@/utils/toastContainer';
+const url = import.meta.env.VITE_NODE_ENV === "production" ? 'api' : 'api';
+console.log('Environment:', import.meta.env.VITE_NODE_ENV);
+console.log('URL:', url);
 
 const FirstSection = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState('');
-  const [reason, setReason] = useState('');
+  const [currentTicketRequestStatus, setCurrentTicketRequestStatus] = useState('');
+  const [comment, setComment] = useState('');
   const [filterText, setFilterText] = useState('');
   const [showFilter, setShowFilter] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
@@ -26,71 +30,54 @@ const FirstSection = () => {
   const handleFilter = () => {
     setShowFilter((prev) => !prev);
   };
-  const handleSave = () => {
-  // handle save logic
-};
-const handleCancel = () => {
-  // handle cancel logic (close modal)
-};
-  const ticketData = [
-    {
-      ticketId: '174824079065597980',
-      date: '2025-05-26',
-      username: 'Prashant Bhatnager',
-      subject: 'KYC APPROVAL',
-      message:
-        'I have submitted my documents. kindly approve my kyc so that I could borrow money',
-      status: 'Open',
-    },
-    {
-      ticketId: '174762975561695000',
-      date: '2025-05-19',
-      username: 'Jennilyn Geraldo',
-      subject: 'loan application',
-      message: 'update',
-      status: 'Open',
-    },
-    {
-      ticketId: '174746936016954880',
-      date: '2025-05-17',
-      username: 'Vishal masih',
-      subject: 'from yesterday my amount not yet been credited',
-      message: 'kindly to the needful',
-      status: 'Open',
-    },
-    {
-      ticketId: '174623379376772000',
-      date: '2025-05-03',
-      username: 'BrticoLibert',
-      subject: 'pueden',
-      message: 'verificar mi kyc',
-      status: 'Close',
-    },
-    {
-      ticketId: '174542495913819780',
-      date: '2025-04-23',
-      username: 'Ganesh',
-      subject: 'demo',
-      message: 'klkokedsjfklvcm,',
-      status: 'Close',
-    },
-  ];
+  const handleSave = async () => {
+    if (!selectedRow?._id || !selectedRow?.user) return;
+    await HandleUpdateStatus(selectedRow._id, selectedRow.user);
+  };
+  const handleCancel = () => {
+    // handle cancel logic (close modal)
+  };
 
 
   const getListData = async () => {
-    const statusVal = status == "all" ? '' : status;
-    await admin.get(`/${url}/v1/admin/usertickets?status=${statusVal}`)
-      .then(result => {
-        if (result.data.status == 201) {
-          setList(result?.data?.data);
-          setCurrentData(result?.data?.data);
+    const statusVal = status === "all" ? '' : status;
+    
+    try {
+      // Try the original endpoint first
+      const result = await admin.get(`/${url}/v1/admin/usertickets?status=${statusVal}`);
+      if (result.data.status === 201 || result.data.status === "201") {
+        setList(result?.data?.data);
+        setCurrentData(result?.data?.data);
+      } else {
+        console.error('API returned non-success status:', result.data.status);
+      }
+    } catch (error) {
+      console.error("Error fetching tickets:", error);
+      console.error("Error response:", error.response?.data);
+      
+      try {
+        const fallbackResult = await admin.get(`/${url}/v1/admin/usertickets`);
+        if (fallbackResult.data.status === 201 || fallbackResult.data.status === "201") {        
+          setList(fallbackResult?.data?.data);
+          setCurrentData(fallbackResult?.data?.data);
         }
-      })
-      .catch(error => {
-        console.log("error", error);
-      })
+      } catch (fallbackError) {
+        console.error("Fallback request also failed:", fallbackError);
+        
+        // Try with /api/v1/ pattern as last resort
+        try {
+          const apiResult = await admin.get(`/api/v1/admin/usertickets?status=${statusVal}`);
+          if (apiResult.data.status === 201 || apiResult.data.status === "201") {
+            setList(apiResult?.data?.data);
+            setCurrentData(apiResult?.data?.data);
+          }
+        } catch (apiError) {
+          console.error("API v1 request also failed:", apiError);
+        }
+      }
+    }
   }
-  useEffect(() => {
+  useEffect(() => {  
     getListData();
   }, [status]);
   const [currentData, setCurrentData] = useState(list);
@@ -136,13 +123,13 @@ const handleCancel = () => {
       render: (row: any) => row.userDetails?.[0]?.name || 'N/A',
     },
     {
-      field: 'userDetails?.email',
-      headerName: 'Type',
-      render: (row: any) => row.userDetails?.[0]?.email || 'N/A',
+      field: 'subject',
+      headerName: 'Subject',
+      render: (row: any) => row.subject || 'N/A',
     },
     {
       field: 'message',
-      headerName: 'Date',
+      headerName: 'Message',
       render: (row: any) => row.message ? `${row.message.slice(0, 20)}...` : '',
     },
     {
@@ -164,7 +151,18 @@ const handleCancel = () => {
            <CommonTooltip title="View chat history" arrow>
       <ChatBubbleOutlineIcon
         style={{ cursor: 'pointer' }}
-        onClick={() => navigate('/admin/help-center/history')}
+        onClick={() => {
+          console.log('Navigating to chat history with row data:', row);
+          // Pass both _id and ticketId to try both
+          console.log('_id:', row._id, 'ticketId:', row.ticketId, 'userId:', row.userDetails?.[0]?._id);
+          navigate('/admin/help-center/history', { 
+            state: { 
+              ticketId: row._id, // Use _id as primary
+              ticketIdAlt: row.ticketId, // Pass ticketId as alternative
+              userId: row.userDetails?.[0]?._id 
+            } 
+          });
+        }}
       />
     </CommonTooltip>
         <VisibilityIcon
@@ -175,6 +173,27 @@ const handleCancel = () => {
       ),
     },
   ];
+
+  const HandleUpdateStatus = async(id:any, userid:any) => {
+    await admin.patch(`/${url}/v1/support/updateStatus/${id}`,
+    {
+      status: currentTicketRequestStatus,
+      comment: comment,
+      user: userid
+    }, 
+   )
+    .then(result => {
+      if(result.data.status == 201) {
+        showToast(result.data.message, "success");
+        setOpen(false);
+        getListData();
+      }
+    })
+    .catch(error => {
+      console.log("error", error);
+      showToast(error.response?.data?.message || "Error updating status", "error");
+    })
+  }
 
   return (
     <Box>
@@ -203,17 +222,15 @@ const handleCancel = () => {
 
       <CustomModal open={open} onClose={handleCancel} title={'Update Support/Ticket Request'} sx={{backgroundColor:theme.palette.background.default}}>
           <label className="ticket-modal-label">Status</label>
-          <select className="ticket-modal-select" value={status} onChange={e => setStatus(e.target.value)} style={{backgroundColor:theme.palette.background.default,color:theme.palette.text.primary}}>
-
+          <select className="ticket-modal-select" value={currentTicketRequestStatus} onChange={e => setCurrentTicketRequestStatus(e.target.value)} style={{backgroundColor:theme.palette.background.default,color:theme.palette.text.primary}}>
             <option value="">Select status</option>
             <option value="open">Open</option>
             <option value="pending">Pending</option>
             <option value="closed">Closed</option>
-
           </select>
 
           <label className="ticket-modal-label">Reason</label>
-          <textarea className="ticket-modal-textarea" rows={3} value={reason}style={{backgroundColor:theme.palette.background.default,color:theme.palette.text.primary}} onChange={e => setReason(e.target.value)} placeholder="Enter reason..." />
+          <textarea className="ticket-modal-textarea" rows={3} value={comment} style={{backgroundColor:theme.palette.background.default,color:theme.palette.text.primary}} onChange={e => setComment(e.target.value)} placeholder="Enter reason..." />
           <div className="ticket-modal-actions">
 
             <Box display="flex" justifyContent="flex-end" gap={2} >

@@ -407,11 +407,12 @@ const FiatCrypto = () => {
                                 >
 
                                     <Box className='button-section' sx={{ display: 'flex', gap: 1 }}>
-                                        <Button className='custom-button'>
+                                        <Button className='custom-button'
+                                             onClick={() => navigate('/buysellswap')}>
                                             <Sell className='icon-size' />
                                             <span className='button-text'>Buy/Sell</span>
                                         </Button>
-                                        <Button className='custom-button'>
+                                        <Button className='custom-button' onClick={() => navigate('/wallet')}>
                                             <Wallet className='icon-size' />
                                             <span className='button-text'> Wallet Address</span>
                                         </Button>
