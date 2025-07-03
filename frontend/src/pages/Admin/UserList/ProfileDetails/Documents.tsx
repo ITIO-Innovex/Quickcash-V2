@@ -5,21 +5,14 @@ import CustomInput from '@/components/CustomInputField';
 import CustomSelect from '@/components/CustomDropdown';
 import logo from '../../../../../public/logo.png';
 
-const Documents = () => {
+interface DocumentsProps {
+  documents: any;
+}
+
+const Documents = ({ documents }: DocumentsProps) => {
   const theme = useTheme();
   const [zoom, setZoom] = useState(false);
 
-  const [formData, setFormData] = useState({
-    documentId: 'ABCD1234567',
-    idType: 'passport',
-  });
-
-  const idTypeOptions = [
-    { label: 'Driving License', value: 'driving_license' },
-    { label: 'Passport', value: 'passport' },
-    { label: 'National ID', value: 'national-id' },
-    { label: 'Social Security Card', value: 'ssn' },
-  ];
 
   return (
     <Box className="documents-container">
@@ -30,20 +23,15 @@ const Documents = () => {
         <Grid item xs={12} md={6}>
           <CustomInput
             label="Document ID No"
-            value={formData.documentId}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, documentId: e.target.value }))
-            }
+            value={documents?.owneridofindividual || ''}
+            disabled
           />
         </Grid>
         <Grid item xs={12} md={6}>
-          <CustomSelect
+          <CustomInput
             label="ID of Individual"
-            options={idTypeOptions}
-            value={formData.idType}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, idType: e.target.value as string }))
-            }
+            value={documents?.ownertaxid || ''}
+            disabled
           />
         </Grid>
         <Grid item xs={12}>
@@ -53,7 +41,7 @@ const Documents = () => {
             onMouseLeave={() => setZoom(false)}
           >
             <Avatar
-              src={logo}
+              src={documents?.ownerbrd ? `${import.meta.env.VITE_PUBLIC_URL}/${documents.ownerbrd}` : logo}
               alt="Uploaded Document"
               className="document-avatar"
             />
@@ -61,7 +49,7 @@ const Documents = () => {
             {zoom && (
               <Box className="document-zoom-box">
                 <img
-                  src={logo}
+                  src={documents?.ownerbrd ? `${import.meta.env.VITE_PUBLIC_URL}/${documents.ownerbrd}` : logo}
                   alt="Zoomed Document"
                   className="document-zoom-img"
                 />

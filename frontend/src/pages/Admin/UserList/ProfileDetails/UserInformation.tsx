@@ -10,24 +10,17 @@ import { useTheme } from '@mui/material/styles';
 import { Edit } from 'lucide-react';
 import CustomButton from '@/components/CustomButton';
 
-const UserInformation = () => {
+interface UserInformationProps {
+  userDetails: any;
+}
+
+const UserInformation = ({ userDetails }: UserInformationProps) => {
   const theme = useTheme();
   const fileInputRef = useRef(null);
   const [imageName, setImageName] = useState('');
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageProfile, setImageProfile] = useState({ raw: null });
-
-  const user = {
-    firstName: 'John',
-    email: 'john.doe@example.com',
-    mobile: '+1234567890',
-    address: '123 Main Street, City, Country',
-    defaultCurrency: 'USD',
-    profilePic: '',
-    totalAccounts:'2',
-    country:'Indonasia'
-  };
 
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
@@ -50,14 +43,14 @@ const UserInformation = () => {
     console.log('Clicked update (mock only)');
   };
 
-  const userDetails = [
-    { label: 'USER NAME:', value: user.firstName || '-' },
-    { label: 'EMAIL:', value: user.email || '-' },
-    { label: 'MOBILE:', value: user.mobile || '-' },
-    { label: 'ADDRESS:', value: user.address || '-' },
-    { label: 'DEFAULT CURRENCY:', value: user.defaultCurrency || '-' },
-    { label: 'COUNTRY:', value: user.country || '-' },
-    { label: 'Total Accounts:', value: user.totalAccounts || '-' },
+  const details = [
+    { label: 'USER NAME:', value: userDetails?.name || '-' },
+    { label: 'EMAIL:', value: userDetails?.email || '-' },
+    { label: 'MOBILE:', value: userDetails?.mobile || '-' },
+    { label: 'ADDRESS:', value: userDetails?.address || '-' },
+    { label: 'DEFAULT CURRENCY:', value: userDetails?.defaultCurrency || '-' },
+    { label: 'COUNTRY:', value: userDetails?.country || '-' },
+    { label: 'Total Accounts:', value: userDetails?.accountDetails?.length || '-' },
   ];
 
   return (
@@ -86,7 +79,7 @@ const UserInformation = () => {
           }}
         >
           <Avatar
-            src={selectedImage || user.profilePic || undefined}
+            src={selectedImage || userDetails?.profilePic || undefined}
             sx={{
               width: 120,
               height: 120,
@@ -94,7 +87,7 @@ const UserInformation = () => {
               fontSize: '3rem',
             }}
           >
-            {!(selectedImage || user.profilePic) && '👤'}
+            {!(selectedImage || userDetails?.profilePic) && '👤'}
           </Avatar>
           <input
             ref={fileInputRef}
@@ -148,7 +141,7 @@ const UserInformation = () => {
               gap: 2,
             }}
           >
-            {userDetails.map((detail, index) => (
+            {details.map((detail, index) => (
               <Box key={index}>
                 <Typography
                   variant="caption"

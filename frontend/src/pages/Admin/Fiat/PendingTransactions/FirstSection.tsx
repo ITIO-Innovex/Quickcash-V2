@@ -8,6 +8,7 @@ import { KeyValueDisplay } from '@/components/KeyValueDisplay';
 import CustomInput from '@/components/CustomInputField';
 import admin from '@/helpers/adminApiHelper';
 import { showToast } from '@/utils/toastContainer';
+import CustomSelect from '@/components/CustomDropdown';
 
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
@@ -15,12 +16,30 @@ const FirstSection = () => {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
-  const [tempPurpose, setTempPurpose] = useState(selectedRow?.description || '');
-  const [finalPurpose, setFinalPurpose] = useState(selectedRow?.description || '');
+  const [tempPurpose, setTempPurpose] = useState('');
+  const [finalPurpose, setFinalPurpose] = useState('');
+  const [details, setDetails] = useState<any[]>([]);
 
-  const handleOpen = (row: any) => {
+  const handleOpen = async (row: any) => {
     setSelectedRow(row);
     setOpen(true);
+    // Fetch transaction details
+    try {
+      const result = await admin.get(`/${url}/v1/transaction/tr/${row._id}`);
+      if (result.data.status == 201) {
+        setDetails(result.data.data);
+        setTempPurpose(result.data.data?.[0]?.info || '');
+        setFinalPurpose(result.data.data?.[0]?.info || '');
+      } else {
+        setDetails([]);
+        setTempPurpose(row.info || '');
+        setFinalPurpose(row.info || '');
+      }
+    } catch (error) {
+      setDetails([]);
+      setTempPurpose(row.info || '');
+      setFinalPurpose(row.info || '');
+    }
   };
 
   const handleClose = () => {
@@ -31,7 +50,6 @@ const FirstSection = () => {
   const [status, setStatus] = React.useState<any>('');
   const [transtatus, setTranStatus] = React.useState<any>('');
   const [currentData, setCurrentData] = useState<any[]>([]);
-  const [details, setDetails] = React.useState<any>([]);
   const [comment, setComment] = React.useState<any>('');
   const [id, setId] = React.useState<any>('');
   const [amount, setAmount] = React.useState<any>('');
@@ -53,15 +71,12 @@ const FirstSection = () => {
   }
   useEffect(() => {
     translist();
+   
   }, [])
   const getDetailsOfTransactions = async (id: any) => {
-    await admin.get(`/${url}/v1/transaction/tr/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('admintoken')}`
-      }
-    })
+    await admin.get(`/${url}/v1/transaction/tr/${id}`)
       .then(result => {
-        if (result.data.status == "201") {
+        if (result.data.status == 201) {
           setDetails(result.data.data)
         }
       })
@@ -87,6 +102,7 @@ const FirstSection = () => {
           setOpenDetails(false);
           showToast(result.data.message, "success");
           translist();
+          handleClose();
         }
       })
       .catch(error => {
@@ -94,6 +110,14 @@ const FirstSection = () => {
         showToast(error.response.data.message, "error");
       })
   }
+
+  const formatAmount = (num) => {
+    if (Number.isInteger(num)) {
+      return num;
+    }
+    return num.toFixed(2);
+  };
+
   const columns = [
     {
       field: 'createdAt',
@@ -113,7 +137,7 @@ const FirstSection = () => {
     {
       field: 'amount',
       headerName: 'Amount',
-      render: (row: any) => `${row.amount < 0 ? '-' : '+'}${Math.abs(row.amount)}`
+      render: (row: any) => row?.amountText || 'N/A'
     },
     {
       field: 'mobile',
@@ -153,37 +177,174 @@ const FirstSection = () => {
       )}
 
       {/* Modal */}
-     <CustomModal open={open} onClose={handleClose} sx={{ backgroundColor: theme.palette.background.default }} title={''}   >
-
-        {selectedRow && (
+      <CustomModal open={open} onClose={handleClose} sx={{ backgroundColor: theme.palette.background.default }} title={''}   >
+        {(details && details[0]) ? (
           <>
             <Typography className="section-title">Transaction Info</Typography>
             <KeyValueDisplay
-              data={{ 'Trx. Id': selectedRow.id, 'Requested Date': selectedRow.date, 'Fee': '$2.00','Bill Amount': selectedRow.amount, 'Transaction Type': 'credit /Add Money',}}/>
-
+              data={{
+                'Trx. Id': details[0].trx || '-',
+                'Requested Date': details[0].createdAt ? details[0].createdAt.slice(0, 10) : '-',
+                'Fee': details[0].fee !== undefined ? `$${details[0].fee}` : '-',
+                'Bill Amount': details[0].amount !== undefined ? `$${details[0].amount}` : '-',
+                'Transaction Type': `${details[0].extraType || '-'}${details[0].trans_type ? ' - ' + details[0].trans_type : ''}`,
+              }}
+            />
             <Typography className="section-title">Sender Info</Typography>
             <KeyValueDisplay
-              data={{ 'Sender Name': 'John Doe', 'Account No': '1234567890', 'Sender Address': '123 Main St, City', 'BIC/IFSC Code':'XXXXX'}}/>
-
+              data={{
+                'Sender Name': (details[0].tr_type !== "UPI" && details[0].tr_type === "bank-transfer")
+                  ? (details[0].receipient ? details[0].senderAccountDetails?.[0]?.name : details[0].senderAccountDetails?.[0]?.name)
+                  : (details[0].extraType === "credit"
+                    ? details[0].transferAccountDetails?.[0]?.name
+                    : details[0].senderAccountDetails?.[0]?.name) || '-',
+                'Account No': (details[0].tr_type !== "UPI" && details[0].tr_type === "bank-transfer")
+                  ? (details[0].receipient ? details[0].senderAccountDetails?.[0]?.iban : details[0].senderAccountDetails?.[0]?.iban)
+                  : (details[0].extraType === "credit"
+                    ? details[0].transferAccountDetails?.[0]?.iban
+                    : details[0].senderAccountDetails?.[0]?.iban) || '-',
+                'Sender Email': selectedRow?.userDetails?.[0]?.email || '-',
+                'Sender Mobile': selectedRow?.userDetails?.[0]?.mobile || '-',
+                'BIC/IFSC Code': (details[0].tr_type !== "UPI" && details[0].tr_type === "bank-transfer")
+                  ? (details[0].receipient ? details[0].senderAccountDetails?.[0]?.bic_code : details[0].senderAccountDetails?.[0]?.bic_code)
+                  : (details[0].extraType === "credit"
+                    ? details[0].transferAccountDetails?.[0]?.bic_code
+                    : details[0].senderAccountDetails?.[0]?.bic_code) || '-',
+              }}
+            />
             <Typography className="section-title">Receiver Info</Typography>
             <KeyValueDisplay
-              data={{ 'Receiver Name': 'Jane Smith', 'Account No': '0987654321','Bank Name': 'HDFC', 'BIC/IFSC Code ':'XXXXX'}}/>
-
+              data={{
+                'Receiver Name': (details[0].extraType === "credit")
+                  ? details[0].senderAccountDetails?.[0]?.name
+                  : (details[0].receipient
+                    ? details[0].recAccountDetails?.[0]?.name
+                    : details[0].transferAccountDetails?.[0]?.name) || '-',
+                'Account No': (details[0].extraType === "credit")
+                  ? details[0].senderAccountDetails?.[0]?.iban
+                  : (details[0].receipient
+                    ? details[0].recAccountDetails?.[0]?.iban
+                    : details[0].transferAccountDetails?.[0]?.iban) || '-',
+                'Bank Name': (details[0].extraType === "credit")
+                  ? details[0].senderAccountDetails?.[0]?.bankName
+                  : (details[0].receipient
+                    ? details[0].recAccountDetails?.[0]?.bankName
+                    : details[0].transferAccountDetails?.[0]?.bankName) || '-',
+                'BIC/IFSC Code': (details[0].extraType === "credit")
+                  ? details[0].senderAccountDetails?.[0]?.bic_code
+                  : (details[0].receipient
+                    ? details[0].recAccountDetails?.[0]?.bic_code
+                    : details[0].transferAccountDetails?.[0]?.bic_code) || '-',
+              }}
+            />
             <Typography className="section-title">Bank Info</Typography>
             <KeyValueDisplay
-              data={{ 'Bank Name':'IDFC', 'Bank Address':'ZZZZ', 'Transfer Amount': `$${Math.abs(selectedRow.amount)}`, 'Settle Amount': '$100.00',  'Transfer Status': selectedRow.status,'Transfer Description/Purpose': finalPurpose || 'No description' }}/>
+              data={{
+                'Bank Name': (details[0].extraType === "credit")
+                  ? details[0].senderAccountDetails?.[0]?.bankName
+                  : (details[0].receipient
+                    ? details[0].recAccountDetails?.[0]?.bankName
+                    : details[0].transferAccountDetails?.[0]?.bankName) || '-',
+                'Bank Address': (details[0].extraType === "credit")
+                  ? details[0].senderAccountDetails?.[0]?.address
+                  : (details[0].receipient
+                    ? details[0].recAccountDetails?.[0]?.address
+                    : details[0].transferAccountDetails?.[0]?.address) || '-',
+                'Transfer Amount': details[0].amount !== undefined ? `$${details[0].amount}` : '-',
+                'Settle Amount': details[0].settle_amount !== undefined ? `$${details[0].settle_amount}` : '-',
+                'Transfer Status': details[0].status || '-',
+                'Transfer Description/Purpose': finalPurpose || details[0].info || 'No description',
+              }}
+            />
             
             <Box mt={3}>
               <Typography className="section-title"> Update Purpose / Description </Typography>
-               <CustomInput value={tempPurpose} onChange={(e) => setTempPurpose(e.target.value)} placeholder="Enter purpose / reason"/>
+               <Box mt={2}>
+              {/* <Typography>Status</Typography> */}
+              <CustomSelect
+                label="Status"
+                value={status}
+                onChange={e => setStatus(e.target.value)}
+                options={[
+                  { label: 'Pending', value: 'pending' },
+                  { label: 'Success', value: 'success' },
+                  { label: 'Failed', value: 'failed' },
+                ]}
+                style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+              />
             </Box>
-
+              <CustomInput value={tempPurpose} onChange={(e) => setTempPurpose(e.target.value)} placeholder="Enter purpose / reason" />
+            </Box>
+           
+            <Box display="flex" justifyContent="flex-end" gap={2} >
+              <CustomButton
+                onClick={() => {
+                  if (!status) {
+                    showToast('Please select a status', 'error');
+                    return;
+                  }
+                  if (details && details[0]) {
+                    HandleUpdateStatus(details[0]._id, details[0].source_account, details[0].amount);
+                  }
+                }}
+              >
+                Update Status
+              </CustomButton>
+              <CustomButton onClick={handleClose}>Close</CustomButton>
+            </Box>
+          </>
+        ) : selectedRow ? (
+          <>
+            <Typography className="section-title">Transaction Info</Typography>
+            <KeyValueDisplay
+              data={{
+                'Trx. Id': selectedRow.trx || '-',
+                'Requested Date': selectedRow.createdAt ? selectedRow.createdAt.slice(0, 10) : '-',
+                'Fee': selectedRow.fee !== undefined ? `$${selectedRow.fee}` : '-',
+                'Bill Amount': selectedRow.amount !== undefined ? `$${selectedRow.amount}` : '-',
+                'Transaction Type': selectedRow.trans_type || '-',
+              }}
+            />
+            <Typography className="section-title">Sender Info</Typography>
+            <KeyValueDisplay
+              data={{
+                'Sender Name': selectedRow.userDetails?.[0]?.name || '-',
+                'Account No': selectedRow.source_account || '-',
+                'Sender Email': selectedRow.userDetails?.[0]?.email || '-',
+                'Sender Mobile': selectedRow.userDetails?.[0]?.mobile || '-',
+                'BIC/IFSC Code': selectedRow.bic || '-',
+              }}
+            />
+            <Typography className="section-title">Receiver Info</Typography>
+            <KeyValueDisplay
+              data={{
+                'Receiver Name': selectedRow.receipient || '-',
+                'Account No': selectedRow.transfer_account || '-',
+                'Bank Name': selectedRow.bank_name || '-',
+                'BIC/IFSC Code': selectedRow.bic || '-',
+              }}
+            />
+            <Typography className="section-title">Bank Info</Typography>
+            <KeyValueDisplay
+              data={{
+                'Bank Name': selectedRow.bank_name || '-',
+                'Bank Address': selectedRow.bank_address || '-',
+                'Transfer Amount': selectedRow.amount !== undefined ? `$${selectedRow.amount}` : '-',
+                'Settle Amount': selectedRow.settle_amount !== undefined ? `$${selectedRow.settle_amount}` : '-',
+                'Transfer Status': selectedRow.status || '-',
+                'Transfer Description/Purpose': finalPurpose || selectedRow.info || 'No description',
+              }}
+            />
+            <Box mt={3}>
+              <Typography className="section-title"> Update Purpose / Description </Typography>
+              <CustomInput value={tempPurpose} onChange={(e) => setTempPurpose(e.target.value)} placeholder="Enter purpose / reason" />
+            </Box>
             <Box display="flex" justifyContent="flex-end" gap={2} >
               <CustomButton onClick={() => setFinalPurpose(tempPurpose)}> Update </CustomButton>
-          <CustomButton onClick={handleClose}>Close</CustomButton>
-          </Box>
+              <CustomButton onClick={handleClose}>Close</CustomButton>
+            </Box>
           </>
-        )}
+        ) : null}
       </CustomModal>
     </Box>
   );
