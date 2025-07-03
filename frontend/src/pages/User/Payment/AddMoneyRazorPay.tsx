@@ -124,11 +124,11 @@ const AddMoneyRazorPay = ({...props}:razorPayDetails) => {
        if(status == "succeeded") {
         alertnotify(result.data.message,"success");
         setTimeout(() => {
-          window.location.href = "/home";
+          window.location.href = "/dashboard";
         },500);
        }
        if(status == "Cancelled") {
-        window.location.href = "/home";
+        window.location.href = "/dashboard";
        }
     })
     .catch(error => {

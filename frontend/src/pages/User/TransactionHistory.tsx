@@ -55,25 +55,28 @@ const TransactionHistory = () => {
         result = await api.post(apiUrl, data);
       }
       if (result.data.status === 201) {
-        const transactions = result.data.data.map((transaction: any) => ({
-          date: new Date(transaction.createdAt).toLocaleDateString(),
-          trx: transaction.trx,
-          type: transaction.trans_type,
-          amount: transaction.amountText,
-          balance : `${transaction?.rec || transaction?.extraType === "debit" || transaction?.tr_type === "Stripe" ? getSymbolFromCurrency(transaction?.from_currency) : getSymbolFromCurrency(transaction?.to_currency)}${parseFloat(transaction?.postBalance ?? 0).toFixed(2)}`,
-          status: (
-            <Chip
-              label={transaction.status.toUpperCase()}
-              sx={{
-                backgroundColor: transaction.status === 'pending' ? '#fffbe0' : '#e0f2fe',
-                color: transaction.status === 'pending' ? '#b45309' : '#0284c7',
-                fontWeight: 'semibold',
-                borderRadius: '9999px',
-                fontSize: '0.75rem',
-              }}
-            />
-          ),
-        }));
+        const transactions = result.data.data.map((transaction: any) => {
+          const isDebit = transaction?.rec || transaction?.extraType === "debit" || transaction?.tr_type === "Stripe";
+          return ({
+            date: new Date(transaction.createdAt).toLocaleDateString(),
+            trx: transaction.trx,
+            type: transaction.trans_type,
+            amount: `${isDebit ? '+' : '-'}${isDebit ? getSymbolFromCurrency(transaction?.from_currency) : getSymbolFromCurrency(transaction?.to_currency)}${parseFloat(transaction?.amount ?? 0).toFixed(2)}`,
+            balance : `${isDebit ? getSymbolFromCurrency(transaction?.from_currency) : getSymbolFromCurrency(transaction?.to_currency)}${parseFloat(transaction?.postBalance ?? 0).toFixed(2)}`,
+            status: (
+              <Chip
+                label={transaction.status.toUpperCase()}
+                sx={{
+                  backgroundColor: transaction.status === 'pending' ? '#fffbe0' : '#e0f2fe',
+                  color: transaction.status === 'pending' ? '#b45309' : '#0284c7',
+                  fontWeight: 'semibold',
+                  borderRadius: '9999px',
+                  fontSize: '0.75rem',
+                }}
+              />
+            ),
+          });
+        });
         setTransactionHistory(transactions);
       }
     }catch (error) {

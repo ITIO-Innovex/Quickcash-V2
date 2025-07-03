@@ -76,7 +76,7 @@ export default function ResponseStripe() {
 
         if (completeRes.data.status === 201) {
           alertnotify("Payment has been done Successfully", "Success");
-          setTimeout(() => navigate('/home'), 100);
+          setTimeout(() => navigate('/dashboard'), 100);
         }
       }
     } catch (error) {
