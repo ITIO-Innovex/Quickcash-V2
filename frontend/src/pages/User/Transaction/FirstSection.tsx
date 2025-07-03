@@ -11,6 +11,7 @@ import GenericTable from '../../../components/common/genericTable';
 import api from '@/helpers/apiHelper';
 import { jwtDecode } from 'jwt-decode';
 import TransactionDetailModal from '@/components/common/transactionDetailModal';
+import getSymbolFromCurrency from 'currency-symbol-map';
 
 interface JwtPayload {
   sub: string;
@@ -130,7 +131,31 @@ const FirstSection = () => {
     {
       field: 'amount',
       headerName: 'Amount',
-      render: (row: any) => `${row.amount < 0 ? '-' : '+'}$${Math.abs(row.amount).toFixed(2)}`
+      render: (row: any) => {
+        if (row?.extraType === 'debit') {
+          return (
+            <span>
+              -{getSymbolFromCurrency(row?.from_currency)}
+              {(parseFloat(row?.amount) + parseFloat(row?.fee || 0)).toFixed(2)}
+            </span>
+          );
+        }
+        // Credit logic
+        if (row?.tr_type === 'Stripe') {
+          return (
+            <span>
+              +{getSymbolFromCurrency(row?.from_currency)}
+              {parseFloat(row?.amount).toFixed(2)}
+            </span>
+          );
+        }
+        return (
+          <span>
+            +{getSymbolFromCurrency(row?.to_currency)}
+            {parseFloat(row?.amount).toFixed(2)}
+          </span>
+        );
+      }
     },
     {
       field: 'balance',
@@ -210,12 +235,12 @@ const FirstSection = () => {
   title="Transaction Details"
   transactionData={{
     transactionInfo: {
-      "Transaction ID": "TXN001",
-      Date: "Jun 1, 2025",
-      Type: "Invoice",
-      Amount: "$45846",
-      Balance: "$45846",
-      Status: "Completed",
+      "Transaction ID": selectedRow?.trx,
+      Date: selectedRow?.createdAt?.slice(0, 10),
+      Type: selectedRow?.trans_type,
+      Amount: `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.amount || 0).toFixed(2)}`,
+      Balance: `${getSymbolFromCurrency(selectedRow?.to_currency)}${parseFloat(selectedRow?.balance || 0).toFixed(2)}`,
+      Status: selectedRow?.status,
     },
     customerInfo: {
       Name: "John Doe",

@@ -7,6 +7,8 @@ import CurrencyExchangeModal from './CurrencyExchangeModal';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import api from '@/helpers/apiHelper';
 import {Box, Typography, InputAdornment, Button, Paper, Grid, useTheme,} from "@mui/material";
+import axios from 'axios';
+import { useAuth } from '@/contexts/authContext';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? "api" : "api";
 
 interface CurrencyExchangeFormProps {
@@ -53,8 +55,15 @@ const accounts = [
   },
 ];
 
+const calculateFee = (amount: string) => {
+  const amt = parseFloat(amount);
+  if (isNaN(amt) || amt <= 0) return 1;
+  return Math.max(1, +(amt * 0.01).toFixed(2));
+};
+
 const CurrencyExchangeForm = ({ onClose }: CurrencyExchangeFormProps) => {
   const theme = useTheme();
+  const { user } = useAuth();
   const [modalOpen, setModalOpen] = useState(false);
   const [exchangeModalOpen, setExchangeModalOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(accounts[0]);
@@ -64,6 +73,11 @@ const CurrencyExchangeForm = ({ onClose }: CurrencyExchangeFormProps) => {
   const [exchangeRate, setExchangeRate] = useState(1); // default 1:1
   const [exchangedAmount, setExchangedAmount] = useState('');
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fee, setFee] = useState(1);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const getCurrencyList = async () => {
     try {
@@ -76,33 +90,42 @@ const CurrencyExchangeForm = ({ onClose }: CurrencyExchangeFormProps) => {
     }
   };
 
-  // Fetch exchange rate (replace with real API if available)
+  // Fetch exchange rate from live API
   const fetchExchangeRate = async (fromCurrency: string, toCurrency: string) => {
     if (fromCurrency === toCurrency) {
       setExchangeRate(1);
+      setError(null);
       return;
     }
+    setLoading(true);
+    setError(null);
     try {
-      // Uncomment and use real API if available
-      // const result = await api.get(`/${url}/v1/currency/exchange-rate?from=${fromCurrency}&to=${toCurrency}`);
-      // if (result && result.data) {
-      //   setExchangeRate(result.data.rate);
-      // }
-      // For demo, use static rates
-      const staticRates: Record<string, number> = {
-        'USDINR': 83.2,
-        'INRUSD': 0.012,
-        'USDEUR': 0.92,
-        'EURUSD': 1.09,
-        'INREUR': 0.011,
-        'EURINR': 89.5,
-        // Add more as needed
+      const options = {
+        method: 'GET',
+        url: 'https://currency-converter18.p.rapidapi.com/api/v1/convert',
+        params: {
+          from: fromCurrency,
+          to: toCurrency,
+          amount: 1,
+        },
+        headers: {
+          'X-RapidAPI-Key': import.meta.env.VITE_RAPID_API_KEY,
+          'X-RapidAPI-Host': import.meta.env.VITE_RAPID_API_HOST,
+        },
       };
-      const key = fromCurrency + toCurrency;
-      setExchangeRate(staticRates[key] || 1);
-    } catch (error) {
+      const response = await axios.request(options);
+      if (response.data.success) {
+        setExchangeRate(parseFloat(response.data.result.convertedAmount));
+        setError(null);
+      } else {
+        setExchangeRate(1);
+        setError(response.data.validationMessage?.[0] || 'Exchange rate error');
+      }
+    } catch (err: any) {
       setExchangeRate(1);
+      setError('Failed to fetch exchange rate');
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -123,6 +146,24 @@ const CurrencyExchangeForm = ({ onClose }: CurrencyExchangeFormProps) => {
     }
   }, [amount, exchangeRate]);
 
+  useEffect(() => {
+    setFee(calculateFee(amount));
+  }, [amount]);
+
+  // Handle account selection and trigger rate fetch
+  const handleAccountSelect = (acc: typeof accounts[0]) => {
+    setSelectedAccount(acc);
+    // Optionally, set currency to match account or keep as is
+    // setCurrency(acc.currency);
+    setModalOpen(false);
+    fetchExchangeRate(acc.currency, currency);
+  };
+
+  // Find the target account for exchange (not the selected/source account)
+  const targetAccount = accounts.find(
+    acc => acc.currency === currency && acc.code !== selectedAccount.code
+  ) || { _id: '', currency, amount: exchangedAmount };
+
   return (
     <>
       <Paper sx={{ p: 3,backgroundColor:theme.palette.background.default }}>
@@ -131,7 +172,7 @@ const CurrencyExchangeForm = ({ onClose }: CurrencyExchangeFormProps) => {
           <img className="img-round" src="../flags/usa.png" alt="USA Flag" width={24} height={24}/>
           <Box>
 
-            <Typography fontWeight="bold">Exchange USD</Typography>
+            <Typography fontWeight="bold">Exchange {selectedAccount?.currency || ''}</Typography>
             <Typography variant="caption" color="text.primary">
               Select Currency
             </Typography>
@@ -170,9 +211,21 @@ const CurrencyExchangeForm = ({ onClose }: CurrencyExchangeFormProps) => {
            <CountryDropdown label="Select Currency" countries={currencyList} value={currency} onChange={(e) => setCurrency(e.target.value as string)} showFlag={true} showCurrency={true} size="small" fullWidth/>
           </Box>
 
+          {/* Loading and error feedback */}
+          {loading && (
+            <Typography variant="caption" color="info.main">Fetching exchange rate...</Typography>
+          )}
+          {error && (
+            <Typography variant="caption" color="error.main">{error}</Typography>
+          )}
+
           <Box mt={1} display="flex" justifyContent="space-between">
-            <Typography variant="caption">Fee: $7</Typography>
-            <Typography variant="caption">Balance: $6188.83</Typography>
+            <Typography variant="caption">
+              {exchangeRate && selectedAccount.currency && currency && selectedAccount.currency !== currency
+                ? `1 ${selectedAccount.currency} = ${exchangeRate} ${currency}`
+                : ''}
+            </Typography>
+            <Typography variant="caption"></Typography>
           </Box>
         </Box>
 
@@ -183,9 +236,9 @@ const CurrencyExchangeForm = ({ onClose }: CurrencyExchangeFormProps) => {
         <Box className='currency-box' mb={2}>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={6}>
-              <Typography variant="h4" fontWeight="bold">
-                {selectedAccount.balance}
-              </Typography>
+            <Typography variant="h4">
+              {exchangedAmount ? `${currency} ${exchangedAmount}` : '--'}
+            </Typography>
             </Grid>
             <Grid item xs={6}>
               <Box className='account-selector-box' onClick={() => setModalOpen(true)} sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
@@ -200,8 +253,8 @@ const CurrencyExchangeForm = ({ onClose }: CurrencyExchangeFormProps) => {
           <Box mt={1} display="flex" justifyContent="space-between">
             <Typography variant="caption">Will get Exactly</Typography>
             <Typography variant="caption">
-              {exchangedAmount ? `${currency} ${exchangedAmount}` : '--'}
-            </Typography>
+                {selectedAccount.balance}
+              </Typography>
           </Box>
         </Box>
 
@@ -210,10 +263,7 @@ const CurrencyExchangeForm = ({ onClose }: CurrencyExchangeFormProps) => {
         </Button>
       </Paper>
 
-      <AccountSelectModal open={modalOpen} onClose={() => setModalOpen(false)} accounts={accounts} onSelect={(acc) => {
-          setSelectedAccount(acc);
-          setModalOpen(false);
-        }}
+      <AccountSelectModal open={modalOpen} onClose={() => setModalOpen(false)} accounts={accounts} onSelect={handleAccountSelect}
       />
      
     <CurrencyExchangeModal
@@ -224,12 +274,22 @@ const CurrencyExchangeForm = ({ onClose }: CurrencyExchangeFormProps) => {
       toCurrency={currency}
       exchangeRate={exchangeRate}
       exchangedAmount={exchangedAmount}
-      fee={7}
+      fee={fee}
       account={selectedAccount}
       onSubmit={(transaction) => {
         setTransactions(prev => [transaction, ...prev]);
-        console.log('Transaction submitted successfully:', transaction);
+        setSuccessMsg('Transaction submitted successfully!');
+        setTimeout(() => setSuccessMsg(null), 3000);
       }}
+      accountId={{ data: { id: user?.id, name: user?.name } }}
+      toExchangeBox={targetAccount}
+      setToExchangeBox={() => {}}
+      getAllAccountsList={() => {}}
+      setReviewOpen={() => {}}
+      setExchangeOpen={() => {}}
+      alertnotify={() => {}}
+      getDashboardData={() => {}}
+      url="api"
     />
     </>
   );

@@ -9,6 +9,7 @@ import GenericTable from '../../../components/common/genericTable';
 import { Box, Button, Typography, useTheme } from '@mui/material';
 import { jwtDecode } from 'jwt-decode';
 import api from '@/helpers/apiHelper';
+import getSymbolFromCurrency from 'currency-symbol-map';
 
 interface JwtPayload {
   sub: string;
@@ -127,8 +128,31 @@ const FirstSection = () => {
     {
       field: 'amount',
       headerName: 'Amount',
-      render: (row: any) =>
-        `${row.amount < 0 ? '-' : '+'}$${parseFloat(row.amount).toFixed(2)}`,
+      render: (row: any) => {
+        if (row?.extraType === 'debit') {
+          return (
+            <span>
+              -{getSymbolFromCurrency(row?.from_currency)}
+              {(parseFloat(row?.amount) + parseFloat(row?.fee || 0)).toFixed(2)}
+            </span>
+          );
+        }
+        // Credit logic
+        if (row?.tr_type === 'Stripe') {
+          return (
+            <span>
+              +{getSymbolFromCurrency(row?.from_currency)}
+              {parseFloat(row?.amount).toFixed(2)}
+            </span>
+          );
+        }
+        return (
+          <span>
+            +{getSymbolFromCurrency(row?.to_currency)}
+            {parseFloat(row?.amount).toFixed(2)}
+          </span>
+        );
+      }
     },
     {
       field: 'balance',
@@ -208,8 +232,8 @@ const FirstSection = () => {
             ['Date', selectedRow?.date],
             ['Transaction ID', selectedRow?.trx],
             ['Type', selectedRow?.trans_type],
-            ['Amount', `$${parseFloat(selectedRow?.amount || 0).toFixed(2)}`],
-            ['Balance', `$${parseFloat(selectedRow?.balance || 0).toFixed(2)}`],
+            ['Amount', `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.amount || 0).toFixed(2)}`],
+            ['Balance', `${getSymbolFromCurrency(selectedRow?.to_currency)}${parseFloat(selectedRow?.balance || 0).toFixed(2)}`],
             ['Status', selectedRow?.status],
           ].map(([label, value]) => (
             <Box display="flex" justifyContent="space-between" mb={2} key={label}>
