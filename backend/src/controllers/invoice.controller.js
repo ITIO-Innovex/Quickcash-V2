@@ -1540,10 +1540,10 @@ async function generatePDFfromURL(setting_id,url, outputPath,qrCode,inv,item,add
    } else {
      const path = require('path');
      const fs = require('fs');
-     const folderName = `public/invoices/${inv}`;
+     const folderName = `public/invoices/${inv}`;  
      try {
       if (!fs.existsSync(folderName)) {
-       fs.mkdirSync(folderName);
+       fs.mkdirSync(folderName, { recursive: true });
       }
      } catch (err) {
        console.error("error",err);

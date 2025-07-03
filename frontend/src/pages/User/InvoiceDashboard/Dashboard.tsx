@@ -6,7 +6,9 @@ import InvoiceQuoteToggle from './InvoiceQuoteToggle';
 import InvoiceIncomeChart from './InvoiceIncomeChart';
 import InvoiceStatsSection from './InvoiceStatsSection';
 import PageHeader from '@/components/common/pageHeader';
-import { Box, Container, Typography } from '@mui/material';
+import { Box, Container, Typography, Grid } from '@mui/material';
+import InvoicePaymentOverview from './InvoicePaymentOverview';
+import { PieChart } from '@mui/x-charts';
 
 const InvoiceDashboard = () => {
   const [activeTab, setActiveTab] = useState<'invoice' | 'quote'>('invoice');
@@ -31,8 +33,9 @@ const InvoiceDashboard = () => {
         <InvoiceQuoteToggle activeTab={activeTab} setActiveTab={setActiveTab} />
         <InvoiceStatsCards activeTab={activeTab} />
         <InvoiceActions activeTab={activeTab} />
-        <InvoiceStatsSection />
-        <InvoiceIncomeChart />
+        <InvoiceStatsSection activeTab={activeTab} />
+        <InvoiceIncomeChart activeTab={activeTab} />
+        <InvoicePaymentOverview activeTab={activeTab} />
       </Box>
     </Container>
   );
