@@ -42,7 +42,7 @@ const CardBalance: React.FC<CardBalanceProps> = ({ card }) => {
   const theme = useTheme();
   const url: string =
     import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
- 
+
   const { list: accounts } = useAccount(accountId?.data?.id);
   const [cards, setCards] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -139,16 +139,22 @@ const CardBalance: React.FC<CardBalanceProps> = ({ card }) => {
             <Box className="balance-row" sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography className="balance-label">Card Balance</Typography>
               <Typography variant="h6" color="success.main">
-                {loading ? 'Loading...' : card ? `₹ ${card.amount.toFixed(2)}` : '₹ 0.00'}
+                {loading ? 'Loading...' : card && typeof card.amount === 'number'
+                  ? `₹ ${card.amount.toFixed(2)}`
+                  : '₹ 0.00'}
               </Typography>
             </Box>
             <Box className="balance-row" sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography className="balance-label">Daily Limit</Typography>
-              <Typography>{loading ? 'Loading...' : card ? `₹ ${card.dailyLimit.toFixed(2)}` : '₹ 0.00'}</Typography>
+              <Typography>{loading ? 'Loading...' : card && typeof card.dailyLimit === 'number'
+                ? `₹ ${card.dailyLimit.toFixed(2)}`
+                : '₹ 0.00'}</Typography>
             </Box>
             <Box className="balance-row" sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography className="balance-label">Monthly Limit</Typography>
-              <Typography>{loading ? 'Loading...' : card ? `₹ ${card.monthlyLimit.toFixed(2)}` : '₹ 0.00'}</Typography>
+              <Typography>{loading ? 'Loading...' : card && typeof card.monthlyLimit === 'number'
+                ? `₹ ${card.monthlyLimit.toFixed(2)}`
+                : '₹ 0.00'}</Typography>
             </Box>
           </Stack>
         </Card>
