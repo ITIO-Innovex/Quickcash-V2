@@ -14,7 +14,8 @@ import admin from '@/helpers/adminApiHelper';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { Tooltip, IconButton } from '@mui/material';
-import InvoiceGeneratedListModal ,{dummyInvoiceData}from './TransactionDetails';
+import InvoiceGeneratedListModal from './TransactionDetails';
+import axios from 'axios';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 interface JwtPayload {
@@ -39,6 +40,7 @@ const FirstSection = () => {
   const [showFilter, setShowFilter] = useState(false);
   const [list, setList] = useState<any>();
   const [copiedRowId, setCopiedRowId] = useState<string | null>(null);
+  const [transactionsResult, setTransactionsResult] = useState<any[]>([]);
   const handleFilter = () => {
     setShowFilter((prev) => !prev);
   };
@@ -47,11 +49,28 @@ const FirstSection = () => {
     getTransactionsList(accountId.data.id);
   }, []);
 
-  const handleInvoiceModalOpen = () => {
-    setSelectedRow(dummyInvoiceData);   // set invoice data
-    setInvoiceModalOpen(true);          // open modal
-    handleMenuClose();                  // close menu if needed
+  const handleInvoiceModalOpen = async (row) => {
+    setSelectedRow(row);
+    await getValues(row._id);
+    setInvoiceModalOpen(true);
+    handleMenuClose();
   };
+
+  const getValues = async(val:any) => {
+    await axios.get(`/${url}/v1/admin/invoice/transactions/${val}`)
+    .then(result => {
+      if(result.data.status == 201) {
+        setTransactionsResult(result.data.data);
+      } else {
+        setTransactionsResult([]);
+      }
+    })
+    .catch(error => {
+     console.log("error", error);
+     setTransactionsResult([]);
+    }) 
+  }
+
   const getTransactionsList = async (id: any) => {
     await admin.get(`/${url}/v1/admin/invoice/list/${id}`)
       .then(result => {
@@ -170,7 +189,7 @@ const FirstSection = () => {
       headerName: 'Action',
       render: (row: any) => (
         <Box display="flex" gap={1}>
-          <IconButton onClick={handleInvoiceModalOpen}>
+          <IconButton onClick={() => handleInvoiceModalOpen(row)}>
             <VisibilityIcon style={{ cursor: 'pointer',color:'black' }} />
           </IconButton>
           <Tooltip title="Copy Invoice URL">
@@ -253,7 +272,7 @@ const FirstSection = () => {
         </Typography>
       )}
 
-    <InvoiceGeneratedListModal open={invoiceModalOpen} onClose={() => setInvoiceModalOpen(false)} data={dummyInvoiceData}/>
+    <InvoiceGeneratedListModal open={invoiceModalOpen} onClose={() => setInvoiceModalOpen(false)} data={transactionsResult}/>
     </Box>
   );
 };

@@ -3,33 +3,12 @@ import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import ReactCountryFlag from "react-country-flag";
 
-const AccountsList = () => {
-  const theme = useTheme();
+interface AccountsListProps {
+  accounts: any[];
+}
 
-  // Static dummy data replacing API logic
-  const [accounts] = useState([
-    {
-      currency: 'USD',
-      code: 'US',
-      balance: '1500.00',
-      iban: 'US64SVBKUS6S3300958879',
-      bic: 'SVBKUS6S',
-    },
-    {
-      currency: 'INR',
-      code: 'IN',
-      balance: '85000.00',
-      iban: 'IN12HDFC000123456789',
-      bic: 'HDFCINBB',
-    },
-    {
-      currency: 'EUR',
-      code: 'DE',
-      balance: '2200.75',
-      iban: 'DE89370400440532013000',
-      bic: 'DEUTDEFF',
-    },
-  ]);
+const AccountsList = ({ accounts }: AccountsListProps) => {
+  const theme = useTheme();
 
   return (
     <Box sx={{ backgroundColor: theme.palette.background.default }}>
@@ -65,7 +44,7 @@ const AccountsList = () => {
               }}
             >
               <ReactCountryFlag
-                countryCode={account.code}
+                countryCode={account.country}
                 svg
                 style={{
                   width: '2em',

@@ -5,28 +5,20 @@ import copy from "copy-to-clipboard";
 import React, { useState } from 'react';
 import CommonTooltip from '@/components/common/toolTip';
 
-const AdditionalInformation = () => {
+interface AdditionalInformationProps {
+  userDetails: any;
+}
+
+const AdditionalInformation = ({ userDetails }: AdditionalInformationProps) => {
   const theme = useTheme();
   const [copied, setCopied] = useState(false);
   const [openAlert, setOpenAlert] = useState(false);
 
-  // ✅ Dummy Data
-  const userDetails = {
-    city: "Mumbai",
-    state: "Maharashtra",
-    postalcode: "400001",
-    owneridofindividual: "Passport",
-    ownertaxid: "INP1234567",
-    referalDetails: [
-      { referral_code: "ABCD1234" }
-    ]
+  const contentCopy = (wid: string) => {
+    copy(wid);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 900);
   };
-
- const contentCopy = (wid: string) => {
-  copy(wid);
-  setCopied(true);
-  setTimeout(() => setCopied(false), 900);
-};
 
   return (
     <Box
