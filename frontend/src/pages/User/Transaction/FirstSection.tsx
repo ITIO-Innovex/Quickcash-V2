@@ -44,10 +44,10 @@ const FirstSection = () => {
   };
 
   const handleClose = () => {
-  console.log("Closing modal");
-  setOpen(false);
-  setSelectedRow(null);
-};
+    console.log("Closing modal");
+    setOpen(false);
+    setSelectedRow(null);
+  };
 
 
   const url = import.meta.env.VITE_NODE_ENV === "production" ? 'api' : 'api';
@@ -91,16 +91,38 @@ const FirstSection = () => {
 
   const handleDownloadPDF = () => {
     const headers = ['Date', 'Transaction ID', 'Type', 'Amount', 'Balance', 'Status'];
-    const formattedData = currentData.map((row) => ({
-      'Date': row.date,
-      'Transaction ID': row.id,
-      Type: row.type,
-      Amount: `$${Math.abs(row.amount)}`,
-      Balance: `$${Math.abs(row.balance)}`,
-      Status: row.status,
-    }));
+
+    const formattedData = currentData.map((row) => {
+      let amountStr = '';
+      const fee = parseFloat(row?.fee || 0);
+      const amount = parseFloat(row?.amount);
+
+      // Determine currency symbol
+      const fromSymbol = getSymbolFromCurrency(row?.from_currency);
+      const toSymbol = getSymbolFromCurrency(row?.to_currency);
+
+      // Apply display logic
+      if (row?.extraType === 'debit') {
+        amountStr = `-${fromSymbol}${(amount + fee).toFixed(2)}`;
+      } else if (row?.tr_type === 'Stripe') {
+        amountStr = `+${fromSymbol}${amount.toFixed(2)}`;
+      } else {
+        amountStr = `+${toSymbol}${amount.toFixed(2)}`;
+      }
+
+      return {
+        'Date': row.createdAt,
+        'Transaction ID': row.trx,
+        'Type': row.type,
+        'Amount': amountStr,
+        'Balance': `$${row.postBalance.toFixed(2)}`,
+        'Status': row.status,
+      };
+    });
+
     downloadPDF(formattedData, headers, 'TransactionsList.pdf', 'Transactions List');
   };
+
 
   const handleGlobalSearch = (text: string) => {
     setFilterText(text);
@@ -165,12 +187,22 @@ const FirstSection = () => {
     {
       field: 'status',
       headerName: 'Status',
-      render: (row: any) => (
-        <span className={`status-chip ${row.status.toLowerCase()}`}>
-          {row.status}
-        </span>
-      )
+      render: (row: any) => {
+        const rawStatus = row.status?.toLowerCase();
+
+        const isSuccess = ['succeeded', 'success', 'complete', 'successful'].includes(rawStatus);
+        const displayText = isSuccess ? 'Success' : row.status;
+        const statusClass = isSuccess ? 'success' : rawStatus; // force same class for all success types
+
+        return (
+          <span className={`status-chip ${statusClass}`}>
+            {displayText}
+          </span>
+        );
+      }
     },
+
+
     {
       field: 'action',
       headerName: 'Action',
@@ -229,38 +261,38 @@ const FirstSection = () => {
         </Typography>
       )}
 
-   <TransactionDetailModal
- open={open}
-  onClose={handleClose}
-  title="Transaction Details"
-  transactionData={{
-    transactionInfo: {
-      "Transaction ID": selectedRow?.trx,
-      Date: selectedRow?.createdAt?.slice(0, 10),
-      Type: selectedRow?.trans_type,
-      Amount: `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.amount || 0).toFixed(2)}`,
-      Balance: `${getSymbolFromCurrency(selectedRow?.to_currency)}${parseFloat(selectedRow?.balance || 0).toFixed(2)}`,
-      Status: selectedRow?.status,
-    },
-    customerInfo: {
-      Name: "John Doe",
-      Email: "john@example.com"
-    },
-    timeline: [
-      { label: "Payment initiated", date: "Jun 1, 2025 12:00 AM", color: "#7e57c2" },
-      { label: "Payment authorized", date: "Jun 1, 2025 12:00 AM", color: "#7e57c2" },
-      { label: "Payment completed", date: "Jun 1, 2025 12:00 AM", color: "#4caf50" }
-    ],
-    actions: [
-      { label: "Issue Refund", onClick: () => console.log("Refund") },
-      { label: "Send Receipt", onClick: () => console.log("Send Receipt") },
-      { label: "Create Dispute", onClick: () => console.log("Dispute") }
-    ]
-  }}
-   dialogContentSx={{ backgroundColor:theme.palette.background.default ,color:theme.palette.text.primary}}
-  cardSx={{ boxShadow: "none", border: "1px solid #ddd", backgroundColor:theme.palette.background.default}}
-  buttonSx={{ color: "white", borderColor: "white" }}
-/>
+      <TransactionDetailModal
+        open={open}
+        onClose={handleClose}
+        title="Transaction Details"
+        transactionData={{
+          transactionInfo: {
+            "Transaction ID": selectedRow?.trx,
+            Date: selectedRow?.createdAt?.slice(0, 10),
+            Type: selectedRow?.trans_type,
+            Amount: `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.amount || 0).toFixed(2)}`,
+            Balance: `${getSymbolFromCurrency(selectedRow?.to_currency)}${parseFloat(selectedRow?.balance || 0).toFixed(2)}`,
+            Status: selectedRow?.status,
+          },
+          customerInfo: {
+            Name: "John Doe",
+            Email: "john@example.com"
+          },
+          timeline: [
+            { label: "Payment initiated", date: "Jun 1, 2025 12:00 AM", color: "#7e57c2" },
+            { label: "Payment authorized", date: "Jun 1, 2025 12:00 AM", color: "#7e57c2" },
+            { label: "Payment completed", date: "Jun 1, 2025 12:00 AM", color: "#4caf50" }
+          ],
+          actions: [
+            { label: "Issue Refund", onClick: () => console.log("Refund") },
+            { label: "Send Receipt", onClick: () => console.log("Send Receipt") },
+            { label: "Create Dispute", onClick: () => console.log("Dispute") }
+          ]
+        }}
+        dialogContentSx={{ backgroundColor: theme.palette.background.default, color: theme.palette.text.primary }}
+        cardSx={{ boxShadow: "none", border: "1px solid #ddd", backgroundColor: theme.palette.background.default }}
+        buttonSx={{ color: "white", borderColor: "white" }}
+      />
 
     </Box>
   );
