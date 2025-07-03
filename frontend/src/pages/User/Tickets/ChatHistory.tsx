@@ -43,10 +43,8 @@ const ChatHistory = () => {
 
   useEffect(() => {
     if (ticketId) fetchChatHistory();
-    // eslint-disable-next-line
   }, [ticketId]);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
