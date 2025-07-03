@@ -84,6 +84,7 @@ import DigitalDashboard from '@/pages/User/DigitalSignature/DummyFile';
 import AnalyticsData from '@/pages/User/DigitalSignature/AnalyticsData.jsx';
 // ===========Digital Signature Route End ==============
 import { useAuth } from '@/contexts/authContext';
+import ResetPassword from '@/pages/User/AccountSection/ResetPassword';
 
 // --- Auth Route Wrapper ---
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
@@ -145,6 +146,7 @@ const guestRoutes = [
   { path: '/register', element: <UserSignup /> },
   { path: '/login-admin', element: <AdminLogin /> },
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
+  { path: '/reset-password/*', element: <ResetPassword /> },
   { path: '/contact', element: <Contact /> },
   { path: '*', element: <NotFound /> },
 ];
