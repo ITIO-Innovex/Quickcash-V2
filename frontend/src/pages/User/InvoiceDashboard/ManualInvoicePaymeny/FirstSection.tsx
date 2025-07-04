@@ -18,6 +18,7 @@ const FirstSection = () => {
   const [filterText, setFilterText] = useState('');
   const [showFilter, setShowFilter] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
+  const [viewDetails, setViewDetails] = useState<any | null>(null);
   const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
   const handleFilter = () => {
@@ -99,14 +100,35 @@ const FirstSection = () => {
   };
   
 
+  const HandleGetProductData = async (val: any) => {
+    console.log('Fetching details for ID:', val);
+    try {
+      const result = await api.get(`/${url}/v1/manualPayment/${val}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (result?.data?.status === 201) {
+        setViewDetails(result?.data?.data);
+      }
+    } catch (error: any) {
+      alert(error?.response?.data?.message || "Error fetching details");
+      console.log("error", error);
+    }
+  };
+
   const handleActionClick = (row: any) => {
+    console.log('Row data:', row);
     setSelectedRow(row);
     setOpen(true);
+    // Dynamically fetch details using the selected row's ID
+    HandleGetProductData(row._id);
   };
 
   const handleClose = () => {
     setOpen(false);
     setSelectedRow(null);
+    setViewDetails(null);
   };
 
 
@@ -203,36 +225,34 @@ const FirstSection = () => {
 
       <CustomModal open={open} onClose={handleClose} title="Invoice Payment Details" sx={{backgroundColor: theme.palette.background.default }}>
               <div className="header-divider" />
-              
-              <Box sx={{ mt: 2 }}>
                  <Box display="flex" justifyContent="space-between" mb={2}>
                       <Typography><strong>Date:</strong></Typography>
-                      <Typography>{selectedRow?.date}</Typography>
+                      <Typography>{viewDetails?.paymentDate || viewDetails?.date || selectedRow?.paymentDate || selectedRow?.date}</Typography>
                       </Box>
       
                       <Box display="flex" justifyContent="space-between" mb={2}>
                       <Typography><strong>Transaction ID:</strong></Typography>
-                      <Typography>{selectedRow?.id}</Typography>
+                      <Typography>{viewDetails?.id || selectedRow?.id}</Typography>
                       </Box>
       
                       <Box display="flex" justifyContent="space-between" mb={2}>
                       <Typography><strong>Type:</strong></Typography>
-                      <Typography>{selectedRow?.type}</Typography>
+                      <Typography>{viewDetails?.type || selectedRow?.type}</Typography>
                       </Box>
       
                       <Box display="flex" justifyContent="space-between" mb={2}>
                       <Typography><strong>Amount:</strong></Typography>
-                      <Typography>${selectedRow?.amount}</Typography>
+                      <Typography>{viewDetails?.amountCurrencyText ? `${viewDetails?.amountCurrencyText} ${viewDetails?.amount}` : viewDetails?.amount || selectedRow?.amount}</Typography>
                       </Box>
       
                       <Box display="flex" justifyContent="space-between" mb={2}>
                       <Typography><strong>Balance:</strong></Typography>
-                      <Typography>${selectedRow?.balance}</Typography>
+                      <Typography>{viewDetails?.balance !== undefined ? `$${viewDetails?.balance}` : '-'}</Typography>
                       </Box>
       
                       <Box display="flex" justifyContent="space-between" mb={2}>
                       <Typography><strong>Status:</strong></Typography>
-                      <Typography>{selectedRow?.status}</Typography>
+                      <Typography>{viewDetails?.status || selectedRow?.status}</Typography>
                       </Box>
       
                       <Button
@@ -242,7 +262,6 @@ const FirstSection = () => {
                       >
                       <span className="button-text">Close</span>
                       </Button>
-              </Box>
               </CustomModal>
     </Box>
   );
