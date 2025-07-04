@@ -75,6 +75,7 @@ reviewFlag
     acc.iban.toLowerCase().includes(search.toLowerCase())
   );
     const HandleSwitchAccount = (item: any) => {
+      console.log(item);
     activeToAccount(item);
     onClose(item);
     setToExchangeBox(item);
