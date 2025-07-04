@@ -53,6 +53,7 @@ import InvoiceDashboard from '@/pages/User/InvoiceDashboard/Dashboard';
 import SendMoney from '@/pages/User/dashboardInsideForms/sendMoney/main';
 import InvoiceSection from '@/pages/User/InvoiceDashboard/Invoices/main';
 import TotalTransactions from '@/pages/Admin/Fiat/TotalTransactions/main';
+import AddQuote from '@/pages/User/InvoiceDashboard/InvoiceQuote/AddQuote';
 import UserProfileDetails from '@/pages/Admin/UserList/ProfileDetails/main';
 import InvoiceQuotes from '@/pages/User/InvoiceDashboard/InvoiceQuote/main';
 import InvoiceProduct from '@/pages/User/InvoiceDashboard/InvoiceProduct/main';
@@ -61,7 +62,7 @@ import InvoiceTemplate from '@/pages/User/InvoiceDashboard/InvoiceTemplate/main'
 import InvoiceCategory from '@/pages/User/InvoiceDashboard/InvoiceCategory/main';
 import PendingTransactionsList from '@/pages/Admin/Fiat/PendingTransactions/main';
 
-import EditInvoiceSection from '@/pages/User/InvoiceDashboard/Invoices/EditInvoice';
+import EditInvoiceSection from '@/pages/User/InvoiceDashboard/Invoices/AddInvoice';
 import ManualPayment  from '@/pages/User/InvoiceDashboard/ManualInvoicePaymeny/main';
 import InvoiceTransactions from '@/pages/User/InvoiceDashboard/InvoiceTransactions/main';
 import AddBeneficiaryForm from '@/pages/User/dashboardInsideForms/sendMoney/addNewBenefiecry';
@@ -158,6 +159,7 @@ const authRoutes = [
   { path: '/wallet', element: <Wallet /> },
   { path: '/clients', element: <Clients /> },
   { path: '/settings', element: <Settings /> },
+  { path: '/add-quote', element: <AddQuote /> },
   { path: '/help-center', element: <Tickets /> },
   { path: '/send-money', element: <SendMoney /> },
   { path: '/refer-earn', element: <ReferEarn /> },
@@ -217,7 +219,7 @@ const authRoutes = [
     path: '/digital-signature/recipientSignPdf/:docId/',
     element: <DigitalSignaturePdfRequestFiles />,
   },
-  { path: '/edit-invoice/:id', element: <EditInvoiceSection /> },
+  { path: '/add-invoice/:id', element: <EditInvoiceSection /> },
   // { path: '/digital-signature', element: <DigitalSignature /> },
   { path: '/invoice-transactions', element: <InvoiceTransactions /> },
   { path: '/digital-signature/sign-yourself/:docId', element: <SignYourSelf /> },

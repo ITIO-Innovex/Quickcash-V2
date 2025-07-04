@@ -251,8 +251,6 @@ const proceedSellCrypto = async () => {
     // console.log("✅ Sell API Response:", response);
     if (response.data.status === 201) {
       handleNext();
-      localStorage.removeItem('sellCalculationData');
-      localStorage.removeItem('sellwalletAddress'); 
     }
 
   } catch (error: any) {
@@ -274,17 +272,28 @@ const proceedSellCrypto = async () => {
     setCurrentStep(currentStep - 1);
   } else {
     navigate('/buysellswap', {
-      state: { tab: transactionType }, // 👈 active tab info pass
-    });
+  state: { type: transactionType }, // 👈 this fixes the bug!
+});
   }
 };
 
 
-  const handleComplete = () => {
+const handleComplete = () => {
+  // Clear buy data
   localStorage.removeItem('calculationData');
   localStorage.removeItem('cwalletAddress');
-  navigate('/buysellswap'); // 👈 Navigate after clearing
+
+  // Clear sell data
+  localStorage.removeItem('sellCalculationData');
+  localStorage.removeItem('sellAvailableData');
+  localStorage.removeItem('sellwalletAddress');
+  localStorage.removeItem('calculationDatasellAvailableData');
+  localStorage.removeItem('sellCalculation');
+
+  // ✅ Redirect
+  navigate('/buysellswap');
 };
+
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -292,7 +301,7 @@ const proceedSellCrypto = async () => {
         return (
           <Box className="proceed-content">
             <Typography variant="h6" className="proceed-title" sx={{ color: theme.palette.text.primary }}>
-              {calculationData?.type?.toUpperCase?.() || 'TRANSACTION'} Details
+              {transactionType?.toUpperCase?.() || 'TRANSACTION'} Details
             </Typography>
             
             <Box className="proceed-grid" >
@@ -457,9 +466,9 @@ const proceedSellCrypto = async () => {
       case 1:
         return (
           <Box className="proceed-confirm-container">
-            <Typography variant="h6" className="proceed-confirm-title" sx={{ color: theme.palette.text.primary }}>
-              Confirm {calculationData.type.toUpperCase()}
-            </Typography>
+            <Typography variant="h6" className="proceed-confirm-title">
+            Confirm {transactionType.toUpperCase()}
+          </Typography>
             <Typography variant="body2" className="proceed-confirm-timer" sx={{ color: theme.palette.text.gray }}>
               <span><CountdownTimer /></span>
             </Typography>
@@ -613,7 +622,7 @@ const proceedSellCrypto = async () => {
               </Typography>
               <Typography variant="h6" className="proceed-total-amount" sx={{ color: theme.palette.text.gray }}>
               {transactionType === 'sell'
-              ? `${calculationData.amount} ${calculationData.currency}`
+              ? `${sellCalculationData.youSell} ${sellCalculationData.currency}`
               : `${calculationData.numberofCoins} ${calculationData.coin}`}
               </Typography>
             </Box>
@@ -674,7 +683,7 @@ const proceedSellCrypto = async () => {
           {renderStepContent()}
 
           <Box className="proceed-buttons">
-           {currentStep > 0 && (
+         
             <CustomButton
               onClick={handleBack}
               sx={{
@@ -689,7 +698,7 @@ const proceedSellCrypto = async () => {
             >
               ← Back
             </CustomButton>
-          )}
+       
 
            {currentStep === steps.length - 1 ? (
             <CustomButton

@@ -338,7 +338,13 @@ const debouncedSwapCall = useRef(
     }
   }, 500) // 500ms delay
 ).current;
+useEffect(() => {
+  const amount = parseFloat(youSend);
 
+  if (fromCoin && swapCoin && amount > 0) {
+    debouncedSwapCall(fromCoin, swapCoin, amount);
+  }
+}, [fromCoin, swapCoin, youSend]);
 const {
   availableCoins: availableCoinsFromHook,
   sellCalculationData,
@@ -376,11 +382,14 @@ const handleSellCoinChange = async (
   if (type === 'sell') {
     setCoin(selectedCoin);
   } else if (type === 'swap') {
-     setFromCoin(selectedCoin);
+    setFromCoin(selectedCoin);
   }
 
   const amount = await loadSellCoinAmount(selectedCoin);
   console.log(`✅ Coins available for ${type}:`, amount);
+
+  // ✅ Update availableCoins immediately
+  setAvailableCoins(amount || 0);
 
   const data = {
     coin: selectedCoin,
@@ -521,7 +530,7 @@ const isFormValid = () => {
   } else {
     // For Buy/Sell tabs
     const isValidAmount = amount && parseFloat(amount) > 0;
-    console.log('💰 Buy/Sell Validation:', { amount, isValidAmount });
+    // console.log('💰 Buy/Sell Validation:', { amount, isValidAmount });
     return isValidAmount;
   }
 };
@@ -596,7 +605,7 @@ const handleSwap = async () => {
     console.error("❌ Error during swap:", error);
   }
 };
-
+const filteredSwapCoins = swapRawCoins.filter((coin) => coin.coin !== fromCoin);
   return (
     <>
       <Box className="crypto-form-container">
@@ -1005,9 +1014,8 @@ const handleSwap = async () => {
                     setSwapCoin(selected);
                     handleSwapCoinChange(fromCoin, selected, parseFloat(youSend));
                   }}
-
                       // @ts-ignore
-                      options={swapRawCoins.map((c) => ({
+                       options={filteredSwapCoins.map((c) => ({
                         label: (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <img
