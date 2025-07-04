@@ -95,7 +95,8 @@
     "swiper": "^11.2.8",
     "tailwindcss": "^3.4.17",
     "xlsx": "^0.18.5",
-    "yup": "^1.6.1"
+    "yup": "^1.6.1",
+    "dayjs": "^1.11.13"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
