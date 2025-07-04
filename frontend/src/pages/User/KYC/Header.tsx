@@ -22,7 +22,7 @@ const Header: React.FC<HeaderProps> = ({
       <Box className="demo-buttons">
         <Grid container spacing={2} justifyContent="center">
           <Grid item xs={12} sm={4}>
-            <CustomButton
+            {/* <CustomButton
               className="demo-button"
               onClick={onOpenPending}
               fullWidth
@@ -46,7 +46,7 @@ const Header: React.FC<HeaderProps> = ({
               fullWidth
             >
               KYC Submitted
-            </CustomButton>
+            </CustomButton> */}
           </Grid>
         </Grid>
       </Box>

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useAppToast } from '@/utils/toast'; 
+import { useAppToast } from '@/utils/toast';
 import curr from 'iso-country-currency';
 import ReactFlagsSelect from 'react-flags-select';
 import React, { useState, useEffect } from 'react';
@@ -28,6 +28,7 @@ const validate = (field: string, value: string): boolean => {
 
 const UserSignup = () => {
   const theme = useTheme();
+  const toast = useAppToast();
   const toast = useAppToast(); 
   const navigate = useNavigate();
   const location = useLocation();
@@ -88,9 +89,14 @@ const UserSignup = () => {
       });
 
       if (result.data.status === 201) {
-        localStorage.setItem('usersessionid', result.data.data._id);
-      } else {
-        throw new Error("Failed to create session");
+        try {
+          toast.success(result.data.message);
+          navigate('/login');
+        } catch (sessionError) {
+          console.error("Session creation error:", sessionError);
+          toast.error("Account created. Please login to continue.");
+          navigate('/login'); // Still navigate even if session creation fails
+        }
       }
     } catch (error: any) {
       console.error("Login session error:", error);
@@ -119,12 +125,10 @@ const UserSignup = () => {
           }
         });
 
-        if (result.data.status === "201") {
+        if (result.data.status === 201) {
           try {
-            await addLoginSession(result.data.data._id);
-            localStorage.setItem("token", result.data.token);
             toast.success(result.data.message);
-            navigate('/dashboard');
+            navigate('/login');
           } catch (sessionError) {
             console.error("Session creation error:", sessionError);
             toast.error("Account created but session creation failed");

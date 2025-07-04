@@ -15,7 +15,8 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { isValidateEmail, isValidPassword } from '@/utils/validator';
-import { useAppToast } from '@/utils/toast'; 
+import { useAppToast } from '@/utils/toast';
+import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '@/contexts/authContext';
 import { jwtDecode } from 'jwt-decode';
 import { API_ROUTES } from '../constant/apiRoutes';
@@ -48,7 +49,7 @@ const errors: { email?: string; password?: string } = {
 
 const UserLogin = () => {
   const theme = useTheme();
-  const toast = useAppToast(); 
+  const toast = useAppToast();
   const navigate = useNavigate();
   const { login } = useAuth();
   const [forgotOpen, setforgotOpen] = useState(false);

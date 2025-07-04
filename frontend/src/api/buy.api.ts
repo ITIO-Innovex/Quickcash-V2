@@ -24,7 +24,7 @@ export const fetchCalculation = async (
       amount,
       side,
     });
-    // console.log("✅ fetchCalculation Response:", res.data);
+    console.log("✅ fetchCalculation Response:", res.data);
     return res.data;
   } catch (error) {
     console.error("❌ fetchCalculation error:", error);

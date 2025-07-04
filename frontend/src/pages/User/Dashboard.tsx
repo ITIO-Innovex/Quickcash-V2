@@ -29,7 +29,7 @@ const UserDashboard = () => {
         const kycStatus = res.data.status;
         console.log('KYC status of USER :', kycStatus);
 
-        if (kycStatus === 'pending') {
+        if (kycStatus === 'Pending') {
           setPendingModalOpen(true);
         } else if (kycStatus === 'submitted') {
           setSubmittedModalOpen(true);
