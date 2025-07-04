@@ -7,6 +7,8 @@ import { isEmpty, isValidPassword } from '@/utils/validator';
 import { showToast } from '@/utils/toastContainer';
 import useValidation from '@/helpers/userValidation';
 import api from '@/helpers/apiHelper';
+import Lottie from 'lottie-react';
+import successAnim from '@/assets/Success.json';
 
 const ResetPassword: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
@@ -92,9 +94,12 @@ const ResetPassword: React.FC = () => {
         </CustomButton>
       </Box>
       {showSuccess && (
-        <Typography sx={{ color: 'green', mt: 2, textAlign: 'center' }}>
-          Password reset successful!
-        </Typography>
+        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" mt={2}>
+          <Lottie animationData={successAnim} loop={false} style={{ width: 100, height: 100 }} />
+          <Typography sx={{ color: 'green', mt: 1, textAlign: 'center' }}>
+            Password reset successful!
+          </Typography>
+        </Box>
       )}
     </Box>
   );
