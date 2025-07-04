@@ -5,14 +5,14 @@ import CustomButton from '../../../components/CustomButton';
 import CustomSelect from '../../../components/CustomDropdown';
 import CustomInput from '../../../components/CustomInputField';
 import { Box, Typography, Grid, useTheme } from '@mui/material';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useAppToast } from '@/utils/toast'; 
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 const AddClient = () => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

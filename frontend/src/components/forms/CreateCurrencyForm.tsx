@@ -3,7 +3,7 @@ import CustomButton from '../CustomButton';
 import CustomInput from '@/components/CustomInputField';
 import { Box, Typography, Divider, useTheme, MenuItem, Select } from '@mui/material';
 import admin from '@/helpers/adminApiHelper';
-import { showToast } from '@/utils/toastContainer';
+import { useAppToast } from '@/utils/toast'; 
 
 const url = import.meta.env.VITE_NODE_ENV === "production" ? 'api' : 'api';
 
@@ -14,6 +14,7 @@ interface Props {
 
 const CreateCurrencyForm: React.FC<Props> = ({ onClose, onAdded }) => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const [currencyName, setCurrencyName] = useState('');
   const [currencyCode, setCurrencyCode] = useState('');
   const [currencyList, setCurrencyList] = useState<any[]>([]);
@@ -51,13 +52,13 @@ const CreateCurrencyForm: React.FC<Props> = ({ onClose, onAdded }) => {
       if (result.data.status === 201) {
         setCurrencyCode('');
         setCurrencyName('');
-        showToast(result?.data?.message, "success");
+        toast.success(result?.data?.message);
         onAdded?.();
         onClose();
       }
     } catch (error) {
       console.log("error", error);
-      showToast(error?.response?.data?.message || "Error occurred", "error");
+      toast.error(error?.response?.data?.message || "Error occurred");
     }
   };
 

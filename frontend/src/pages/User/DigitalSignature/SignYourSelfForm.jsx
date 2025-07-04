@@ -14,7 +14,7 @@ import {
   maxTitleLength,
 } from "../constant/const";
 import { API_ROUTES } from "../constant/apiRoutes";
-import { toast } from "react-toastify";
+import { useAppToast } from '@/utils/toast'; 
 import Title from '../../../components/common/Title';
 import Loader from '../../../components/common/loader';
 
@@ -84,6 +84,7 @@ const FilePreview = styled(Box)(({ theme }) => ({
 
 const SignYourselfForm = () => {
   const inputFileRef = useRef(null);
+  const toast = useAppToast(); 
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     Name: "",

@@ -4,7 +4,7 @@ import CustomInput from '@/components/CustomInputField';
 import CustomButton from '@/components/CustomButton';
 import { useNavigate, useParams } from 'react-router-dom';
 import { isEmpty, isValidPassword } from '@/utils/validator';
-import { showToast } from '@/utils/toastContainer';
+import { useAppToast } from '@/utils/toast'; 
 import useValidation from '@/helpers/userValidation';
 import api from '@/helpers/apiHelper';
 import Lottie from 'lottie-react';
@@ -18,10 +18,11 @@ const ResetPassword: React.FC = () => {
   const { errors, validate } = useValidation();
   const { "*": token } = useParams();
   const navigate = useNavigate();
+  const toast = useAppToast(); 
   const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
   console.log("Token:", token);
   const handleSubmit = async () => {
-    console.log("Submit clicked");
+    // console.log("Submit clicked");
     setError('');
     if (isEmpty(newPassword)) return setError('Password is required');
     if (!isValidPassword(newPassword)) return setError('Password must be at least 6 characters');
@@ -46,7 +47,7 @@ const ResetPassword: React.FC = () => {
         );
       if (result.data.status === 201) {
         setShowSuccess(true);
-        showToast(result.data.message, "success");
+        toast.success(result.data.message);
         setTimeout(() => {
           setShowSuccess(false);
           navigate('/');
@@ -54,7 +55,7 @@ const ResetPassword: React.FC = () => {
       }
     } catch (error: any) {
       setError(error.response?.data?.message || 'Error resetting password');
-      showToast(error.response?.data?.message || 'Error resetting password', "error");
+      toast.error(error.response?.data?.message || 'Error resetting password');
     }
   };
 

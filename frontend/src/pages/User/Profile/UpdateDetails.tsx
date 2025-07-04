@@ -7,7 +7,7 @@ import CustomButton from '../../../components/CustomButton';
 import { jwtDecode } from 'jwt-decode';
 import api from '@/helpers/apiHelper';
 import axios from 'axios';
-import { showToast } from '@/utils/toastContainer';
+import { useAppToast } from '@/utils/toast'; 
 interface JwtPayload {
   sub: string;
   role: string;
@@ -25,7 +25,7 @@ const url = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
 
 const UpdateDetails = () => {
   const theme = useTheme();
-
+const toast = useAppToast(); 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -214,15 +214,15 @@ const UpdateDetails = () => {
       });
 
       if (result.data.status === 201) {
-        showToast(result.data.message || "Profile updated successfully!", "success");
+        toast.success(result.data.message || "Profile updated successfully!", );
         console.log('Success:', result.data.message);
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        showToast(error.response?.data?.message || error.message, "error");
+        toast.error(error.response?.data?.message || error.message);
         console.log('Save Error:', error.response?.data?.message || error.message);
       } else {
-        showToast((error as Error).message, "error");
+        toast.error((error as Error).message);
         console.log('Unexpected Error:', (error as Error).message);
       }
     }

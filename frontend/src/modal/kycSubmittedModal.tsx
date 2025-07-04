@@ -1,4 +1,4 @@
-import { toast } from 'react-toastify'; 
+import { useAppToast } from '@/utils/toast'; 
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 import { useAuth } from '@/contexts/authContext';
@@ -6,6 +6,7 @@ import CustomModal from '@/components/CustomModal';
 
 const KYCSubmittedModal = ({ open }: { open: boolean }) => {
   const { logout } = useAuth();
+  const toast = useAppToast(); 
   const navigate = useNavigate();
 
   const handleClose = () => {

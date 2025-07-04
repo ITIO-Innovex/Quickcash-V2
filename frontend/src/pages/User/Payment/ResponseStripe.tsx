@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { toast } from 'react-toastify';
+import { useAppToast } from '@/utils/toast'; 
 import React, { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import getSymbolFromCurrency from 'currency-symbol-map';
@@ -8,6 +8,7 @@ import { JwtPayload } from '@/types/jwt';
 
 export default function ResponseStripe() {
   const navigate = useNavigate();
+  const toast = useAppToast(); 
   const url = import.meta.env.VITE_NODE_ENV === 'production' ? 'api' : 'api';
   const search = useLocation().search;
   const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
@@ -23,32 +24,6 @@ export default function ResponseStripe() {
       getData(id, OrderStatus);
     }
   }, []);
-
-  const alertnotify = (text: any, type: any) => {
-    if (type === "error") {
-      toast.error(text, {
-        position: "top-left",
-        autoClose: 7000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-      });
-    } else {
-      toast.success(text, {
-        position: "top-center",
-        autoClose: 7000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-      });
-    }
-  };
 
   const getData = async (val: any, stats: any) => {
     try {
@@ -75,7 +50,7 @@ export default function ResponseStripe() {
         });
 
         if (completeRes.data.status === 201) {
-          alertnotify("Payment has been done Successfully", "Success");
+          toast.success("Payment has been done Successfully");
           setTimeout(() => navigate('/dashboard'), 100);
         }
       }

@@ -11,7 +11,7 @@ import Brightness7Icon from '@mui/icons-material/Brightness7';
 import { isValidateEmail, isEmpty, isValidPassword } from '@/utils/validator';
 import { Typography, Modal, IconButton, Box, useTheme } from '@mui/material';
 import axios from 'axios';
-import { showToast } from '@/utils/toastContainer';
+import { useAppToast } from '@/utils/toast'; 
 
 interface Props {
   open: boolean;
@@ -20,6 +20,7 @@ interface Props {
 
 const ForgotPasswordModal: React.FC<Props> = ({ open, onClose }) => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const { themeMode, toggleTheme } = useSettings();
   const navigate = useNavigate();
   const [error, setError] = useState('');
@@ -41,12 +42,12 @@ const ForgotPasswordModal: React.FC<Props> = ({ open, onClose }) => {
         }
       });
       if (result.data.status == 201) {
-        showToast("Check your Registered mail, we have sent a reset password link", "success");
+        toast.success("Check your Registered mail, we have sent a reset password link");
         navigate('/');
       }
     } catch (error: any) {
       setError(error.response?.data?.message || "Error sending reset link");
-      showToast(error.response?.data?.message || "Error sending reset link", "error");
+      toast.error(error.response?.data?.message || "Error sending reset link");
     }
   };
 

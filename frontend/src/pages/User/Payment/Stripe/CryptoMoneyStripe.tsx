@@ -1,6 +1,6 @@
 import axios from 'axios';
 import React, {useState} from 'react';
-import { toast } from 'react-toastify';
+import { useAppToast } from '@/utils/toast'; 
 import { useNavigate } from 'react-router-dom';
 import getSymbolFromCurrency from 'currency-symbol-map';
 import { Backdrop, Box, CircularProgress } from '@mui/material';
@@ -10,6 +10,7 @@ import CustomButton from '@/components/CustomButton';
 const CryptoMoneyStripe = ({...props}) => {
 
   const stripe = useStripe();
+  const toast = useAppToast(); 
   const navigate = useNavigate();
   const elements = useElements();
   const [errorMessage, setErrorMessage] = useState<any>(null);
@@ -72,35 +73,11 @@ const CryptoMoneyStripe = ({...props}) => {
     .catch(error => {
       setStripeLoading(false);
       console.log("stripe error", error.response.data.raw.message);
-      alertnotify(error.response.data.raw.message, "error");
+      toast.error(error.response.data.raw.message);
     })
   };
 
-  const alertnotify = (text:any,type:any) => {
-    if(type == "error") {
-      toast.error(text, {
-        position: "top-center",
-        autoClose: 6000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-      })
-    } else {
-      toast.success(text, {
-        position: "top-center",
-        autoClose: 1900,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-      })
-    }
-  }
+
 
   const handleClose = () => {
     setStripeLoading(false);

@@ -6,12 +6,12 @@ import PageHeader from '@/components/common/pageHeader';
 import AddProductForm from '@/components/forms/AddProductForm';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useAppToast } from '@/utils/toast'; 
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 const Main = () => {
   const theme = useTheme();
+  const toast = useAppToast(); 
    const [isModalOpen, setIsModalOpen] = useState(false);
   
     const handleAddProduct = async (data: { name: string; productCode: string; category: string; unitPrice: string; description: string; }) => {
