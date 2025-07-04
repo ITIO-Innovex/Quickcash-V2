@@ -131,7 +131,7 @@ const FirstSection = () => {
     {
       field: 'message',
       headerName: 'Message',
-      render: (row: any) => row.message ? `${row.message.slice(0, 20)}...` : '',
+      render: (row: any) => row.message ? `${row.message.slice(0, 50)}...` : '',
     },
     {
       field: 'status',

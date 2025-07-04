@@ -56,19 +56,19 @@ const FirstSection = () => {
     handleMenuClose();
   };
 
-  const getValues = async(val:any) => {
+  const getValues = async (val: any) => {
     await axios.get(`/${url}/v1/admin/invoice/transactions/${val}`)
-    .then(result => {
-      if(result.data.status == 201) {
-        setTransactionsResult(result.data.data);
-      } else {
+      .then(result => {
+        if (result.data.status == 201) {
+          setTransactionsResult(result.data.data);
+        } else {
+          setTransactionsResult([]);
+        }
+      })
+      .catch(error => {
+        console.log("error", error);
         setTransactionsResult([]);
-      }
-    })
-    .catch(error => {
-     console.log("error", error);
-     setTransactionsResult([]);
-    }) 
+      })
   }
 
   const getTransactionsList = async (id: any) => {
@@ -159,8 +159,15 @@ const FirstSection = () => {
           ? `${row.currency_text} ${row.total.toFixed(2)}`
           : 'N/A',
     },
+    {
+      field: 'dueAmount',
+      headerName: 'Transactions',
+      render: (row: any) =>
+        row.dueAmount != null && row.currency_text
+          ? `${row.currency_text} ${row.dueAmount.toFixed(2)}`
+          : 'N/A',
+    },
 
-    { field: 'dueAmount', headerName: 'Transactions' },
     {
       field: 'status',
       headerName: 'Status',
@@ -190,7 +197,7 @@ const FirstSection = () => {
       render: (row: any) => (
         <Box display="flex" gap={1}>
           <IconButton onClick={() => handleInvoiceModalOpen(row)}>
-            <VisibilityIcon style={{ cursor: 'pointer',color:'black' }} />
+            <VisibilityIcon style={{ cursor: 'pointer', color: 'black' }} />
           </IconButton>
           <Tooltip title="Copy Invoice URL">
             <IconButton
@@ -272,7 +279,7 @@ const FirstSection = () => {
         </Typography>
       )}
 
-    <InvoiceGeneratedListModal open={invoiceModalOpen} onClose={() => setInvoiceModalOpen(false)} data={transactionsResult}/>
+      <InvoiceGeneratedListModal open={invoiceModalOpen} onClose={() => setInvoiceModalOpen(false)} data={transactionsResult} />
     </Box>
   );
 };

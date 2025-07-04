@@ -13,6 +13,7 @@ import GenericTable from '../../../../components/common/genericTable';
 import CustomButton from '@/components/CustomButton';
 import admin from '@/helpers/adminApiHelper';
 import axios from 'axios';
+import getSymbolFromCurrency from 'currency-symbol-map';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 const FirstSection = () => {
@@ -154,13 +155,16 @@ const FirstSection = () => {
             </Box>
 
             <Box display="flex" justifyContent="space-between" mb={2}>
-              <Typography><strong>Username:</strong></Typography>
-              <Typography>{selectedRow.userDetails?.[0]?.name}</Typography>
+              <Typography><strong>Amount:</strong></Typography>
+              <Typography>{getSymbolFromCurrency(selectedRow.currencyType)}{selectedRow.amount}</Typography>
             </Box>
-
             <Box display="flex" justifyContent="space-between" mb={2}>
-              <Typography><strong>email:</strong></Typography>
-              <Typography>{selectedRow.userDetails?.[0]?.email}</Typography>
+              <Typography><strong>Number Of Coins:</strong></Typography>
+              <Typography>{selectedRow.noOfCoins}</Typography>
+            </Box>
+            <Box display="flex" justifyContent="space-between" mb={2}>
+              <Typography><strong>Fee:</strong></Typography>
+              <Typography>{getSymbolFromCurrency(selectedRow.currencyType)}{selectedRow.fee}</Typography>
             </Box>
 
             <Box display="flex" justifyContent="space-between" mb={2}>
@@ -171,11 +175,6 @@ const FirstSection = () => {
             <Box display="flex" justifyContent="space-between" mb={2}>
               <Typography><strong>Coin:</strong></Typography>
               <Typography>{selectedRow.coin?.replace("_TEST","")}</Typography>
-            </Box>
-
-            <Box display="flex" justifyContent="space-between" mb={2}>
-              <Typography><strong>Amount:</strong></Typography>
-              <Typography>{selectedRow.amount}</Typography>
             </Box>
 
             <Box display="flex" justifyContent="space-between" mb={2}>
@@ -202,7 +201,7 @@ const FirstSection = () => {
                   ))
                 )}
               </Box>
-              <Box className="accounts-status-row">
+              {/* <Box className="accounts-status-row">
                 <span>Status</span>
                 <Select
                   value={modalStatus}
@@ -213,7 +212,7 @@ const FirstSection = () => {
                   <MenuItem value="completed">Completed</MenuItem>
                   <MenuItem value="declined">Declined</MenuItem>
                 </Select>
-              </Box>
+              </Box> */}
             </Box>
              <Box display="flex" justifyContent="flex-end" gap={2} >
             <CustomButton onClick={handleClose}>Close</CustomButton>

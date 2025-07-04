@@ -15,8 +15,8 @@ const FirstLeftSection = ({ summary, loaderResult }: FirstLeftSectionProps) => {
     { icon: <HourglassEmptyIcon fontSize="large" />, value: summary?.wallet ?? 0, label: 'Total Wallet' },
     {
       icon: <BarChartIcon fontSize="large" />, value: summary?.transactionsallTotal !== undefined && summary?.transactionsallTotal !== null
-        ? summary.transactionsallTotal.toFixed(2)
-        : '0.00',
+         ? `$${summary.transactionsallTotal.toFixed(2)}`
+      : '$0.00',
       label: 'Total Transactions'
     },
   ];
