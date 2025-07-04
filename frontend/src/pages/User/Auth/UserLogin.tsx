@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { isValidateEmail, isValidPassword } from '@/utils/validator';
-import { toast } from 'react-toastify';
+import { useAppToast } from '@/utils/toast';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '@/contexts/authContext';
 import { jwtDecode } from 'jwt-decode';
@@ -49,6 +49,7 @@ const errors: { email?: string; password?: string } = {
 
 const UserLogin = () => {
   const theme = useTheme();
+  const toast = useAppToast();
   const navigate = useNavigate();
   const { themeMode, toggleTheme } = useSettings();
   const { login } = useAuth();

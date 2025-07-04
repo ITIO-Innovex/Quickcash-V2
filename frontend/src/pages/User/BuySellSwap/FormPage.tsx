@@ -212,8 +212,9 @@ const filteredCurrencyOptions = currencyOptions.filter(opt =>
 const { list } = useAccount(accountIdData?.data?.id);
 
    // ✅ 2. useEffect (for side-effects)
- useEffect(() => {
+useEffect(() => {
   if (
+    activeTab === 'buy' &&
     coin &&
     amount &&
     currency &&
@@ -221,7 +222,19 @@ const { list } = useAccount(accountIdData?.data?.id);
   ) {
     calculation(coin, currency, amount);
   }
-}, [amount, currency, coin]); // ✅ add coin
+}, [activeTab, amount, currency, coin]); // ✅ Also added `activeTab` as dependency
+
+useEffect(() => {
+  if (
+    activeTab === 'buy' &&
+    coin &&
+    amount &&
+    currency &&
+    allowedCurrencies.includes(currency.toUpperCase())
+  ) {
+    calculation(coin, currency, amount);
+  }
+}, [coin]); // This re-triggers whenever coin changes
 
 
     // ✅ 3. Handlers
@@ -241,13 +254,13 @@ const { list } = useAccount(accountIdData?.data?.id);
  const calculation = async (coin: string, currency: string, amount: string) => {
   try {
     const data = await fetchCalculation(coin, currency, amount, activeTab); // 'buy' or 'sell'
-
+    console.log('Recieved Data :', data);
     if (data.status === 201) {
       const { rate, cryptoFees, exchangeFees, numberofCoins } = data.data;
 
-      // console.log("💰 Rate:", rate);
-      // console.log("💸 Crypto Fees:", cryptoFees);
-      // console.log("🔢 Number of Coins:", numberofCoins);
+      console.log("💰 Rate:", rate);
+      console.log("💸 Crypto Fees:", cryptoFees);
+      console.log("🔢 Number of Coins:", numberofCoins);
 
       // Set state
       setYouReceive(numberofCoins);
@@ -375,12 +388,13 @@ const handleSellCoinChange = async (
 ) => {
   if (type === 'sell') {
     setCoin(selectedCoin);
+    setAmount(''); // optional: reset input when coin changes
   } else if (type === 'swap') {
-     setFromCoin(selectedCoin);
+    setFromCoin(selectedCoin);
   }
 
   const amount = await loadSellCoinAmount(selectedCoin);
-  console.log(`✅ Coins available for ${type}:`, amount);
+  setAvailableCoins(amount || 0);
 
   const data = {
     coin: selectedCoin,
@@ -389,23 +403,35 @@ const handleSellCoinChange = async (
   };
 
   localStorage.setItem(
-    `${type}AvailableData`, // 'sellAvailableData' or 'swapAvailableData'
+    `${type}AvailableData`,
     JSON.stringify(data)
   );
 };
+useEffect(() => {
+  const runSellCalculation = async () => {
+    // Only trigger on 'sell' tab
+    if (activeTab !== 'sell') return;
 
-const handleSellAmountChange = async (value: string) => {
+    // Guard clause
+    if (!coin || !currency || !amount) return;
+
+    if (parseFloat(amount) > availableCoins) {
+      error("You cannot sell more than what you have!");
+      return;
+    }
+
+    // Debounced calculation
+    await calculateSellValues(coin, currency, amount);
+  };
+
+  const debounceFn = setTimeout(runSellCalculation, 500); // debounce for smoother UX
+
+  return () => clearTimeout(debounceFn);
+}, [coin, currency, amount, activeTab]);
+
+
+const handleSellAmountChange = (value: string) => {
   setAmount(value);
-
-  if (parseFloat(value) > availableCoins) {
-    error('You cannot sell more than what you have!');
-    return;
-  }
-
-  if (coin && currency && value) {
-    const res = await calculateSellValues(coin, currency, value);
-    // console.log('🔥 Response from sellCalculation API:', res);
-  }
 };
 
 // swap Implementation
@@ -521,7 +547,7 @@ const isFormValid = () => {
   } else {
     // For Buy/Sell tabs
     const isValidAmount = amount && parseFloat(amount) > 0;
-    console.log('💰 Buy/Sell Validation:', { amount, isValidAmount });
+    // console.log('💰 Buy/Sell Validation:', { amount, isValidAmount });
     return isValidAmount;
   }
 };
@@ -711,7 +737,14 @@ const handleSwap = async () => {
                         <CustomDropdown
                           label=""
                           value={currency}
-                          onChange={(e) => setCurrency(e.target.value as string)}
+                         onChange={(e) => {
+                            const selectedCurrency = e.target.value as string;
+                            setCurrency(selectedCurrency);
+
+                            if (amount && coin) {
+                              calculation(coin, selectedCurrency, amount);
+                            }
+                          }}
                           disabled={!amount}
                           options={
                             list?.map((item: any, index: number) => ({
@@ -884,28 +917,15 @@ const handleSwap = async () => {
                        <Typography variant="subtitle2" className="crypto-form-label" sx={{ color: theme.palette.text.primary }}>
                         YOU SELL
                       </Typography>
-                     <CustomInputField
-                        type="number"
-                        value={amount}
-                        disabled={!currency}
-                        onChange={async (e) => {
-                          const newAmount = e.target.value;
+                    <CustomInputField
+                      type="number"
+                      value={amount}
+                      disabled={!currency}
+                      onChange={(e) => handleSellAmountChange(e.target.value)}
+                      placeholder="0"
+                      className="crypto-amount-input"
+                    />
 
-                          if (parseFloat(newAmount) > availableCoins) {
-                            error('You cannot sell more than what you have!');
-                            return;
-                          }
-
-                          setAmount(newAmount);
-
-                          //  API call here
-                          if (coin && currency && newAmount) {
-                            await calculateSellValues(coin, currency, newAmount);
-                          }
-                        }}
-                        placeholder="0"
-                        className="crypto-amount-input"
-                      />
                     </Box>
                     <Box className="crypto-form-field">
                       <Typography variant="subtitle2" className="crypto-form-label" sx={{ color: theme.palette.text.primary }}>
@@ -1005,9 +1025,9 @@ const handleSwap = async () => {
                     setSwapCoin(selected);
                     handleSwapCoinChange(fromCoin, selected, parseFloat(youSend));
                   }}
-
+                      const filteredSwapCoins = swapRawCoins.filter((coin) => coin.coin !== fromCoin);
                       // @ts-ignore
-                      options={swapRawCoins.map((c) => ({
+                     options={filteredSwapCoins.map((c) => ({
                         label: (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <img
