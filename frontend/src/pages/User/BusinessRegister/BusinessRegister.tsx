@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { toast } from 'react-hot-toast';
+import { useAppToast } from '@/utils/toast'; 
 import { useNavigate } from 'react-router-dom';
 import CustomButton from '../../../components/CustomButton';
 import CustomInputField from '../../../components/CustomInputField';
@@ -13,6 +13,7 @@ import { Box, Card, CardContent, Typography, Stepper, Step, StepLabel, useTheme,
 
 const BusinessRegister = () => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);

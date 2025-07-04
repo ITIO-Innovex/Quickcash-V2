@@ -16,11 +16,11 @@ import { downloadExcel } from '../../../../utils/downloadExcel';
 import { Box, Button, Typography, useTheme } from '@mui/material';
 import GenericTable from '../../../../components/common/genericTable';
 import axios from 'axios';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useAppToast } from '@/utils/toast'; 
 
 const FirstSection = () => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const [open, setOpen] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [showFilter, setShowFilter] = useState(false);

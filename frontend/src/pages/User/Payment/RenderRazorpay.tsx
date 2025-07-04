@@ -1,6 +1,6 @@
 import Axios from 'axios';
 import crypto from 'crypto-js';
-import { toast } from 'react-toastify';
+import { useAppToast } from '@/utils/toast'; 
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,31 +19,6 @@ const loadScript = (src:any) => new Promise((resolve) => {
   document.body.appendChild(script);
 });
 
-const alertnotify = (text:any,type:any) => {
- if(type == "error") {
-  toast.error(text, {
-    position: "top-center",
-    autoClose: 1900,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    progress: undefined,
-    theme: "colored",
-  })
- } else {
-    toast.success(text, {
-      position: "top-center",
-      autoClose: 1900,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "colored",
-    })
-   }
- }
 
 interface razorPayDetails {
   finalAmount:Number;
@@ -87,6 +62,7 @@ const RenderRazorpay = ({...props}:razorPayDetails) => {
   };
 
   const navigate = useNavigate();
+  const toast = useAppToast(); 
   const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
   const handlePayment = async (status:any, orderDetails = {}) => {
     await Axios.post(`/${url}/v1/razorpay/capture`,
@@ -100,7 +76,7 @@ const RenderRazorpay = ({...props}:razorPayDetails) => {
       paymentType:props?.paymentType
     }).then(result => {
        if(status == "succeeded") {
-        alertnotify(result.data.message,"success");
+        toast.success(result.data.message);
        }
        navigate('/invoice-section');
     })

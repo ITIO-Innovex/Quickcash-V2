@@ -13,7 +13,7 @@ import {
   maxTitleLength,
 } from "../constant/const";
 import { API_ROUTES } from "../constant/apiRoutes";
-import { toast } from "react-toastify";
+import { useAppToast } from '@/utils/toast'; 
 import Title from '../../../components/common/Title';
 import Loader from '../../../components/common/loader';
 import AddContactModal from './AddContactModal';
@@ -321,7 +321,7 @@ const RequestSignatureForm = () => {
       navigate('/digital-signature/request-signature', { replace: true });
     }
   }, [location.search, navigate]);
-
+const toast = useAppToast(); 
   return (
     <Fade in={true} timeout={500}>
       <Paper

@@ -12,11 +12,11 @@ import GenericTable from '../../../../components/common/genericTable';
 import { Box, Button, Typography, useTheme, TextField } from '@mui/material';
 import CustomFormModal from '@/components/CustomFormModal';
 import axios from 'axios';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useAppToast } from '@/utils/toast'; 
 
 const FirstSection = () => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const [open, setOpen] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [showFilter, setShowFilter] = useState(false);
