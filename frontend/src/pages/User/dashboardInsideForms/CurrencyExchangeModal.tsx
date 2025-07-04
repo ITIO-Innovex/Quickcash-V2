@@ -9,6 +9,7 @@ import getSymbolFromCurrency from "currency-symbol-map";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
 import { JwtPayload } from '@/types/jwt';
+import { useAppToast }from '@/utils/toast';
 
 interface CurrencyExchangeModalProps {
   open: boolean;
@@ -30,11 +31,13 @@ interface CurrencyExchangeModalProps {
   setExchangeOpen: (val: boolean) => void;
   alertnotify: (msg: string, type: string) => void;
   getDashboardData: (id: string) => void;
+  IsCurrencyExchnageOpen: (value: boolean) => void;
   url: string;
 }
 
-const CurrencyExchangeModal: React.FC<CurrencyExchangeModalProps> = ({ open, onClose, fromAmount, fromCurrency, toCurrency, exchangeRate, exchangedAmount, fee, account,toAccount, onSubmit, accountId, toExchangeBox, setToExchangeBox, getAllAccountsList, setReviewOpen, setExchangeOpen, alertnotify, getDashboardData, url }) => {
+const CurrencyExchangeModal: React.FC<CurrencyExchangeModalProps> = ({ open, onClose, fromAmount, fromCurrency, toCurrency, exchangeRate, exchangedAmount, fee, account,toAccount, onSubmit, accountId, toExchangeBox, setToExchangeBox, getAllAccountsList, setReviewOpen, setExchangeOpen, alertnotify, getDashboardData, url,IsCurrencyExchnageOpen }) => {
     const theme = useTheme();
+    const toast= useAppToast();
     const totalCharge = fromAmount && fee ? (parseFloat(fromAmount) + fee).toFixed(2) : '';
     const [submitting, setSubmitting] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
@@ -51,7 +54,7 @@ const CurrencyExchangeModal: React.FC<CurrencyExchangeModalProps> = ({ open, onC
       // Check for sufficient balance before making the API call
       if (parseFloat(account.amount) < parseFloat(fromAmount) + fee) {
         console.log("Insufficient Error");
-        alertnotify("Insufficient balance for this transaction.", "error");
+        toast.error("Insufficient balance for this transaction.");
         setSubmitting(false);
         return;
       }
@@ -86,13 +89,14 @@ const CurrencyExchangeModal: React.FC<CurrencyExchangeModalProps> = ({ open, onC
           }
         )
         .then((result) => {
-          if (result.data.status == "201") {
+          if (result.data.status == 201) {
             setToExchangeBox(null);
             getAllAccountsList(accountId?.data?.id);
             setReviewOpen(false);
             setExchangeOpen(false);
+            IsCurrencyExchnageOpen(false);
             setTimeout(() => {
-              alertnotify("Exchange has been done successfully", "success");
+              toast.success("Exchange has been done successfully");
             }, 300);
             getDashboardData(accountId?.data?.id);
             navigate(`/dashboard?currency=${account?.currency}`);

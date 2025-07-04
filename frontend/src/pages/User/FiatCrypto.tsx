@@ -523,7 +523,9 @@ const FiatCrypto = () => {
                     activeAccount={ActiveAccountDetails?._id}
                     accountBalance={ActiveAccountDetails?.amount}
                     acctDetails={ActiveAccountDetails}
-                    accountList={fiatAccounts}/>
+                    accountList={fiatAccounts}
+                    IsCurrencyExchnageOpen={setIsCurrencyExchnageOpen}
+                    />
             </CustomModal>
 
                 <SelectCryptoModal

@@ -105,7 +105,7 @@ const AdminLogin = () => {
                 label="Remember me"
                 className="remember-label"
               />
-              <Link
+              {/* <Link
                 to="/forgot-password"
                 className="forgot-link"
                 style={{ color: theme.palette.navbar.text }}
@@ -116,7 +116,7 @@ const AdminLogin = () => {
               <ForgotPasswordModal
                 open={forgotOpen}
                 onClose={() => setforgotOpen(false)}
-              />
+              /> */}
             </Box>
             <CustomButton
               type="submit"
@@ -127,12 +127,12 @@ const AdminLogin = () => {
             </CustomButton>
           </form>
           <Box className="login-form-footer" style={{ color: theme.palette.text.gray }}>
-            <p>
+            {/* <p>
               New on our platform?{' '}
               <a href="/register" className="signup-link" style={{ color: theme.palette.navbar.text }}>
                 Create an account
               </a>
-            </p>
+            </p> */}
             <Typography variant="caption" className="copyright-text" style={{ color: theme.palette.text.gray }}>
               © Quick Cash 2025.
             </Typography>

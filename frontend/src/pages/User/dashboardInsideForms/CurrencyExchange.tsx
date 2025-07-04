@@ -21,6 +21,7 @@ interface CurrencyExchangeFormProps {
   accountBalance: any;
   acctDetails: any;
   accountList: any;
+  IsCurrencyExchnageOpen: (value: boolean) => void;
   onClose: (value: string) => void;
 }
 
@@ -70,7 +71,7 @@ const calculateFee = (amount: string) => {
   return Math.max(1, +(amt * 0.01).toFixed(2));
 };
 
-const CurrencyExchangeForm = ({ onClose,acctDetails,activeAccount,accountBalance,accountList, }: CurrencyExchangeFormProps) => {
+const CurrencyExchangeForm = ({ onClose,acctDetails,activeAccount,accountBalance,accountList, IsCurrencyExchnageOpen}: CurrencyExchangeFormProps) => {
 console.log("account list =>", JSON.stringify(accountList, null, 2)); 
 
   const theme = useTheme();
@@ -550,6 +551,7 @@ console.log("account list =>", JSON.stringify(accountList, null, 2));
       }}
       accountId={{ data: { id: user?.id, name: user?.name } }}
       toExchangeBox={toExchangeBox}
+      IsCurrencyExchnageOpen ={IsCurrencyExchnageOpen}
       setToExchangeBox={() => {}}
       getAllAccountsList={() => {}}
       setReviewOpen={() => {}}
