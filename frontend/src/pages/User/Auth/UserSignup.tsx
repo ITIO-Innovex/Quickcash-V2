@@ -88,9 +88,14 @@ const UserSignup = () => {
       });
 
       if (result.data.status === 201) {
-        localStorage.setItem('usersessionid', result.data.data._id);
-      } else {
-        throw new Error("Failed to create session");
+        try {
+          toast.success(result.data.message);
+          navigate('/login');
+        } catch (sessionError) {
+          console.error("Session creation error:", sessionError);
+          toast.error("Account created. Please login to continue.");
+          navigate('/login'); // Still navigate even if session creation fails
+        }
       }
     } catch (error: any) {
       console.error("Login session error:", error);
@@ -119,12 +124,10 @@ const UserSignup = () => {
           }
         });
 
-        if (result.data.status === "201") {
+        if (result.data.status === 201) {
           try {
-            await addLoginSession(result.data.data._id);
-            localStorage.setItem("token", result.data.token);
             toast.success(result.data.message);
-            navigate('/dashboard');
+            navigate('/login');
           } catch (sessionError) {
             console.error("Session creation error:", sessionError);
             toast.error("Account created but session creation failed");
