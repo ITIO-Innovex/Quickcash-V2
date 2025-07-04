@@ -166,7 +166,11 @@ const Header: React.FC<HeaderProps> = ({ collapsed }) => {
               <Box
                 className="icon-group"
                 onClick={() => {
+                  if (isAdminAuthenticated) {
                     navigate('/admin/help-center');
+                  } else {
+                    navigate('/help-center');
+                  }
                 }}
                 sx={{
                   display: 'flex',
