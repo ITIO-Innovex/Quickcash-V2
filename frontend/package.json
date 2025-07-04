@@ -96,7 +96,8 @@
     "tailwindcss": "^3.4.17",
     "xlsx": "^0.18.5",
     "yup": "^1.6.1",
-    "dayjs": "^1.11.13"
+    "dayjs": "^1.11.13",
+    "playwright": "^1.46.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
