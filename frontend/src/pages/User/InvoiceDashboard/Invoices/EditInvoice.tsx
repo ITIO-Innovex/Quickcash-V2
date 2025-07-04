@@ -176,7 +176,7 @@ const EditInvoice = () => {
 
   return (
     <Box className="dashboard-container" sx={{ p: 3 }}>
-      <PageHeader title={`Edit Invoice / ${id}`} />
+      <PageHeader title={`Edit Invoice / ${invoiceData?.invoice_number || id}`} />
 
       {invoiceData && (
         <>
