@@ -2,7 +2,7 @@ import {Box, Typography, Grid, Paper, useTheme,} from '@mui/material';
 import {CircularProgressbarWithChildren, buildStyles,} from 'react-circular-progressbar';
 import { ArrowDownward, ArrowUpward, Person } from '@mui/icons-material';
 import { DollarSign } from 'lucide-react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import api from '@/helpers/apiHelper';
 import { JwtPayload } from '@/types/jwt';
@@ -13,16 +13,34 @@ const url = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
 export default function DashboardStats() {
     const theme = useTheme();
     const [dashboardData, setDashboardData] = React.useState<any>("");//Holds the dashboard data
+    const [userName, setUserName] = useState<string>('');
+    const [lastLogin, setLastLogin] = useState<string>('');
+
     // Fetch the dashboard data when the component mounts
-        useEffect(() => {
+    useEffect(() => {
         if (localStorage.getItem("token")) {
             const accountId = jwtDecode<JwtPayload>(
             localStorage.getItem("token") as string
             );
             getDashboardData(accountId.data.id);
         }
-        }, []);
-    // Function to fetch dashboard data
+        const userStr = localStorage.getItem('userData');
+        const sessionStr = localStorage.getItem('UserInformation');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            setUserName(user.name || '');
+        }
+        if (sessionStr) {
+            const session = JSON.parse(sessionStr);
+            const date = new Date(session.createdAt);
+            const formatted = date.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+            setLastLogin(formatted);
+        }
+    }, []);
     const getDashboardData = async (id: any) => {
         try {
             const result = await api.get(`/${url}/v1/admin/revenue/dashboard/${id}`);
@@ -71,14 +89,14 @@ export default function DashboardStats() {
                     variant="body1"
                     sx={{ fontWeight: 'bold', color: 'text.primary', mb: { xs: 1, sm: 0 } }}
                 >
-                    Welcome, Jean-Pierre!
+                    Welcome, {userName}!
                 </Typography>
                 <Typography
                     variant="body2"
                     sx={{ display: 'flex', alignItems: 'center' }}
                 >
                     <Person sx={{ width: 16, height: 16, mr: 0.5 }} />
-                    You were last logged in on 5 February 2025.
+                    You were last logged in on {lastLogin}.
                 </Typography>
             </Box>
             <Box sx={{ p: { xs: 2, md: 4 } }}>
