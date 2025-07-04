@@ -4,7 +4,6 @@ import PageHeader from '@/components/common/pageHeader';
 import { Box, Avatar, Typography, IconButton, useTheme, Grid, TextField, Button } from '@mui/material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import SendIcon from '@mui/icons-material/Send';
-import axios from 'axios';
 import moment from 'moment';
 import admin from '@/helpers/adminApiHelper';
 

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { toast } from 'react-toastify';
+import { useAppToast } from '@/utils/toast'; 
 import curr from 'iso-country-currency';
 import ReactFlagsSelect from 'react-flags-select';
 import React, { useState, useEffect } from 'react';
@@ -28,6 +28,7 @@ const validate = (field: string, value: string): boolean => {
 
 const UserSignup = () => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const navigate = useNavigate();
   const location = useLocation();
   const query = new URLSearchParams(location.search);

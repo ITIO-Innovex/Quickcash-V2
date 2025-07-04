@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Loader from "./Loader";
-import { toast } from "react-toastify";
+import { useAppToast } from '@/utils/toast'; 
 import axios from "axios";
 import { API_ROUTES } from "../constant/apiRoutes";
 import { getBearerToken } from "../constant/Utils";
@@ -8,6 +8,7 @@ import { getBearerToken } from "../constant/Utils";
 const AddContact = (props) => {
   
   const [name, setName] = useState("");
+  const toast = useAppToast(); 
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [addYourself, setAddYourself] = useState(false);

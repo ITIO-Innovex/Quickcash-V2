@@ -7,13 +7,14 @@ import CustomButton from '@/components/CustomButton';
 import { KeyValueDisplay } from '@/components/KeyValueDisplay';
 import CustomInput from '@/components/CustomInputField';
 import admin from '@/helpers/adminApiHelper';
-import { showToast } from '@/utils/toastContainer';
+import { useAppToast } from '@/utils/toast'; 
 import CustomSelect from '@/components/CustomDropdown';
 
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 const FirstSection = () => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const [open, setOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [tempPurpose, setTempPurpose] = useState('');
@@ -100,14 +101,14 @@ const FirstSection = () => {
           setAccount('');
           setComment('');
           setOpenDetails(false);
-          showToast(result.data.message, "success");
+          toast.success(result.data.message);
           translist();
           handleClose();
         }
       })
       .catch(error => {
         console.log(error);
-        showToast(error.response.data.message, "error");
+        toast.error(error.response.data.message);
       })
   }
 
@@ -280,7 +281,7 @@ const FirstSection = () => {
               <CustomButton
                 onClick={() => {
                   if (!status) {
-                    showToast('Please select a status', 'error');
+                    toast.error('Please select a status');
                     return;
                   }
                   if (details && details[0]) {

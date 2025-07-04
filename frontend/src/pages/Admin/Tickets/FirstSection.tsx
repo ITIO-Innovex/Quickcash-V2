@@ -10,13 +10,14 @@ import { Box, Button, Typography, useTheme } from '@mui/material';
 import GenericTable from '../../../components/common/genericTable';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import admin from '@/helpers/adminApiHelper';
-import { showToast } from '@/utils/toastContainer';
+import { useAppToast } from '@/utils/toast'; 
 const url = import.meta.env.VITE_NODE_ENV === "production" ? 'api' : 'api';
 console.log('Environment:', import.meta.env.VITE_NODE_ENV);
 console.log('URL:', url);
 
 const FirstSection = () => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState('');
@@ -184,14 +185,14 @@ const FirstSection = () => {
    )
     .then(result => {
       if(result.data.status == 201) {
-        showToast(result.data.message, "success");
+        toast.success(result.data.message);
         setOpen(false);
         getListData();
       }
     })
     .catch(error => {
       console.log("error", error);
-      showToast(error.response?.data?.message || "Error updating status", "error");
+      toast.error(error.response?.data?.message || "Error updating status");
     })
   }
 

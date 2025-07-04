@@ -22,8 +22,7 @@ import ReactCountryFlag from "react-country-flag";
 import { Box, Button,Tooltip, Card, CardContent, Tab, Tabs, Typography, useTheme } from '@mui/material';
 import getSymbolFromCurrency from "currency-symbol-map";
 import { Grid } from 'lucide-react';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useAppToast } from '@/utils/toast'; 
 interface ActiveAccDetails {
   _id: string;
   amount: any;
@@ -48,6 +47,7 @@ const FiatCrypto = () => {
     const [toExchangeAccount, setToExchangeAccount] = useState("");
 
     const theme = useTheme  ();
+    const toast = useAppToast(); 
     const [activeTab, setActiveTab] = useState('Fiat');
     // Fetch the Fiat Crypto data when the component mounts
         useEffect(() => {

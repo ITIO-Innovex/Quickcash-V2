@@ -6,12 +6,12 @@ import CustomModal from '@/components/CustomModal';
 import AddCategoryForm from '@/components/forms/AddCategoryForm';
 import { jwtDecode } from 'jwt-decode';
 import { JwtPayload } from '@/types/jwt';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useAppToast } from '@/utils/toast'; 
 import api from '@/helpers/apiHelper';
 
 const Main = () => {  
   const theme = useTheme();
+  const toast = useAppToast(); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [refresh, setRefresh] = useState(false);
 

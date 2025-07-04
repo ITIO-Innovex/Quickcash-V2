@@ -11,7 +11,7 @@ import { Edit } from 'lucide-react';
 import CustomButton from '@/components/CustomButton';
 import { jwtDecode } from 'jwt-decode';
 import admin from '@/helpers/adminApiHelper';
-import { showToast } from '@/utils/toastContainer';
+import { useAppToast } from '@/utils/toast'; 
 import { TextField } from '@mui/material';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
@@ -30,6 +30,7 @@ interface JwtPayload {
 }
 const FirstSection = () => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -81,12 +82,12 @@ const FirstSection = () => {
       const result = await admin.patch(`/${url}/v1/admin/update-profile`, formData);
 
       if (result.data.status === 201) {
-        showToast(result.data.message, 'success');
+        toast.success(result.data.message);
         // getProfileDetails();
       }
     } catch (error: any) {
       console.error('error', error);
-      showToast(error?.response?.data?.message || 'Update failed', 'error');
+      toast.error(error?.response?.data?.message || 'Update failed');
     }
   };
 

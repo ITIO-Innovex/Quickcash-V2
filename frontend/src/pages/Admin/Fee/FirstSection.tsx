@@ -9,7 +9,7 @@ import CustomInput from '@/components/CustomInputField';
 import admin from '@/helpers/adminApiHelper';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { showToast } from '@/utils/toastContainer';
+import { useAppToast } from '@/utils/toast'; 
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
  interface JwtPayload {
     sub: string;
@@ -27,6 +27,7 @@ const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 const FirstSection = () => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editRow, setEditRow] = useState<any | null>(null);
@@ -103,14 +104,14 @@ const FirstSection = () => {
    )
     .then(result => {
       if(result.data.status == 201) {
-        showToast(result.data.message,"success");
+        toast.success(result.data.message);
         getListData();
         setEditOpen(false);
       }
     })
    .catch(error => {
      console.log("error", error);
-     showToast(error.response.data.message,"error");
+     toast.error(error.response.data.message);
     }) 
   }
   // Reset edit modal state on close

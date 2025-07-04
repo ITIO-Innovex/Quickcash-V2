@@ -1,6 +1,6 @@
 import Axios from 'axios';
 import crypto from 'crypto-js';
-import { toast } from 'react-toastify';
+import { useAppToast } from '@/utils/toast'; 
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import getSymbolFromCurrency from 'currency-symbol-map';
@@ -20,33 +20,6 @@ const loadScript = (src:any) => new Promise((resolve) => {
   };
   document.body.appendChild(script);
 });
-
-const alertnotify = (text:any,type:any) => {
- if(type == "error") {
-  toast.error(text, {
-    position: "top-center",
-    autoClose: 1900,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    progress: undefined,
-    theme: "colored",
-  })
- } else {
-    toast.success(text, {
-      position: "top-center",
-      autoClose: 1900,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "colored",
-    })
-   }
- }
-
 interface razorPayDetails {
   details: [any][any];
   account: any;
@@ -75,7 +48,7 @@ interface JwtPayload {
 }
 
 const AddMoneyRazorPay = ({...props}:razorPayDetails) => {
-
+const toast = useAppToast(); 
   const paymentId = useRef(null);
   const paymentMethod = useRef(null);
 
@@ -122,7 +95,7 @@ const AddMoneyRazorPay = ({...props}:razorPayDetails) => {
       rec_currency: props?.currency
     }).then(result => {
        if(status == "succeeded") {
-        alertnotify(result.data.message,"success");
+        toast.success(result.data.message);
         setTimeout(() => {
           window.location.href = "/dashboard";
         },500);

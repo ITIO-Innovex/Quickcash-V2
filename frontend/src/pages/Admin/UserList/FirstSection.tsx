@@ -6,7 +6,7 @@ import admin from '@/helpers/adminApiHelper';
 import MenuItem from '@mui/material/MenuItem';
 import { useNavigate } from 'react-router-dom';
 import CustomModal from '@/components/CustomModal';
-import { showToast } from '@/utils/toastContainer';
+import { useAppToast } from '@/utils/toast'; 
 import CommonFilter from '@/components/CustomFilter';
 import CustomButton from '@/components/CustomButton';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -22,6 +22,7 @@ const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 const FirstSection = () => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [filterText, setFilterText] = useState('');
@@ -255,13 +256,13 @@ const FirstSection = () => {
     },)
       .then(result => {
         if (result.data.status == 201) {
-          showToast(result.data.message, "success");
+          toast.success(result.data.message);
           getListData();
         }
       })
       .catch(error => {
         console.log("error", error);
-        showToast(error.response.data.message, "error");
+        toast.error(error.response.data.message);
       })
   };
 
@@ -280,13 +281,13 @@ const FirstSection = () => {
       )
       .then((result) => {
         if (result.data.status == 201) {
-          showToast(result.data.message, 'success');
+          toast.success(result.data.message);
           getListData();
         }
       })
       .catch((error) => {
         console.log('error', error);
-        showToast(error.response.data.message, 'error');
+        toast.error(error.response.data.message);
       });
   };
 

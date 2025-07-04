@@ -2,7 +2,7 @@ import { Box, Button, Grid, IconButton, Modal, Typography } from "@mui/material"
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { DocumentDetails } from "@/interfaces/digital-signature/document.interface";
-import { toast } from "react-toastify";
+import { useAppToast } from '@/utils/toast'; 
 
 
 interface ShareLinkModalProps {
@@ -16,6 +16,7 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
   handleCloseShareModal,
   documentDetails
 }) => {
+  const toast = useAppToast(); 
   return (
     <Modal
       open={openShareModal}

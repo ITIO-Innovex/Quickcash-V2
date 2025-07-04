@@ -9,7 +9,7 @@ import { Grid, Box, Typography, IconButton } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import NotificationDropdown from '../NotificationDropdown';
 import { useRef, useState } from 'react';
-import { toast } from 'react-toastify';
+import { useAppToast } from '@/utils/toast'; 
 import axios from 'axios';
 import { useAuth } from '@/contexts/authContext';
 
@@ -21,6 +21,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ collapsed }) => {
   const navigate = useNavigate();
+  const toast = useAppToast(); 
   const theme = useTheme();
   const notifRef = useRef(null);
   const { themeMode, toggleTheme } = useSettings();

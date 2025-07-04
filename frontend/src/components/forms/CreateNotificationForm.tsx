@@ -5,8 +5,7 @@ import CustomButton from '../CustomButton';
 import CustomInput from '@/components/CustomInputField';
 import { Box, Divider, MenuItem, Select, Typography, useTheme } from '@mui/material';
 import { jwtDecode } from 'jwt-decode';
-import axios from 'axios';
-import { showToast } from '@/utils/toastContainer';
+import { useAppToast } from '@/utils/toast'; 
 import { useUser } from '@/hooks/useUsers';
 import admin from '@/helpers/adminApiHelper';
 interface JwtPayload {
@@ -31,6 +30,7 @@ interface Props {
 
 const CreateNotificationForm: React.FC<Props> = ({ onClose, onAdded }) => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const [user, setUser] = useState('');
   const [title, setTitle] = useState('');
   const [tags, setTags] = useState('');
@@ -70,13 +70,13 @@ const CreateNotificationForm: React.FC<Props> = ({ onClose, onAdded }) => {
         setTags('');
         setImage({ preview: '', raw: null });
         setContent('');
-        showToast(result?.data?.message, 'success');
+        toast.success(result?.data?.message);
         onAdded?.();
         onClose();
       }
     } catch (error: any) {
       console.log(error);
-      showToast(error?.response?.data?.message || 'Something went wrong', 'error');
+      toast.error(error?.response?.data?.message || 'Something went wrong');
     }
   };
 
