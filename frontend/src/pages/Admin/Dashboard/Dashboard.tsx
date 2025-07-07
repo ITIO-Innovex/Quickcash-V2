@@ -21,7 +21,7 @@ const AdminDashboard = () => {
       try {
         const result = await admin.get(`/${url}/v1/admin/dashboarddetails`, {
         });
-        // console.log('API result:', result); 
+        console.log('API result:', result); 
         if (result.data.status === 201) {
           setTimeout(() => {
             setLoaderResult(false);

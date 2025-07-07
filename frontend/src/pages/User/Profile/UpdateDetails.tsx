@@ -99,7 +99,10 @@ const toast = useAppToast();
 
     fetchAll();
   }, []);
-
+ useEffect(() => {
+    getUserDetails();
+    getCountryList();
+  },[]);
   const getUserDetails = async () => {
     try {
       const result = await axios.post(`/${url}/v1/user/auth`, {}, {
