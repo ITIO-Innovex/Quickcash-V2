@@ -19,7 +19,7 @@ import {Box ,Card, CardContent, Typography, useTheme, LinearProgress, useMediaQu
 
 const FormPage = () => {
   const theme = useTheme();
-  const { error } = useAppToast();
+  const { error ,success} = useAppToast();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -52,7 +52,8 @@ const [swapRawCoins, setSwapRawCoins] = useState<any[]>([]);
 const [conversionData, setConversionData] = useState<any>(null);
 const [coinsAdded, setCoinsAdded] = useState<string>('');
 const [conversionRate, setConversionRate] = useState<number | null>(null);
-
+const [errorMessage, setErrorMessage] = useState("");
+const [swapAvailableData, setSwapAvailableData] = useState<any>(null);
 
   // Log activeTab changes for debugging
   useEffect(() => {
@@ -62,6 +63,7 @@ const [conversionRate, setConversionRate] = useState<number | null>(null);
     // console.log('FormPage - Current youReceive:', youReceive);
     // console.log('FormPage - Is confirmed:', isConfirmed);
   }, [activeTab, amount, youSend, youReceive, isConfirmed]);
+
 // to get user's buy data on page refresh
 useEffect(() => {
   if (activeTab === 'buy') {
@@ -110,8 +112,9 @@ useEffect(() => {
 
     console.log('FormPage - Navigation triggered with state:', { type: newValue, timestamp: Date.now() });
   };
+
   // store sell response 
-useEffect(() => {
+  useEffect(() => {
   if (activeTab === 'sell' && coin && currency && amount) {
     if (parseFloat(amount) > availableCoins) {
       error('You cannot sell more than what you have!');
@@ -140,6 +143,7 @@ useEffect(() => {
     });
   }
 }, [activeTab, coin, currency, amount]); 
+
 // 3. Load from localStorage on refresh
 useEffect(() => {
   const saved = localStorage.getItem('sellCalculationData');
@@ -186,6 +190,7 @@ useEffect(() => {
       },
     });
   };
+
 // currency dropdown 
  const currencyOptions = [
   { label: 'USD', value: 'USD' },
@@ -223,7 +228,6 @@ const { list } = useAccount(accountIdData?.data?.id);
   }
 }, [amount, currency, coin]); // ✅ add coin
 
-
     // ✅ 3. Handlers
   const handleCoinChange = (e: any) => {
     const selectedCoin = e.target.value;
@@ -237,6 +241,7 @@ const { list } = useAccount(accountIdData?.data?.id);
       calculation(selectedCoin, currency, amount);
     }
   };
+
 // Buy Calculation
  const calculation = async (coin: string, currency: string, amount: string) => {
   try {
@@ -282,6 +287,7 @@ const { list } = useAccount(accountIdData?.data?.id);
   const handleCurrencyChange = (e: any) => {
     setCurrency(e.target.value);
   };
+
 useEffect(() => {
   const swapDetailsRaw = localStorage.getItem("SwapDetails");
 
@@ -308,15 +314,24 @@ useEffect(() => {
   }
 }, []);
 
-  // Reset values
- const handleReset = () => {
-  // Remove buy and sell calculation data
+const handleReset = () => {
+  // ✅ Clear LocalStorage keys
   localStorage.removeItem("calculationData");
   localStorage.removeItem("sellCalculationData");
   localStorage.removeItem("sellAvailableData");
   localStorage.removeItem("SwapDetails");
+  localStorage.removeItem("swapAvailableData");
 
-  // Reset states
+  // ✅ Reset swap-related states
+  setFromCoin("");           // 🔁 resets "You Send" dropdown
+  setSwapCoin("");           // 🔁 resets "You Receive" dropdown
+  setYouSend("");            // 🔁 resets amount input
+  setCoinsAdded("");         // 🔁 resets converted amount
+  setConversionRate(0);      // 🔁 resets rate
+  setConversionData(null);   // optional
+  setSwapAvailableData(null);
+
+  // ✅ Reset common sell/buy states (already correct)
   setAmount('');
   setCurrency('');
   setCoin('');
@@ -327,7 +342,7 @@ useEffect(() => {
   setSellAmountToGet('');
   setSellCryptoFees('');
   setSellExchangeFees('');
-  setAvailableCoins(0); // optional if you want to reset it too
+  setAvailableCoins(0);
 };
 
 // Sell Backend Implementation
@@ -338,6 +353,7 @@ const debouncedSwapCall = useRef(
     }
   }, 500) // 500ms delay
 ).current;
+
 useEffect(() => {
   const amount = parseFloat(youSend);
 
@@ -345,6 +361,7 @@ useEffect(() => {
     debouncedSwapCall(fromCoin, swapCoin, amount);
   }
 }, [fromCoin, swapCoin, youSend]);
+
 const {
   availableCoins: availableCoinsFromHook,
   sellCalculationData,
@@ -422,6 +439,7 @@ const handleYouSendCoinChange = (val: string) => {
   setYouSendCoin(val);
   console.log("Selected coin for sending:", val);
 };
+
 useEffect(() => {
   const fetchSwapCoins = async () => {
     const token = localStorage.getItem("token");
@@ -441,7 +459,7 @@ useEffect(() => {
 
       setSwapRawCoins(coinsArray); // ✅ Store as-is (no map here)
 
-      if (coinsArray.length) {
+      if (coinsArray.length && !swapCoin) {
         setSwapCoin(coinsArray[0].coin); // Default selection
       }
     } catch (error) {
@@ -454,14 +472,12 @@ useEffect(() => {
   }
 }, [activeTab]);
 
-
 // fetch Swap calculation 
 const handleSwapCoinChange = async (
   from: string,
   to: string,
   amt: number
 ) => {
-
 
   if (!from || !to || isNaN(amt) || amt <= 0) {
     console.warn("Missing input data for conversion");
@@ -488,7 +504,7 @@ const handleSwapCoinChange = async (
   localStorage.setItem("coinsAdded", coinsAdded);
   localStorage.setItem("coinsDeducted", coinsDeducted);
   localStorage.setItem("selectedFromCoin", from);
-localStorage.setItem("selectedToCoin", to);
+  localStorage.setItem("selectedToCoin", to);
 
   const swapDetails = {
     fromCoin: from,
@@ -503,17 +519,16 @@ localStorage.setItem("selectedToCoin", to);
 else {
       console.error("❌ Conversion data missing in response");
     }
-
     setConversionData(resData);
   } catch (error: any) {
-    console.error("❌ Error fetching conversion rate:", error);
+  console.error("❌ Error fetching conversion rate:", error);
 
-    if (error?.response?.status === 429) {
-      error("You've hit the rate limit!");
-    } else {
-      error("You've crossed the conversion limit! Please refresh the page.");
-    }
+  if (error?.response?.status === 429) {
+    setErrorMessage("⚠️ You've exceeded the Rate Limit. Please try again later or refresh the page.");
+  } else {
+    setErrorMessage("⚠️ Something went wrong. Please refresh and try again.");
   }
+}
 };
 
 const isFormValid = () => {
@@ -596,8 +611,11 @@ const handleSwap = async () => {
       localStorage.removeItem("selectedToCoin");
       localStorage.removeItem("SwapDetails");
 
-      // ✅ Navigate to wallet
       navigate("/wallet");
+      setTimeout(() => {
+        success("Coins Swapped Successfully 🎉");
+      }, 100);
+      
     } else {
       console.warn("⚠️ Swap response status not 201:", response.status);
     }
@@ -605,6 +623,7 @@ const handleSwap = async () => {
     console.error("❌ Error during swap:", error);
   }
 };
+
 const filteredSwapCoins = swapRawCoins.filter((coin) => coin.coin !== fromCoin);
   return (
     <>
@@ -1047,13 +1066,15 @@ const filteredSwapCoins = swapRawCoins.filter((coin) => coin.coin !== fromCoin);
                       <Typography variant="caption" className="crypto-fees-text">
                       {fromCoin} → {swapCoin} Rate:{" "}
                       {conversionRate !== null ? conversionRate.toFixed(8) : "—"}
+                       {errorMessage && (
+                        <p style={{ color: "red", marginTop: "20px" }}>{errorMessage}</p>
+                      )}
                     </Typography>
-
                   </Box>
                 </Box>
 
                 {/* Confirmation checkbox for swap */}
-                <Box className="crypto-form-field" sx={{ mt: 3 }}>
+                <Box className="crypto-form-field" >
                   <FormControlLabel
                     control={
                       <Checkbox
