@@ -58,7 +58,7 @@ const FirstSection = () => {
     {
       field: 'userDetails?.email',
       headerName: 'Email',
-      render: (row: any) => row.userDetails?.[0]?.name || 'N/A',
+      render: (row: any) => row.userDetails?.[0]?.email || 'N/A',
     },
    {
       field: 'coin',

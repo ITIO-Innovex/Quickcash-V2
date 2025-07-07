@@ -19,12 +19,26 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
+import { jwtDecode } from 'jwt-decode';
+import api from '@/helpers/apiHelper';
 
 type SidebarProps = {
   isOpen: boolean;
   toggleSidebar: () => void;
 };
-
+interface JwtPayload {
+  sub: string;
+  role: string;
+  iat: number;
+  exp: number;
+  data: {
+    defaultcurr: string;
+    email: string;
+    id: string;
+    name: string;
+    type: string;
+  };
+}
 const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -33,7 +47,23 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [hoveredItem, setHoveredItem] = useState<any>(null);
-
+  const handleCardTabClick = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const accountId = jwtDecode<JwtPayload>(token)?.data?.id;
+      if (!accountId) return;
+      const result = await api.get(`/api/v1/card/list/${accountId}`);
+      if (result.data.status === 201 && result.data.data.length > 0) {
+        navigate('/card-details');
+      } else {
+        navigate('/cards');
+      }
+    } catch (error) {
+      console.error("Card tab navigation failed:", error);
+      navigate('/cards'); 
+    }
+  };
   const menuItems = [
     {
       name: 'Dashboard',
@@ -41,7 +71,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
       path: '/dashboard',
 
     },
-    { name: 'Cards', icon: 'credit_card', path: '/cards' },
+    { name: 'Cards', icon: 'credit_card', onClick: handleCardTabClick },
     { name: 'Transaction', icon: 'receipt', path: '/transactions' },
     { name: 'Statement', icon: 'assignment', path: '/statements' },
     {
@@ -155,7 +185,9 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
                 button
                 className={clsx('menu-item', { 'active': location.pathname === item.path })}
                 onClick={() => {
-                  if (item.hasDropdown) {
+                  if (item.onClick) {
+                    item.onClick();
+                  } else if (item.hasDropdown) {
                     if (isOpen) {
                       setOpenDropdown(openDropdown === item.name ? null : item.name);
                     }
@@ -165,7 +197,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
                 }}
               >
                 <ListItemIcon className='menu-list-item'>
-                  <span className="material-icons" style={{color: theme.palette.text.primary,}}>{item.icon}</span>
+                  <span className="material-icons" style={{ color: theme.palette.text.primary, }}>{item.icon}</span>
                 </ListItemIcon>
 
                 {isOpen && (

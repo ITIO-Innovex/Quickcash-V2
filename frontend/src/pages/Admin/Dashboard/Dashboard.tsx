@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import LeftBox1 from "./FirstLeftSection";
 import LeftBox2 from "./SecondLeftSection";
 import LeftBox3 from "./ThirdLeftSection";
-import LeftBox4 from "./FourthLeftSection";	
+import LeftBox4 from "./FourthLeftSection";
 import RightBox3 from "./ThirdRightSection";
-import RightBox1 from "./FirstRigthSection";   
+import RightBox1 from "./FirstRigthSection";
 import RightBox2 from "./SecondRightSection";
 import MarqueeSection from '@/components/common/marquee';
 import PageHeader from '@/components/common/pageHeader';
@@ -38,28 +38,30 @@ const AdminDashboard = () => {
   }, []);
 
   return (
-    <Box
-      className="dashboard-container"
-      sx={{ backgroundColor: theme.palette.background.default }}
-    >
-      <PageHeader title='Admin-dashboard'/>
-      <MarqueeSection/>
+    <Box className="dashboard-container" sx={{ backgroundColor: theme.palette.background.default }}>
+      <PageHeader title="Admin-dashboard" />
+      <MarqueeSection />
+
+      {/* Two Column Layout */}
       <Box className="dashboard-flex-container">
-        {/* Left Column */}
         <Box className="dashboard-left-column">
           <LeftBox1 summary={summary} loaderResult={loaderResult} />
           <LeftBox2 summary={summary} loaderResult={loaderResult} />
-           <LeftBox3 walletItems={summary?.walletItems} loaderResult={loaderResult} />
-          <LeftBox4 cryptoTransactions={summary?.crypto_transactions} loaderResult={loaderResult} />
+          <LeftBox3 walletItems={summary?.walletItems} loaderResult={loaderResult} />
         </Box>
-        {/* Right Column */}
+
         <Box className="dashboard-right-column">
           <RightBox1 summary={summary} loaderResult={loaderResult} />
-         <RightBox2 summary={summary} loaderResult={loaderResult} />
-           <RightBox3 summary={summary} loaderResult={loaderResult} />
+          <RightBox2 summary={summary} loaderResult={loaderResult} />
+          <RightBox3 summary={summary} loaderResult={loaderResult} />
         </Box>
       </Box>
+
+      <Box className="dashboard-full-width-box">
+        <LeftBox4 cryptoTransactions={summary?.crypto_transactions} loaderResult={loaderResult} />
+      </Box>
     </Box>
+
   );
 };
 

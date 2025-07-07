@@ -36,7 +36,7 @@ const FirstSection = () => {
     await HandleUpdateStatus(selectedRow._id, selectedRow.user);
   };
   const handleCancel = () => {
-    // handle cancel logic (close modal)
+    setOpen(false);
   };
 
 

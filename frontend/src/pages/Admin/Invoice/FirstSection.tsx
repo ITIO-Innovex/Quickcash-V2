@@ -112,7 +112,7 @@ const FirstSection = () => {
       InvoiceNumber: row.invoice_number,
       InvoiceDate: row.invoice_date,
       InvoiceDueDate: row.due_date,
-      Amount: `${Math.abs(Number(row.total.replace(/[^\d.-]/g, '')))}`,
+      Amount: row.total,
       Transactions: row.dueAmount,
       Status: row.status,
     }));

@@ -26,7 +26,8 @@ interface FourthLeftSectionProps {
 
 const FourthLeftSection = ({ cryptoTransactions, loaderResult }: FourthLeftSectionProps) => {
   // console.log('Crypto Transactions:', cryptoTransactions);
-  const tableData = (cryptoTransactions || []).map((item: any) => ({
+  const tableData = (cryptoTransactions || []).slice(0, 5).map((item: any) => ({
+  
     date: item.date || item.createdAt?.slice(0, 10) || '',
     coin: item.coin || item.from_currency || '',
     paymentType: item.paymentType || item.trans_type || '',
@@ -44,7 +45,7 @@ const FourthLeftSection = ({ cryptoTransactions, loaderResult }: FourthLeftSecti
       {loaderResult ? (
         <Skeleton variant="rectangular" width="100%" height={200} />
       ) : (
-        <GenericTable columns={cryptoColumns} data={tableData} />
+        <GenericTable columns={cryptoColumns} data={tableData} disablePagination/>
       )}
     </Box>
   );

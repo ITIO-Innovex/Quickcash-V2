@@ -65,16 +65,12 @@ const UserInformation: React.FC = () => {
       const result = await api.post(
         `/${url}/v1/user/auth`,
         {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
+       
       );
       if (result?.data?.status === 201) {
         const data = result.data.data;
         setUser({
-          firstName: data.name?.split(' ')[0] || '',
+          firstName: data.name|| '',
           email: data.email || '',
           mobile: "+" + (data.mobile || ''),
           address: data.address || '',
