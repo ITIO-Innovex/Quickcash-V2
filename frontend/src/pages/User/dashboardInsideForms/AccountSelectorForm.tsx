@@ -75,6 +75,7 @@ reviewFlag
     acc.iban.toLowerCase().includes(search.toLowerCase())
   );
     const HandleSwitchAccount = (item: any) => {
+      console.log(item);
     activeToAccount(item);
     onClose(item);
     setToExchangeBox(item);
@@ -128,7 +129,7 @@ reviewFlag
       <Box className='account-box'sx={{backgroundColor:theme.palette.background.default}} >
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h6" fontWeight="bold">Change Account</Typography>
-          <IconButton onClick={onClose}>
+          <IconButton onClick={() => onClose(selectedValue)}>
             <Close />
           </IconButton>
         </Box>

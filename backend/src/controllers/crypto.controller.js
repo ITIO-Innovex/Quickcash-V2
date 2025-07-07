@@ -1651,13 +1651,50 @@ calculateCrypto: async (req, res) => {
       }
     });
     } catch (error) {
-      console.error("🔥 Error fetching conversion rate:", error);
-      return res.status(500).json({
+  console.log("🔥 Error fetching conversion rate");
+
+  // ✅ Step 1: Log incoming request for trace
+  console.log("📥 Request:", req.body);
+
+  // ✅ Step 2: Print actual URL called
+  console.log("🌐 Requested URL:", error?.config?.url || 'URL not found');
+
+  // ✅ Step 3: Axios response based logging
+  if (error.response) {
+    console.log("❌ HTTP Status:", error.response.status);
+    console.log("🗣 Error Message:", error.response.data?.status?.error_message || error.response.statusText);
+
+    return res.status(error.response.status).json({
+      success: false,
+      message: error.response.data?.status?.error_message || "API error",
+    });
+  }
+
+  // ✅ Step 4: If custom `.err` exists and is stringified
+  if (typeof error.err === "string") {
+    try {
+      const parsed = JSON.parse(error.err);
+      const msg = parsed?.status?.error_message || "Unknown custom error";
+
+      console.log("💥 Parsed `err`:", msg);
+
+      return res.status(429).json({
         success: false,
-        message: "Internal server error",
-        error: error.message,
+        message: msg,
       });
+    } catch (e) {
+      console.log("⚠️ Error parsing `err` string:", error.err);
     }
+  }
+
+  // ✅ Step 5: Fallback for unknown errors
+  console.log("📛 Fallback Error Message:", error.message || "Unknown error");
+
+  return res.status(500).json({
+    success: false,
+    message: error.message || "Something went wrong",
+  });
+}
   },
   // fetch no of coins
   fetchCoins: async (req, res) => {

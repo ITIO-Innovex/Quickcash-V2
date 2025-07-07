@@ -21,6 +21,7 @@ interface CurrencyExchangeFormProps {
   accountBalance: any;
   acctDetails: any;
   accountList: any;
+  IsCurrencyExchnageOpen: (value: boolean) => void;
   onClose: (value: string) => void;
 }
 
@@ -70,8 +71,8 @@ const calculateFee = (amount: string) => {
   return Math.max(1, +(amt * 0.01).toFixed(2));
 };
 
-const CurrencyExchangeForm = ({ onClose,acctDetails,activeAccount,accountBalance,accountList, }: CurrencyExchangeFormProps) => {
-console.log("account list =>", JSON.stringify(accountList, null, 2));
+const CurrencyExchangeForm = ({ onClose,acctDetails,activeAccount,accountBalance,accountList, IsCurrencyExchnageOpen}: CurrencyExchangeFormProps) => {
+console.log("account list =>", JSON.stringify(accountList, null, 2)); 
 
   const theme = useTheme();
   const ExchangeFees = useFee("Exchange");
@@ -463,6 +464,7 @@ console.log("account list =>", JSON.stringify(accountList, null, 2));
                     
                   </>
                 ): (
+                  <>
                     <ReactCountryFlag
                       countryCode={toExchangeAccount?.country}
                       svg
@@ -475,6 +477,11 @@ console.log("account list =>", JSON.stringify(accountList, null, 2));
                       cdnSuffix="svg"
                       title={toExchangeAccount?.country}
                     />
+                    <Typography variant="caption"  display="block">
+                      {(toExchangeAccount?.name).substring(0, 9) +"..." }
+                    </Typography>
+                  </>
+                    
                 )}
                 {/* <img className="img-round" src={selectedAccount.flag} alt={selectedAccount.label} width={20} height={20} />
                 <Typography sx={{ ml: 1 }}>{selectedAccount.label}</Typography> */}
@@ -485,8 +492,14 @@ console.log("account list =>", JSON.stringify(accountList, null, 2));
 
           <Box mt={1} display="flex" justifyContent="space-between">
             <Typography variant="caption">Will get Exactly</Typography>
-            <Typography variant="caption">
-                {selectedAccount.balance}
+              <Typography variant="caption">
+                  {getSymbolFromCurrency(toExchangeBox?.currency)}
+                  {toExchangeBox
+                    ? parseFloat(toExchangeBox?.amount).toFixed(
+                        3
+                      ) || "0"
+                    : 0
+                  }
               </Typography>
           </Box>
         </Box>
@@ -524,19 +537,21 @@ console.log("account list =>", JSON.stringify(accountList, null, 2));
       open={exchangeModalOpen}
       onClose={() => setExchangeModalOpen(false)}
       fromAmount={amount}
-      fromCurrency={selectedAccount.currency}
-      toCurrency={currency}
-      exchangeRate={exchangeRate}
-      exchangedAmount={exchangedAmount}
-      fee={fee}
-      account={selectedAccount}
+      fromCurrency={acctDetails?.currency}
+      toCurrency={toExchangeBox?.currency}
+      exchangeRate={activeRate}
+      exchangedAmount={convertedValue}
+      fee={feeChargeAmount}
+      account={acctDetails}
+      toAccount = {toExchangeAccount}
       onSubmit={(transaction) => {
         setTransactions(prev => [transaction, ...prev]);
         setSuccessMsg('Transaction submitted successfully!');
         setTimeout(() => setSuccessMsg(null), 3000);
       }}
       accountId={{ data: { id: user?.id, name: user?.name } }}
-      toExchangeBox={targetAccount}
+      toExchangeBox={toExchangeBox}
+      IsCurrencyExchnageOpen ={IsCurrencyExchnageOpen}
       setToExchangeBox={() => {}}
       getAllAccountsList={() => {}}
       setReviewOpen={() => {}}

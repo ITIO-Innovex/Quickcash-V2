@@ -2,7 +2,7 @@ import ReactQuill from 'react-quill-new';
 import 'quill/dist/quill.snow.css';
 import api from '@/helpers/apiHelper';
 import 'quill/dist/quill.snow.css';
-import { Box, Grid, useTheme } from '@mui/material';
+import { Box, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -14,9 +14,11 @@ import { jwtDecode } from 'jwt-decode';
 import { JwtPayload } from '@/types/jwt';
 import axios from 'axios';
 import getSymbolFromCurrency from 'currency-symbol-map';
+import 'react-toastify/dist/ReactToastify.css';
+import CustomSelect from '@/components/CustomDropdown';
 import { useAppToast } from '@/utils/toast'; 
 
-const EditInvoice = () => {
+const AddInvoice = () => {
   const theme = useTheme();
   const toast = useAppToast(); 
   const { id } = useParams();
@@ -29,6 +31,14 @@ const EditInvoice = () => {
   const url = import.meta.env.VITE_NODE_ENV === 'production' ? 'api' : 'api';
   const navigate = useNavigate();
 
+  const [receiverType, setReceiverType] = useState<'member' | 'other'>('member');
+  const [isRecurring, setIsRecurring] = useState<'yes' | 'no'>('no');
+  const [recurringCycle, setRecurringCycle] = useState('');
+    const [receiverDetails, setReceiverDetails] = useState({
+      name: '',
+      email: '',
+      address: '',
+    });
   //  After all useState declarations
   const [selectedTax, setSelectedTax] = useState({ name: 'Ganesh', rate: 35 });
 
@@ -51,27 +61,36 @@ const EditInvoice = () => {
   const taxAmount = ((subtotal - discountAmount) * selectedTax.rate) / 100;
 
   const total = subtotal - discountAmount + taxAmount;
+const handleAddRow = () => {
+  const updated = [...items];
+  const lastItem = updated[updated.length - 1];
 
-  const handleAddRow = () => {
-    const updated = [...items];
-    const lastItem = updated[updated.length - 1];
-    if (!lastItem.product || !lastItem.qty || !lastItem.unitPrice) {
-      toast.error('Please fill in all fields before adding.');
-      return;
-    }
-    lastItem.isAdded = true;
+  // Basic field validation
+ if (
+  lastItem.product.trim() === '' ||
+  lastItem.qty === '' ||
+  lastItem.unitPrice === ''
+) {
+  toast.error('Please fill in all fields before adding.');
+  return;
+}
 
-    updated.push({
-      id: updated.length + 1,
-      product: '',
-      qty: '',
-      unitPrice: '',
-      amount: '',
-      isAdded: false,
-    });
+  // Mark last item as added (read-only display)
+  lastItem.isAdded = true;
 
-    setItems(updated);
-  };
+  // Push new editable row
+  updated.push({
+    id: Date.now(), // better unique id than index-based
+    product: '',
+    qty: '',
+    unitPrice: '',
+    amount: '',
+    isAdded: false,
+  });
+
+  setItems(updated);
+};
+
 
   const handleItemChange = (index, field, value) => {
     const updated = [...items];
@@ -115,18 +134,21 @@ const EditInvoice = () => {
       render: (row: any) => (
         <Box display="flex" gap={1}>
           <DeleteIcon
-            sx={{ cursor: 'pointer', color: '#FF0000' }}
-            onClick={() => handleDelete(row)}
+            sx={{ cursor: 'pointer', color: 'red' }}
+            onClick={() => handleDeleteRow(row.id)}
           />
         </Box>
       ),
     },
   ];
 
-  const handleDeleteRow = (id) => {
-    const updated = items.filter((item) => item.id !== id);
-    setItems(updated);
-  };
+const handleDeleteRow = (id: number) => {
+  if (items.length <= 1) return;
+
+  const updatedItems = items.filter((item) => item.id !== id);
+  setItems(updatedItems);
+};
+
 
   const HandleUpdateInvoice = async () => {
     try {
@@ -176,38 +198,140 @@ const EditInvoice = () => {
 
   return (
     <Box className="dashboard-container" sx={{ p: 3 }}>
-      <PageHeader title={`Edit Invoice / ${id}`} />
+
+      <PageHeader title={`Edit Invoice / ${invoiceData?.invoice_number || id}`} />
 
       {invoiceData && (
         <>
           <Grid container spacing={2} mt={2}>
             <Grid item xs={12} md={6}>
-              <CustomInput label="Invoice #" value={invoiceData.invoice_number || ''} disabled />
+              <CustomInput label="Invoice #" value={invoiceData.invoice_number || ''}  />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <FormLabel component="legend" sx={{ fontWeight: 600, color: '#483594' }}>
+                Select Type
+              </FormLabel>
+              <RadioGroup
+                row
+                value={receiverType}
+                onChange={(e) => setReceiverType(e.target.value as 'member' | 'other')}
+              >
+                <FormControlLabel value="member" control={<Radio />} label="Member" />
+                <FormControlLabel value="other" control={<Radio />} label="Other" />
+              </RadioGroup>
+            </Grid>
+
+            {receiverType === 'other' && (
+                <>
+                  <Grid item xs={12} md={6}>
+                    <CustomInput
+                      label="Receiver Name"
+                      value={receiverDetails.name}
+                      onChange={(e) =>
+                        setReceiverDetails({ ...receiverDetails, name: e.target.value })
+                      }
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <CustomInput
+                      label="Receiver Email"
+                      value={receiverDetails.email}
+                      onChange={(e) =>
+                        setReceiverDetails({ ...receiverDetails, email: e.target.value })
+                      }
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}md={6}>
+                    <CustomInput
+                      label="Receiver Address"
+                      value={receiverDetails.address}
+                      onChange={(e) =>
+                        setReceiverDetails({ ...receiverDetails, address: e.target.value })
+                      }
+                      fullWidth
+                    />
+                  </Grid>
+                </>
+              )}
+
+            <Grid item xs={12} md={6}>
+              <CustomInput label="Invoice Date" type="date" value={invoiceData.invoice_date || ''} />
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomInput label="Invoice Date" value={invoiceData.invoice_date || ''} disabled />
+              <CustomInput label="Due Date" type="date" value={invoiceData.due_date || ''}  />
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomInput label="Due Date" value={invoiceData.due_date || ''} disabled />
+              <CustomSelect
+                label="Status"
+                value={invoiceData.status || ''}
+                onChange={(e) =>
+                  setInvoiceData({
+                    ...invoiceData,
+                    status: (e.target as HTMLSelectElement).value,
+                  })
+                }
+                options={[
+                  { label: 'Draft', value: 'Draft' },
+                  { label: 'Pending', value: 'Pending' },
+                  { label: 'Completed', value: 'Completed' },
+                  { label: 'Partially Completed', value: 'Partially Completed' },
+                ]}
+              />
+
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomInput label="Status" value={invoiceData.status || ''} disabled />
+              <CustomInput label="Invoice Template" value="Default"  />
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomInput label="Invoice Template" value="Default" disabled />
+              <CustomInput label="Payment QR Code" value={invoiceData.payment_qr_code || ''}  />
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomInput label="Payment QR Code" value={invoiceData.payment_qr_code || ''} disabled />
+              <CustomInput label="Select Currency" value={`${invoiceData.currency_text} ${invoiceData.currency}`}   />
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomInput label="Select Currency" value={`${invoiceData.currency_text} ${invoiceData.currency}`} disabled  />
+              <FormLabel component="legend" sx={{ fontWeight: 600, color: '#483594' }}>
+                Recurring
+              </FormLabel>
+              <RadioGroup
+                row
+                value={isRecurring}
+                onChange={(e) => setIsRecurring(e.target.value as 'yes' | 'no')}
+              >
+                <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+                <FormControlLabel value="no" control={<Radio />} label="No" />
+              </RadioGroup>
             </Grid>
+            {isRecurring === 'yes' && (
+              <Grid item xs={12} md={6}>
+                <CustomSelect
+                  label="Recurring Cycle"
+                  value={recurringCycle}
+                  onChange={(e) => setRecurringCycle((e.target as HTMLSelectElement).value)}
+                  options={[
+                    { label: 'Select Cycle', value: '' },
+                    { label: 'Weekly', value: 'weekly' },
+                    { label: 'Monthly', value: 'monthly' },
+                    { label: 'Quarterly', value: 'quarterly' },
+                    { label: 'Yearly', value: 'yearly' },
+                  ]}
+                  style={{
+                    padding: '12px',
+                    border: '1px solid #ccc',
+                    borderRadius: '6px',
+                    width: '100%',
+                  }}
+                />
+              </Grid>
+            )}
 
           </Grid>
 
@@ -231,59 +355,79 @@ const EditInvoice = () => {
           </Grid>
 
           <Grid container spacing={2} mt={3}>
-            {items.map((item, index) => (
-              <Grid item xs={12} key={item.id}>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={1}> {index + 1} </Grid>
+              {items.map((item, index) => (
+                <Grid item xs={12} key={item.id}>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={1}> {index + 1} </Grid>
 
-                  <Grid item xs={3}>
-                    {item.isAdded ? (
-                      <span>{item.product}</span>
-                    ) : (
-                      <CustomInput type="text" value={item.product}
-                        onChange={(e) => handleItemChange(index, 'product', e.target.value) }
-                        fullWidth
-                      />
-                    )}
-                  </Grid>
+                    <Grid item xs={3}>
+                      {item.isAdded ? (
+                        <span>{item.product}</span>
+                      ) : (
+                        <CustomInput
+                          type="text"
+                          value={item.product}
+                          onChange={(e) =>
+                            handleItemChange(index, 'product', e.target.value)
+                          }
+                          fullWidth
+                        />
+                      )}
+                    </Grid>
 
-                  <Grid item xs={2}>
-                    {item.isAdded ? (
-                      <span>{item.qty}</span>
-                    ) : (
-                      <CustomInput type="number" value={item.qty}
-                        onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
-                        fullWidth
-                      />
-                    )}
-                  </Grid>
+                    <Grid item xs={2}>
+                      {item.isAdded ? (
+                        <span>{item.qty}</span>
+                      ) : (
+                        <CustomInput
+                          type="number"
+                          value={item.qty}
+                          onChange={(e) =>
+                            handleItemChange(index, 'qty', e.target.value)
+                          }
+                          fullWidth
+                        />
+                      )}
+                    </Grid>
 
-                  <Grid item xs={2}>
-                    {item.isAdded ? (
-                      <span>{item.unitPrice}</span>
-                    ) : (
-                      <CustomInput type="number" value={item.unitPrice}
-                       onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)}
-                        fullWidth
-                      />
-                    )}
-                  </Grid>
+                    <Grid item xs={2}>
+                      {item.isAdded ? (
+                        <span>{item.unitPrice}</span>
+                      ) : (
+                        <CustomInput
+                          type="number"
+                          value={item.unitPrice}
+                          onChange={(e) =>
+                            handleItemChange(index, 'unitPrice', e.target.value)
+                          }
+                          fullWidth
+                        />
+                      )}
+                    </Grid>
 
-                  <Grid item xs={2}>
-                    <span>{item.amount}</span>
-                  </Grid>
+                    <Grid item xs={2}>
+                      <span>{item.amount}</span>
+                    </Grid>
 
-                  <Grid item xs={2}>
-                    {index !== 0 && (
-                      <DeleteIcon
-                        sx={{ cursor: 'pointer', color: '#FF0000' }}
-                        onClick={() => handleDeleteRow(item.id)}
-                      />
-                    )}
+                    <Grid item xs={2}>
+                      <Box display="flex" alignItems="center" justifyContent="space-between">
+                        {index !== 0 && (
+                          <DeleteIcon
+                            sx={{ cursor: 'pointer', color: '#FF0000' }}
+                            onClick={() => handleDeleteRow(item.id)}
+                          />
+                        )}
+                      </Box>
+                    </Grid>
                   </Grid>
                 </Grid>
+              ))}
+
+              {/* ⬇️ ADD Button aligned under Action */}
+              <Grid item xs={12} display="flex" justifyContent="flex-end" mt={2}>
+                <CustomButton onClick={handleAddRow}>ADD</CustomButton>
               </Grid>
-            ))}
+            </Grid>
             <Grid container spacing={2} mt={4}>
               {/* Left side: Inputs */}
               <Grid item xs={12} md={6}>
@@ -315,7 +459,7 @@ const EditInvoice = () => {
                       );
                       if (selected) setSelectedTax(selected);
                     }}
-                    style={{ padding: '12px', width: '100%', borderRadius: '6px',}}
+                    style={{ padding: '12px', width: '100%', borderRadius: '6px', border: '1px solid #ccc'}}
                   >
                     {taxOptions.map((tax) => (
                       <option key={tax.name} value={tax.name}>
@@ -348,11 +492,6 @@ const EditInvoice = () => {
                 </Box>
               </Grid>
             </Grid>
-
-            <Grid item xs={12}>
-              <CustomButton onClick={handleAddRow}>Add</CustomButton>
-            </Grid>
-          </Grid>
 
           {/* 🔽 Notes & Terms Section */}
           <Box className="notes-terms-wrapper">
@@ -397,7 +536,4 @@ const EditInvoice = () => {
   );
 };
 
-export default EditInvoice;
-function handleDelete(row: any): void {
-  throw new Error('Function not implemented.');
-}
+export default AddInvoice;

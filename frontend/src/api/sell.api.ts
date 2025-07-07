@@ -24,7 +24,7 @@ export const fetchSellCalculation = async (
       noOfCoins,
     });
 
-    // console.log("✅ Sell Calculation API Response:", response.data);
+    console.log("✅ Sell Calculation API Response:", response.data);
     return response.data;
   } catch (error) {
     console.error("❌ Error in fetchSellCalculation:", error);

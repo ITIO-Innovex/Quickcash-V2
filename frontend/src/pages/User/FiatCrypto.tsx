@@ -407,12 +407,11 @@ const FiatCrypto = () => {
                                 >
 
                                     <Box className='button-section' sx={{ display: 'flex', gap: 1 }}>
-                                        <Button className='custom-button'
-                                             onClick={() => navigate('/buysellswap')}>
+                                        <Button className='custom-button'>
                                             <Sell className='icon-size' />
                                             <span className='button-text'>Buy/Sell</span>
                                         </Button>
-                                        <Button className='custom-button' onClick={() => navigate('/wallet')}>
+                                        <Button className='custom-button'>
                                             <Wallet className='icon-size' />
                                             <span className='button-text'> Wallet Address</span>
                                         </Button>
@@ -519,13 +518,14 @@ const FiatCrypto = () => {
                 />
             </CustomModal>
 
-            <CustomModal open={isCurrencyExchnageOpen} onClose={handleCurrencyExchangeClose} title="Exchange USD Currency" sx={{backgroundColor:theme.palette.background.default, color:theme.palette.text.primary}}>
+            <CustomModal open={isCurrencyExchnageOpen} onClose={handleCurrencyExchangeClose} title="Exchange Currency" sx={{backgroundColor:theme.palette.background.default, color:theme.palette.text.primary}}>
                 <CurrencyExchangeForm onClose={handleCurrencyExchangeClose}
                     activeAccount={ActiveAccountDetails?._id}
                     accountBalance={ActiveAccountDetails?.amount}
                     acctDetails={ActiveAccountDetails}
                     accountList={fiatAccounts}
-                />
+                    IsCurrencyExchnageOpen={setIsCurrencyExchnageOpen}
+                    />
             </CustomModal>
 
                 <SelectCryptoModal

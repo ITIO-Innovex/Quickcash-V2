@@ -7,6 +7,9 @@ import api from '@/helpers/apiHelper';
 import axios from "axios";
 import getSymbolFromCurrency from "currency-symbol-map";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from 'jwt-decode';
+import { JwtPayload } from '@/types/jwt';
+import { useAppToast }from '@/utils/toast';
 
 interface CurrencyExchangeModalProps {
   open: boolean;
@@ -18,6 +21,7 @@ interface CurrencyExchangeModalProps {
   exchangedAmount: string;
   fee: number;
   account: any;
+  toAccount:any;
   onSubmit: (transaction: any) => void;
   accountId: any;
   toExchangeBox: any;
@@ -27,26 +31,35 @@ interface CurrencyExchangeModalProps {
   setExchangeOpen: (val: boolean) => void;
   alertnotify: (msg: string, type: string) => void;
   getDashboardData: (id: string) => void;
+  IsCurrencyExchnageOpen: (value: boolean) => void;
   url: string;
 }
 
-const CurrencyExchangeModal: React.FC<CurrencyExchangeModalProps> = ({ open, onClose, fromAmount, fromCurrency, toCurrency, exchangeRate, exchangedAmount, fee, account, onSubmit, accountId, toExchangeBox, setToExchangeBox, getAllAccountsList, setReviewOpen, setExchangeOpen, alertnotify, getDashboardData, url }) => {
+const CurrencyExchangeModal: React.FC<CurrencyExchangeModalProps> = ({ open, onClose, fromAmount, fromCurrency, toCurrency, exchangeRate, exchangedAmount, fee, account,toAccount, onSubmit, accountId, toExchangeBox, setToExchangeBox, getAllAccountsList, setReviewOpen, setExchangeOpen, alertnotify, getDashboardData, url,IsCurrencyExchnageOpen }) => {
     const theme = useTheme();
+    const toast= useAppToast();
     const totalCharge = fromAmount && fee ? (parseFloat(fromAmount) + fee).toFixed(2) : '';
     const [submitting, setSubmitting] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
     const navigate = useNavigate();
 
     const HandleTransactions = async () => {
+      console.log("Submit transactoin")
+       const accountId = jwtDecode<JwtPayload>(
+      localStorage.getItem("token") as string
+    );
+      console.log(`Account ID: ${accountId}`);
       setSubmitting(true);
       setError(null);
       // Check for sufficient balance before making the API call
-      if (parseFloat(account.balance) < parseFloat(fromAmount) + fee) {
-        alertnotify("Insufficient balance for this transaction.", "error");
+      if (parseFloat(account.amount) < parseFloat(fromAmount) + fee) {
+        console.log("Insufficient Error");
+        toast.error("Insufficient balance for this transaction.");
         setSubmitting(false);
         return;
       }
       try {
+        console.log("Add Transaction logic");
         await axios.post(
           `/${url}/v1/transaction/add`,
           {
@@ -76,16 +89,17 @@ const CurrencyExchangeModal: React.FC<CurrencyExchangeModalProps> = ({ open, onC
           }
         )
         .then((result) => {
-          if (result.data.status == "201") {
+          if (result.data.status == 201) {
             setToExchangeBox(null);
             getAllAccountsList(accountId?.data?.id);
             setReviewOpen(false);
             setExchangeOpen(false);
+            IsCurrencyExchnageOpen(false);
             setTimeout(() => {
-              alertnotify("Exchange has been done successfully", "success");
+              toast.success("Exchange has been done successfully");
             }, 300);
             getDashboardData(accountId?.data?.id);
-            navigate(`/home?currency=${account?.currency}`);
+            navigate(`/dashboard?currency=${account?.currency}`);
           }
         })
         .catch((error) => {
@@ -101,7 +115,7 @@ const CurrencyExchangeModal: React.FC<CurrencyExchangeModalProps> = ({ open, onC
               setExchangeOpen(false);
               setTimeout(() => {
                 getDashboardData(accountId?.data?.id);
-                navigate(`/home?currency=${account?.currency}`);
+                navigate(`/dashboard?currency=${account?.currency}`);
               }, 300);
             }
           } else {
@@ -120,9 +134,29 @@ const CurrencyExchangeModal: React.FC<CurrencyExchangeModalProps> = ({ open, onC
     <CustomModal open={open} onClose={onClose} 
       title={
         <Box display="flex" alignItems="center" gap={1}>
-          <img src={account.flag} alt={account.label} width={28} height={28} style={{ borderRadius: '50%' }} />
+          <ReactCountryFlag
+            countryCode={
+              account
+                ? account?.country
+                : account?.country
+            }
+            svg
+            style={{
+              width: "2em",
+              height: "2em",
+              borderRadius: "50%",
+              marginTop: "10px",
+            }}
+            cdnUrl="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.4.3/flags/1x1/"
+            cdnSuffix="svg"
+            title={
+              account
+                ? account?.country
+                : account?.country
+            }
+          />
           <Typography fontWeight="bold" fontSize={20}>
-            {account.label} : {account.balance}
+            {account.name} : {account.iban}
           </Typography>
         </Box>
       }
@@ -130,20 +164,60 @@ const CurrencyExchangeModal: React.FC<CurrencyExchangeModalProps> = ({ open, onC
       <Box className="currency-exchange-modal-content">
          <Box className="currency-exchange-top">
         <Box className="currency-exchange-amounts">
-          <Typography className="from-amount">- {fromCurrency} {fromAmount || '0.00'}</Typography>
-          <Typography className="to-amount">{toCurrency} {exchangedAmount || '0.00'}</Typography>
+          <Typography className="from-amount">{getSymbolFromCurrency(fromCurrency)} {fromAmount || '0.00'}</Typography>
+          <Typography className="to-amount">{getSymbolFromCurrency(toCurrency)} {exchangedAmount || '0.00'}</Typography>
         </Box>
         <Box className="currency-exchange-flags">
-          <img src={account.flag} alt={account.label} className="currency-exchange-flag" />
-          <img src={`../flags/${toCurrency.toLowerCase()}.png`} alt={toCurrency} className="currency-exchange-flag" />
+          <ReactCountryFlag
+            countryCode={
+              account
+                ? account?.country
+                : account?.country
+            }
+            svg
+            style={{
+              width: "2em",
+              height: "2em",
+              borderRadius: "50%",
+              marginTop: "10px",
+            }}
+            cdnUrl="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.4.3/flags/1x1/"
+            cdnSuffix="svg"
+            title={
+              account
+                ? account?.country
+                : account?.country
+            }
+          />
+          <ReactCountryFlag
+            countryCode={
+              account
+                ? toAccount?.country
+                : toAccount?.country
+            }
+            svg
+            style={{
+              width: "2em",
+              height: "2em",
+              borderRadius: "50%",
+              marginTop: "10px",
+            }}
+            cdnUrl="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.4.3/flags/1x1/"
+            cdnSuffix="svg"
+            title={
+              account
+                ? toAccount?.country
+                : toAccount?.country
+            }
+          />
+          {/* toAccount */}
         </Box>
       </Box>
       {/* To Card Info */}
       <Box className="currency-exchange-to-card">
         <Typography className="to-currency">
           to <span className="to-currency-name">
-            <img src={`../flags/${toCurrency.toLowerCase()}.png`} alt={toCurrency} width={20} style={{ borderRadius: '50%', marginRight: 4 }} />
-            {toCurrency}
+            {toAccount.name}
           </span>
         </Typography>
         <Typography className="to-card-number">{account.code}</Typography>
@@ -152,11 +226,11 @@ const CurrencyExchangeModal: React.FC<CurrencyExchangeModalProps> = ({ open, onC
         <Box className="currency-exchange-summary">
           <Box className="currency-exchange-summary-row">
             <span className="label">Exchange</span>
-            <span className="value">{fromCurrency} {fromAmount || '0.00'}</span>
+            <span className="value">{getSymbolFromCurrency(fromCurrency)} {fromAmount || '0.00'}</span>
           </Box>
           <Box className="currency-exchange-summary-row">
             <span className="label">Rate</span>
-            <span className="value">1 {fromCurrency} = {exchangeRate} {toCurrency}</span>
+            <span className="value">{getSymbolFromCurrency(fromCurrency)} 1 = {getSymbolFromCurrency(toCurrency)} {exchangeRate} </span>
           </Box>
           <Box className="currency-exchange-summary-row">
             <span className="label">Fee</span>
@@ -164,23 +238,43 @@ const CurrencyExchangeModal: React.FC<CurrencyExchangeModalProps> = ({ open, onC
           </Box>
           <Box className="currency-exchange-summary-row">
             <span className="label">Total Charge</span>
-            <span className="value">{fromCurrency} {totalCharge}</span>
+            <span className="value">{getSymbolFromCurrency(fromCurrency)} {totalCharge}</span>
           </Box>
           <Box className="currency-exchange-summary-row">
             <span className="label">Will get Exactly</span>
-            <span className="value">{toCurrency} {exchangedAmount || '0.00'}</span>
+            <span className="value">{getSymbolFromCurrency(toCurrency)} {exchangedAmount || '0.00'}</span>
           </Box>
         </Box>
         <Box className="currency-exchange-section">
           <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Source Account</Typography>
           <Box className="account-row">
-            <img src={account.flag} alt={account.label} className="currency-exchange-flag" />
+            <ReactCountryFlag
+              countryCode={
+                account
+                  ? account?.country
+                  : account?.country
+              }
+              svg
+              style={{
+                width: "2em",
+                height: "2em",
+                borderRadius: "50%",
+                marginTop: "10px",
+              }}
+              cdnUrl="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.4.3/flags/1x1/"
+              cdnSuffix="svg"
+              title={
+                account
+                  ? account?.country
+                  : account?.country
+              }
+            />
             <Box>
               <Typography fontWeight={600}>{account.currency}</Typography>
-              <Typography variant="body2">{account.code}</Typography>
+              <Typography variant="body2">{account.iban}</Typography>
             </Box>
             <Box sx={{ marginLeft: 'auto' }}>
-              <Typography fontWeight={600}>{account.balance}</Typography>
+              <Typography fontWeight={600}>{account.amount}</Typography>
             </Box>
           </Box>
         </Box>

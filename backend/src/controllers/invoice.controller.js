@@ -978,13 +978,12 @@ module.exports = {
     const invoice_number = req?.params?.id;
 
     try {
-
-      const { ObjectId } = require('mongoose').Types;
-const getDetails = await Invoice.findOne({ _id: new ObjectId(invoice_number) });
-
+      
+      const getDetails = await Invoice.findOne({ invoice_number: invoice_number });
+        
       if(!getDetails) {
-        return res.status(404).json({
-          status:404,
+        return res.status(401).json({
+          status:401,
           message: "Error while fetching invoice details!",
           data:getDetails
         });
@@ -1136,60 +1135,6 @@ const getDetails = await Invoice.findOne({ _id: new ObjectId(invoice_number) });
 
     const dates = dateRange(fdate1, fdate2);
 
-    // const totalPaid = await InvoiceRevenue.aggregate([
-    // {
-    //   $match: {
-    //     user: new ObjectId(userId),
-    //     createdAt: {
-    //       $gte: new Date(fdate1),
-    //       $lte: moment.utc(fdate2).endOf('day').toDate()
-    //     }  
-    //   }
-    // },
-    // {
-    //   $group: { 
-    //    '_id': '$dateadded',
-    //    'count': { '$sum': 1 },
-    //    'total': { $sum: "$convertAmount" }
-    //   }, 
-    // },
-    // // Third pipeline step
-    // {  
-    //   '$group': {
-    //   '_id': null,
-    //   'counts': {
-    //     '$push': {
-    //       'k': '$_id',
-    //       'v': {
-    //         'total': '$total'
-    //       }
-    //     }
-    //   }
-    //  } 
-    // },
-    // // Fourth pipeline step
-    // { 
-    //   '$replaceRoot': {
-    //    'newRoot': { '$arrayToObject': '$counts' }
-    //   }}
-    // ]);
-
-    // console.log(totalPaid);
-    // var keyArray = [];
-    // if(totalPaid[0]) {
-    //   Object.entries(totalPaid[0]).map(([key, value]) => {
-    //     keyArray.push({
-    //       key: key,
-    //       value: value?.total
-    //     }
-    //     );
-    //   });
-    // }
-
-    // console.log("KeyArray", keyArray);
-    // console.log("paidArray", totalPaid[0]);
-
-
     var newArrayLabelAndValues = [];
     var i = 0;
     if(dates) {
@@ -1208,32 +1153,6 @@ const getDetails = await Invoice.findOne({ _id: new ObjectId(invoice_number) });
       }
     }
   
-    // if(!totalPaid) {
-    //   return res.status(401).json({
-    //     status:401,
-    //     message: "getting error while fetching invoice details!",
-    //     data:null
-    //   });
-    // }
-
-    // var jk = [];
-    // if(dates) {
-    //   for (const element of dates) {
-    //     const totalPaid2 = await InvoiceRevenue.find(
-    //     {
-    //       user: new ObjectId(userId),
-    //       createdAt: {
-    //         $gte: new Date(element),
-    //         $lte: moment.utc(element).endOf('day').toDate()
-    //       }
-    //     }
-    //     )
-    //     jk.push({
-    //       element,totalPaid2
-    //     })
-    //   }
-    // }
-
     return res.status(201).json({
       status: 201,
       message: "Dashboard details are fetched successfully!!!",
