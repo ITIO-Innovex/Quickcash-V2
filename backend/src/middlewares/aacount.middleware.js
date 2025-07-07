@@ -6,7 +6,7 @@ module.exports  = {
     try {
       const result = await Account.find({
         user: req?.user?._id,
-        _id: req?.body?.source_account
+        _id: req?.body?.source_account || req?.body?.sourceAccountId
       });
     
       if(result.length == 0) {
