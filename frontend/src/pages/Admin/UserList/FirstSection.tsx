@@ -318,7 +318,7 @@ const FirstSection = () => {
     // },
     {
       field: 'suspend',
-      headerName: 'Suspend/Status',
+      headerName: 'Suspend/Active',
       render: (row: any) => (
         <label className="switch">
           <input
