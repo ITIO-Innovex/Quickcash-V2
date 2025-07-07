@@ -253,7 +253,7 @@ const FirstSection = () => {
             <CustomButton onClick={handleSave} sx={{ mt: 2 }}>
               Save
             </CustomButton>
-            <Button className="custom-button" onClick={handleEditClose}>Close</Button>
+            <Button onClick={handleEditClose}>Close</Button>
           </Box>
         </Box>
       </CustomModal>

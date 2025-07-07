@@ -12,9 +12,10 @@ type Props = {
   columns: Column[];
   data: any[];
   onActionClick?: (row: any) => void;
+  disablePagination?: boolean;
 };
 
-const GenericTable: React.FC<Props> = ({ columns, data }) => {
+const GenericTable: React.FC<Props> = ({ columns, data, disablePagination }) => {
   const theme = useTheme();
   const [expandedIndex, setExpandedIndex] = React.useState<number | null>(null);
 
@@ -36,10 +37,10 @@ const GenericTable: React.FC<Props> = ({ columns, data }) => {
     setPage(0);
   };
 
-  const paginatedData = data.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+  const paginatedData = disablePagination
+    ? data
+    : data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
 
   if (data.length === 0) {
     return (
@@ -78,18 +79,18 @@ const GenericTable: React.FC<Props> = ({ columns, data }) => {
           ))}
         </tbody>
       </table>
-
-      <TablePagination
-        component="div"
-        count={data.length}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        rowsPerPageOptions={[5, 10, 25, 50]}
-        labelRowsPerPage="Rows per page"
-      />
-
+      {!disablePagination && (
+        <TablePagination
+          component="div"
+          count={data.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          labelRowsPerPage="Rows per page"
+        />
+      )}
       {/* Mobile Cards */}
       <Box className="mobile-cards">
         {paginatedData.map((row, rowIdx) => {
@@ -106,7 +107,7 @@ const GenericTable: React.FC<Props> = ({ columns, data }) => {
               {columns
                 .filter(
                   (col, index) =>
-                    index < 2 || ['Status','Type'].includes(col.headerName)
+                    index < 2 || ['Status', 'Type'].includes(col.headerName)
                 )
                 .map((col, colIdx) => (
                   <Box key={colIdx} className="mobile-card-row">
@@ -127,7 +128,7 @@ const GenericTable: React.FC<Props> = ({ columns, data }) => {
                       (col, index) =>
                         !(
                           index < 2 ||
-                          ['Status','Type'].includes(col.headerName)
+                          ['Status', 'Type'].includes(col.headerName)
                         )
                     )
                     .map((col, colIdx) => (

@@ -8,22 +8,22 @@ const columns = [
   { field: 'amount', headerName: 'Amount' },
   { field: 'detail', headerName: 'Details' },
   {
-    field: 'status',
-    headerName: 'Status',
-    render: (row: any) => (
-      <span
-        className={`status-chip ${
-          row.status === 'succeeded'
-            ? 'success'
-            : row.status === 'pending'
-              ? 'pending'
-              : 'failed'
-        }`}
-      >
-        {row.status}
-      </span>
-    ),
-  },
+      field: 'status',
+      headerName: 'Status',
+      render: (row: any) => {
+        const rawStatus = row.status?.toLowerCase();
+
+        const isSuccess = ['succeeded', 'success', 'complete', 'successful'].includes(rawStatus);
+        const displayText = isSuccess ? 'Success' : row.status;
+        const statusClass = isSuccess ? 'success' : rawStatus; // force same class for all success types
+
+        return (
+          <span className={`status-chip ${statusClass}`}>
+            {displayText}
+          </span>
+        );
+      }
+    },
 ];
 
 interface ThirdRightSectionProps {
@@ -34,7 +34,7 @@ interface ThirdRightSectionProps {
 const ThirdRightSection = ({ summary, loaderResult }: ThirdRightSectionProps) => {
   // console.log('ThirdRightSection summary:', summary);
  const data = (summary?.transactions || [])
-  .slice(0, 5)
+  .slice(0, 7)
   .map((item: any) => ({
     date: item.createdAt?.slice(0, 10) || '',
     trx: item.trx || '',
@@ -50,7 +50,7 @@ const ThirdRightSection = ({ summary, loaderResult }: ThirdRightSectionProps) =>
       {loaderResult ? (
         <Skeleton variant="rectangular" width="100%" height={200} />
       ) : (
-        <GenericTable columns={columns} data={data} />
+        <GenericTable columns={columns} data={data} disablePagination/>
       )}
     </Box>
   );

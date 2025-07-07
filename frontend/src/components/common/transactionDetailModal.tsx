@@ -11,8 +11,8 @@ type TransactionDetailModalProps = {
   transactionData: {
     transactionInfo?: Record<string, any>;
     customerInfo?: Record<string, any>;
-    timeline?: { label: string; date: string; color?: string }[];
-    actions?: { label: string; onClick: () => void }[];
+    // timeline?: { label: string; date: string; color?: string }[];
+    // actions?: { label: string; onClick: () => void }[];
   };
   dialogContentSx?: SxProps<Theme>;
   cardSx?: SxProps<Theme>;
@@ -29,7 +29,7 @@ const TransactionDetailModal = ({
   buttonSx,
 }: TransactionDetailModalProps) => {
   const theme = useTheme();
-  const { transactionInfo, customerInfo, timeline, actions } = transactionData || {};
+  const { transactionInfo, customerInfo } = transactionData || {};
 
    const renderInfoCard = (cardTitle: string, data?: Record<string, any>) => (
     <Card className="transaction-card">
@@ -52,54 +52,54 @@ const TransactionDetailModal = ({
     </Card>
   );
 
-  const renderTimelineCard = () => (
-    <Card className="transaction-card">
-      <CardContent>
-        <Typography variant="h6" gutterBottom>Transaction Timeline</Typography>
-        <Box className="transaction-card-separator" />
-        {timeline && timeline.length > 0 ? (
-          <List>
-            {timeline.map((event, i) => (
-              <ListItem key={i}>
-                <ListItemIcon>
-                  <FiberManualRecordIcon className="transaction-timeline-icon" />
-                </ListItemIcon>
-                <ListItemText primary={event.label} secondary={event.date} />
-              </ListItem>
-            ))}
-          </List>
-        ) : (
-          <Typography color="text.secondary">No data found</Typography>
-        )}
-      </CardContent>
-    </Card>
-  );
+  // const renderTimelineCard = () => (
+  //   <Card className="transaction-card">
+  //     <CardContent>
+  //       <Typography variant="h6" gutterBottom>Transaction Timeline</Typography>
+  //       <Box className="transaction-card-separator" />
+  //       {timeline && timeline.length > 0 ? (
+  //         <List>
+  //           {timeline.map((event, i) => (
+  //             <ListItem key={i}>
+  //               <ListItemIcon>
+  //                 <FiberManualRecordIcon className="transaction-timeline-icon" />
+  //               </ListItemIcon>
+  //               <ListItemText primary={event.label} secondary={event.date} />
+  //             </ListItem>
+  //           ))}
+  //         </List>
+  //       ) : (
+  //         <Typography color="text.secondary">No data found</Typography>
+  //       )}
+  //     </CardContent>
+  //   </Card>
+  // );
 
-  const renderActionsCard = () => (
-    <Card className="transaction-card">
-      <CardContent>
-        <Typography variant="h6" gutterBottom>Actions</Typography>
-        <Box className="transaction-card-separator" />
-        {actions && actions.length > 0 ? (
-          <Stack spacing={2}>
-            {actions.map((action, i) => (
-              <Button
-                key={i}
-                variant="outlined"
-                fullWidth
-                className="transaction-action-button"
-                onClick={action.onClick}
-              >
-                {action.label}
-              </Button>
-            ))}
-          </Stack>
-        ) : (
-          <Typography color="text.secondary">No actions available</Typography>
-        )}
-      </CardContent>
-    </Card>
-  );
+  // const renderActionsCard = () => (
+  //   <Card className="transaction-card">
+  //     <CardContent>
+  //       <Typography variant="h6" gutterBottom>Actions</Typography>
+  //       <Box className="transaction-card-separator" />
+  //       {actions && actions.length > 0 ? (
+  //         <Stack spacing={2}>
+  //           {actions.map((action, i) => (
+  //             <Button
+  //               key={i}
+  //               variant="outlined"
+  //               fullWidth
+  //               className="transaction-action-button"
+  //               onClick={action.onClick}
+  //             >
+  //               {action.label}
+  //             </Button>
+  //           ))}
+  //         </Stack>
+  //       ) : (
+  //         <Typography color="text.secondary">No actions available</Typography>
+  //       )}
+  //     </CardContent>
+  //   </Card>
+  // );
 
   return (
     <Dialog open={open} onClose={onClose} fullScreen>
@@ -120,14 +120,14 @@ const TransactionDetailModal = ({
           <Box className="transaction-section-left">
             <Stack spacing={3}>
               {renderInfoCard("Transaction Information", transactionInfo)}
-              {renderTimelineCard()}
+              {/* {renderTimelineCard()} */}
             </Stack>
           </Box>
 
           <Box className="transaction-section-right">
             <Stack spacing={3}>
               {renderInfoCard("Customer Information", customerInfo)}
-              {renderActionsCard()}
+              {/* {renderActionsCard()} */}
             </Stack>
           </Box>
         </Box>

@@ -5,6 +5,7 @@ import GenericTable from '../../../components/common/genericTable';
 import { Box, Button, Typography, useTheme, TextField } from '@mui/material';
 import CustomButton from '@/components/CustomButton';
 import admin from '@/helpers/adminApiHelper';
+import getSymbolFromCurrency from 'currency-symbol-map';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 const FirstSection = () => {
@@ -56,24 +57,36 @@ const FirstSection = () => {
     {
       field: 'userDetails?.email',
       headerName: 'Email',
-      render: (row: any) => row.userDetails?.[0]?.name || 'N/A',
+      render: (row: any) => row.userDetails?.[0]?.email || 'N/A',
     },
     {
       field: 'amount',
       headerName: 'Amount',
-      render: (row: any) => (row.amount != null ? row.amount.toFixed(2) : 'N/A'),
+      render: (row: any) =>
+        row?.amount
+          ? `${getSymbolFromCurrency(row?.fromCurrency)}${parseFloat(row?.amount).toFixed(2)}`
+          : 'N/A',
     },
+
     { field: 'info', headerName: 'Details' },
     { field: 'trans_type', headerName: 'Type' },
 
-    {
+     {
       field: 'status',
       headerName: 'Status',
-      render: (row: any) => (
-        <span className={`status-chip ${row.status.toLowerCase()}`}>
-          {row.status}
-        </span>
-      ),
+      render: (row: any) => {
+        const rawStatus = row.status?.toLowerCase();
+
+        const isSuccess = ['succeeded', 'success', 'complete', 'successful'].includes(rawStatus);
+        const displayText = isSuccess ? 'Success' : row.status;
+        const statusClass = isSuccess ? 'success' : rawStatus; // force same class for all success types
+
+        return (
+          <span className={`status-chip ${statusClass}`}>
+            {displayText}
+          </span>
+        );
+      }
     },
     {
       field: 'action',
@@ -159,7 +172,7 @@ const FirstSection = () => {
           </Box>
 
           <Box display="flex" justifyContent="flex-end" gap={2} >
-          <CustomButton onClick={handleClose}>Close</CustomButton>
+            <CustomButton onClick={handleClose}>Close</CustomButton>
           </Box>
         </Box>
       </CustomModal>
