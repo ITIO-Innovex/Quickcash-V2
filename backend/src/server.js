@@ -26,24 +26,24 @@ const linkedinAuthRoutes = require('./routes/linkedin.route');
 const chatSocket = require('../socket/chat.socket.js');
 // Created cors setting here, as we setup socket and server on different port
 
-const io = socketIo(server, {
-  path:'/socket.io',
-  cors: {
-    origin: 'https://quickcash.oyefin.com',
-    methods: ["GET", "POST"],
-    transports: ["polling"],
-    credentials: true
-  },
-  allowEIO4: true
-});
-
 // const io = socketIo(server, {
+//   path:'/socket.io',
 //   cors: {
-//     origin: '*',
-//     transports: ["polling"]
+//     origin: 'https://quickcash.oyefin.com',
+//     methods: ["GET", "POST"],
+//     transports: ["polling"],
+//     credentials: true
 //   },
 //   allowEIO4: true
 // });
+
+const io = socketIo(server, {
+  cors: {
+    origin: '*',
+    transports: ["polling"]
+  },
+  allowEIO4: true
+});
 
 app.use(bodyParser.json({limit: "50mb"}));
 app.use(bodyParser.urlencoded({limit: "50mb", extended: true, parameterLimit:50000}));

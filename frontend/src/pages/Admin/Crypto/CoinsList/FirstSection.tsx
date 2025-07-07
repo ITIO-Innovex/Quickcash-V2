@@ -9,7 +9,7 @@ import GenericTable from '../../../../components/common/genericTable';
 import { Box, Button, Typography, useTheme } from '@mui/material';
 import CustomButton from '@/components/CustomButton';
 import admin from '@/helpers/adminApiHelper';
-import { showToast } from '@/utils/toastContainer';
+import { useAppToast } from '@/utils/toast'; 
 import { Delete } from '@mui/icons-material';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 interface Coin {
@@ -26,6 +26,7 @@ interface Coin {
 }
 const FirstSection = forwardRef((props, ref) => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const [open, setOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [coinsAPI2, setCoinsAPI2] = useState<Coin[]>([]);
@@ -70,7 +71,7 @@ const FirstSection = forwardRef((props, ref) => {
       const result = await admin.patch(path, {});
 
       if (result.data.success) {
-        showToast(result.data.message, "success");
+        toast.success(result.data.message);
 
         setCoinsAPI2(prevCoins =>
           prevCoins.map(coin => ({
@@ -89,7 +90,7 @@ const FirstSection = forwardRef((props, ref) => {
 
     } catch (error: any) {
       console.log("error", error);
-      showToast(error.response?.data?.message || "Something went wrong", "error");
+      toast.error(error.response?.data?.message || "Something went wrong");
     }
   };
   useImperativeHandle(ref, () => ({

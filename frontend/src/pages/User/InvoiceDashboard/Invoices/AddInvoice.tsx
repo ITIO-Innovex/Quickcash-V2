@@ -14,12 +14,13 @@ import { jwtDecode } from 'jwt-decode';
 import { JwtPayload } from '@/types/jwt';
 import axios from 'axios';
 import getSymbolFromCurrency from 'currency-symbol-map';
-import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CustomSelect from '@/components/CustomDropdown';
+import { useAppToast } from '@/utils/toast'; 
 
 const AddInvoice = () => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const { id } = useParams();
   const [note, setNote] = useState('');
   const [terms, setTerms] = useState('');
@@ -197,7 +198,8 @@ const handleDeleteRow = (id: number) => {
 
   return (
     <Box className="dashboard-container" sx={{ p: 3 }}>
-      <PageHeader title={`Add Invoice / ${id}`} />
+
+      <PageHeader title={`Edit Invoice / ${invoiceData?.invoice_number || id}`} />
 
       {invoiceData && (
         <>

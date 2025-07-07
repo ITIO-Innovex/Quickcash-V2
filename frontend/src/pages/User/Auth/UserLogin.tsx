@@ -51,7 +51,6 @@ const UserLogin = () => {
   const theme = useTheme();
   const toast = useAppToast();
   const navigate = useNavigate();
-  const { themeMode, toggleTheme } = useSettings();
   const { login } = useAuth();
   const [forgotOpen, setforgotOpen] = useState(false);
   const [loading, setLoading] = useState(false);

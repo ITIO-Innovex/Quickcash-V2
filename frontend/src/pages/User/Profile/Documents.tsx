@@ -7,7 +7,7 @@ import CustomSelect from '../../../components/CustomDropdown';
 import CustomButton from '../../../components/CustomButton';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { showToast } from '@/utils/toastContainer';
+import { useAppToast } from '@/utils/toast'; 
 
 const url = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
 
@@ -19,7 +19,7 @@ const Documents = () => {
   });
   const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
+const toast = useAppToast(); 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -67,11 +67,11 @@ const Documents = () => {
       });
 
       if (response.data.status === 201) {
-        showToast(response.data.message, 'success');
+        toast.success(response.data.message);
       }
     } catch (error: any) {
       console.error("error", error);
-      showToast(error?.response?.data?.message || "Failed to update document", "error");
+      toast.success(error?.response?.data?.message || "Failed to update document");
     }
   };
 
@@ -107,7 +107,7 @@ console.log("Set form data:", {
     }
   } catch (error: any) {
     console.log("error", error);
-    showToast(error.response?.data?.message || "Failed to load user data", "error");
+    toast.error(error.response?.data?.message || "Failed to load user data");
   }
 };
 

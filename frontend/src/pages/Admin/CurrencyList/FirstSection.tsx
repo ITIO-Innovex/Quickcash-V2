@@ -7,12 +7,13 @@ import CustomButton from '@/components/CustomButton';
 import { Box, Button, Typography, useTheme, Tooltip } from '@mui/material';
 import admin from '@/helpers/adminApiHelper';
 import ReactCountryFlag from 'react-country-flag'; // or 'react-country-flag'
-import { showToast } from '@/utils/toastContainer';
+import { useAppToast } from '@/utils/toast'; 
 import { Delete } from '@mui/icons-material';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 const FirstSection = forwardRef((props, ref) => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const [open, setOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [list, setList] = useState<any>();
@@ -57,12 +58,12 @@ const FirstSection = forwardRef((props, ref) => {
         .then(result => {
           if (result.data.status == 201) {
             getListData();
-            showToast(result?.data?.message, "success");
+            toast.success(result?.data?.message);
           }
         })
         .catch(error => {
           console.log("error", error);
-          showToast(error?.response?.data?.message, "error");
+          toast.error(error?.response?.data?.message);
         })
     }
   }
@@ -73,12 +74,12 @@ const FirstSection = forwardRef((props, ref) => {
       });
 
       if (result.data.status === 201) {
-        showToast(result.data.message, "success");
+        toast.success(result.data.message);
         getListData();
       }
     } catch (error) {
       console.log("error", error);
-      showToast(error.response?.data?.message || "Something went wrong", "error");
+      toast.error(error.response?.data?.message || "Something went wrong");
     }
   };
 

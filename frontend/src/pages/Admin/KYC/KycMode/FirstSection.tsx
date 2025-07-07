@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { Box, Typography, useTheme, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel } from '@mui/material';
 import CustomInput from '../../../../components/CustomInputField';
 import CustomButton from '../../../../components/CustomButton';
-import toast from 'react-hot-toast';
+import { useAppToast } from '@/utils/toast'; 
 
 const FirstSection = () => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const [kycMode, setKycMode] = useState('manual');
   const [formData, setFormData] = useState({
     kycProvider: '',

@@ -504,7 +504,7 @@ const handleSwapCoinChange = async (
   localStorage.setItem("coinsAdded", coinsAdded);
   localStorage.setItem("coinsDeducted", coinsDeducted);
   localStorage.setItem("selectedFromCoin", from);
-localStorage.setItem("selectedToCoin", to);
+  localStorage.setItem("selectedToCoin", to);
 
   const swapDetails = {
     fromCoin: from,

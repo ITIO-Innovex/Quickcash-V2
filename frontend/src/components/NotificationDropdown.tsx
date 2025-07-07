@@ -13,6 +13,8 @@ import NotificationItem from './NotificationItem';
 import { jwtDecode } from 'jwt-decode';
 import admin from '@/helpers/adminApiHelper';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import moment from 'moment';
 
 const url = import.meta.env.VITE_NODE_ENV === 'production' ? 'api' : 'api';
 interface Notification {
@@ -44,6 +46,10 @@ const NotificationDropdown: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [status] = useState<any>(''); // adjust or remove if unnecessary
+  const [unReadNotification, setUnReadNotification] = useState<any[]>([]);
+  const [notifyBell, setNotifyBell] = useState(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const open = Boolean(anchorEl);
   const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -62,13 +68,13 @@ const NotificationDropdown: React.FC = () => {
     );
   };
 
-  const handleNotificationClick = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) =>
-        n.id === id ? { ...n, isRead: true } : n
-      )
-    );
-  };
+  // const handleNotificationClick = (id: string) => {
+  //   setNotifications((prev) =>
+  //     prev.map((n) =>
+  //       n.id === id ? { ...n, isRead: true } : n
+  //     )
+  //   );
+  // };
   const getListData = async (status: any) => {
     try {
       const token = localStorage.getItem('admin');
@@ -99,9 +105,86 @@ const NotificationDropdown: React.FC = () => {
     }
   };
 
+  const getAllUnreadNotification = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    let user: JwtPayload | null = null;
+    try {
+      user = jwtDecode<JwtPayload>(token);
+      setCurrentUserId(user?.data?.id || null);
+    } catch (e) {
+      user = null;
+      setCurrentUserId(null);
+    }
+
+    await axios.get(`/${url}/v1/admin/notification/unread`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    .then(result => {
+      if(result?.data?.status == 201) {
+        // Only show notifications for this user or notifyType 'all'
+        const filtered = (result?.data?.data || []).filter((item: any) =>
+          (item?.user === user?.data?.id) || item?.notifyType === 'all'
+        ).slice(0, 4);
+        setUnReadNotification(filtered);
+        if(filtered.length > 0) {
+          if(result?.data?.usersGroup && user && result?.data?.usersGroup.includes(user?.data?.id)) {
+            setNotifyBell(true);
+          }
+          filtered.forEach((item: any) => {
+            if(user && item?.user == user?.data?.id) setNotifyBell(true);
+            if(user && item?.user == user?.data?.id && item?.read == false) setNotifyBell(true);
+          });
+        }
+      }
+    })
+    .catch(error => {
+      console.log("error", error);
+    });
+  };
+
+  const updateUnReadAllMessage = async () => {
+    if (!currentUserId || unReadNotification.length === 0) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    await axios.patch(`/${url}/v1/admin/notification/update-unread`, {
+      user: currentUserId
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    .then(result => {
+      if(result?.data?.status == 201) {
+        getAllUnreadNotification();
+      }
+    })
+    .catch(error => {
+      console.log('error', error);
+    });
+  };
 
   useEffect(() => {
-    getListData(status);
+    const adminToken = localStorage.getItem('admin');
+    const userToken = localStorage.getItem('token');
+    if (adminToken) {
+      setIsAdmin(true);
+      getListData(status); // fetch admin notifications only
+      setUnReadNotification([]); // clear user notifications
+      setNotifyBell(false);
+    } else if (userToken) {
+      setIsAdmin(false);
+      setNotifications([]); // clear admin notifications
+      getAllUnreadNotification(); // fetch user notifications only
+    } else {
+      setIsAdmin(false);
+      setNotifications([]);
+      setUnReadNotification([]);
+      setNotifyBell(false);
+    }
   }, [status]);
 
   return (
@@ -115,7 +198,7 @@ const NotificationDropdown: React.FC = () => {
           },
         }}
       >
-        <Badge badgeContent={unreadCount} color="error">
+        <Badge badgeContent={isAdmin ? unreadCount : unReadNotification.length} color="error" variant={notifyBell && !isAdmin ? "dot" : "standard"}>
           <NotificationsIcon />
         </Badge>
       </IconButton>
@@ -158,8 +241,12 @@ const NotificationDropdown: React.FC = () => {
               <Button
                 size="small"
                 onClick={() => {
-                  handleClose(); 
-                  navigate('/admin/notifications');
+                  handleClose();
+                  if (isAdmin) {
+                    navigate('/admin/notifications');
+                  } else {
+                    navigate('/notifications');
+                  }
                 }}
                 sx={{
                   color: theme.palette.primary.main,
@@ -173,7 +260,13 @@ const NotificationDropdown: React.FC = () => {
               </Button>
               <Button
                 size="small"
-                onClick={handleMarkAllRead}
+                onClick={() => {
+                  if (isAdmin) {
+                    handleMarkAllRead();
+                  } else {
+                    updateUnReadAllMessage();
+                  }
+                }}
                 sx={{
                   color: theme.palette.primary.main,
                   fontSize: '0.75rem',
@@ -188,22 +281,42 @@ const NotificationDropdown: React.FC = () => {
           </Box>
 
           <Box sx={{ maxHeight: '400px', overflowY: 'auto' }}>
-            {notifications.length > 0 ? (
-              notifications.map((notification) => (
-                <NotificationItem
-                  key={notification.id}
-                  title={notification.title}
-                  timestamp={notification.timestamp}
-                  isRead={notification.isRead}
-                  onClick={() => handleNotificationClick(notification.id)}
-                />
-              ))
+            {isAdmin ? (
+              notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <NotificationItem
+                    key={notification.id}
+                    title={notification.title}
+                    timestamp={notification.timestamp}
+                    isRead={notification.isRead}
+                    // onClick={() => handleNotificationClick(notification.id)}
+                  />
+                ))
+              ) : (
+                <Box sx={{ p: 4, textAlign: 'center' }}>
+                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                    No notifications
+                  </Typography>
+                </Box>
+              )
             ) : (
-              <Box sx={{ p: 4, textAlign: 'center' }}>
-                <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                  No notifications
-                </Typography>
-              </Box>
+              unReadNotification.length > 0 ? (
+                unReadNotification.map((notification: any) => (
+                  <NotificationItem
+                    key={notification._id}
+                    title={notification.title}
+                    timestamp={moment(notification.createdAt).format('MMM D, YYYY, h:mm A')}
+                    isRead={notification.read}
+                    onClick={() => {}}
+                  />
+                ))
+              ) : (
+                <Box sx={{ p: 4, textAlign: 'center' }}>
+                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                    No notifications
+                  </Typography>
+                </Box>
+              )
             )}
           </Box>
         </Box>

@@ -28,7 +28,7 @@ import CustomButton from '@/components/CustomButton';
 import Flag from 'react-world-flags';
 import CommonTooltip from '@/components/common/toolTip';
 import api from '@/helpers/apiHelper';
-import { toast } from 'react-toastify';
+import { useAppToast } from '@/utils/toast'; 
 import getSymbolFromCurrency from 'currency-symbol-map';
 import { useFee } from '@/hooks/useFee';
 import axios from 'axios';
@@ -61,6 +61,7 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
   currencyList
 }) => {
   const theme = useTheme();
+  const toast = useAppToast(); 
     useEffect(() => {
       console.log("formData", formData);
       HandleSendCurrency(formData.sendCurrencyData||'USD-1');

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { toast } from 'react-toastify';
+import { useAppToast } from '@/utils/toast'; 
 import React, { useEffect } from 'react';
 import { styled } from '@mui/material/styles';
 import { Box, Grid, TextField } from '@mui/material';
@@ -76,7 +76,7 @@ export default function AdminPayment() {
   useEffect(() => {
     getDetails();
   },[]);   
-  
+  const toast = useAppToast(); 
   const getDetails = async () => {
     axios.get('/${url}/v1/admin/paymentSetting/list',{
      headers: {
@@ -126,39 +126,13 @@ export default function AdminPayment() {
     })
     .then(result => {
       if(result.data.status == 201) {
-        alertnotify(result.data.message, "Success");
+        toast.success(result.data.message);
       }
     })
     .catch(error => {
       console.log(error);
-      alertnotify(error.response.data.message, "error");
+      toast.error(error.response.data.message);
     })
-  }
-
-  const alertnotify = (text:any,type:any) => {
-    if(type == "error") {
-      toast.error(text, {
-        position: "top-center",
-        autoClose: 1900,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-      })
-    } else {
-      toast.success(text, {
-        position: "top-center",
-        autoClose: 1900,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-      })
-    }
   }
 
   return (

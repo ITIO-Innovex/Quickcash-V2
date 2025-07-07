@@ -13,7 +13,7 @@ import {
 import axios from 'axios';
 import EditCardForm from './EditForm';
 import { jwtDecode } from 'jwt-decode';
-import { toast } from 'react-toastify';
+import { useAppToast } from '@/utils/toast'; 
 import { Delete, Edit } from '@mui/icons-material';
 import CustomModal from '@/components/CustomModal';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -36,6 +36,7 @@ interface JwtPayload {
 }
 const CardList = () => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [isModalOpen, setModalOpen] = useState(false);

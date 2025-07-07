@@ -13,12 +13,13 @@ import CustomFormModal from '@/components/CustomFormModal';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Box, Button, Typography, useTheme } from '@mui/material';
 import GenericTable from '../../../components/common/genericTable';
-import { toast } from 'react-toastify';
+import { useAppToast } from '@/utils/toast'; 
 import 'react-toastify/dist/ReactToastify.css';
 const url = import.meta.env.VITE_NODE_ENV == 'production' ? 'api' : 'api';
 
 const FirstSection = () => {
   const theme = useTheme();
+  const toast = useAppToast(); 
   const [open, setOpen] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [showFilter, setShowFilter] = useState(false);

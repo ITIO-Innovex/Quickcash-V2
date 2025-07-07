@@ -86,6 +86,7 @@ import AnalyticsData from '@/pages/User/DigitalSignature/AnalyticsData.jsx';
 // ===========Digital Signature Route End ==============
 import { useAuth } from '@/contexts/authContext';
 import ResetPassword from '@/pages/User/AccountSection/ResetPassword';
+import UserNotification from '@/pages/User/Notification/notification';
 
 // --- Auth Route Wrapper ---
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
@@ -185,6 +186,7 @@ const authRoutes = [
   { path: '/register-business', element: <BusinessRegister /> },
   { path: '/add-beneficiary', element: <AddBeneficiaryForm /> },
   { path: '/invoice-dashboard', element: <InvoiceDashboard /> },
+  { path: '/notifications', element: <UserNotification /> },
   { path: '/beneficiary', element: <SelectBeneficiary /> },
   { path: '/digital-signature', element: <DigitalDashboard /> },
   { path: '/digital-signature/templates', element: <TemplatePage /> },
