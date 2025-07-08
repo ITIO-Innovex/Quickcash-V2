@@ -1,5 +1,5 @@
-const BASE_URL = 'http://localhost:5000';
-// const BASE_URL = 'https://quickcash.oyefin.com';
+// const BASE_URL = 'http://localhost:5000';
+const BASE_URL = 'https://quickcash.oyefin.com';
 
 const getURL = (url: string): string => {
   return BASE_URL + '/api/v1/digital-signature' + url;
