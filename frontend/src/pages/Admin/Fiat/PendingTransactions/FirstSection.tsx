@@ -112,12 +112,6 @@ const FirstSection = () => {
       })
   }
 
-  const formatAmount = (num) => {
-    if (Number.isInteger(num)) {
-      return num;
-    }
-    return num.toFixed(2);
-  };
 
   const columns = [
     {
@@ -145,15 +139,24 @@ const FirstSection = () => {
       headerName: 'Mobile',
       render: (row: any) => row.userDetails?.[0]?.mobile || 'N/A',
     },
-    {
+   {
       field: 'status',
       headerName: 'Status',
-      render: (row: any) => (
-        <span className={`status-chip ${row.status.toLowerCase()}`}>
-          {row.status}
-        </span>
-      )
+      render: (row: any) => {
+        const rawStatus = row.status?.toLowerCase();
+
+        const isSuccess = ['succeeded', 'success', 'complete', 'successful'].includes(rawStatus);
+        const displayText = isSuccess ? 'Success' : row.status;
+        const statusClass = isSuccess ? 'success' : rawStatus; // force same class for all success types
+
+        return (
+          <span className={`status-chip ${statusClass}`}>
+            {displayText}
+          </span>
+        );
+      }
     },
+
     {
       field: 'action',
       headerName: 'Action',

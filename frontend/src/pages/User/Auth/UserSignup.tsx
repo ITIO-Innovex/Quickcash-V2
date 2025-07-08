@@ -29,7 +29,6 @@ const validate = (field: string, value: string): boolean => {
 const UserSignup = () => {
   const theme = useTheme();
   const toast = useAppToast();
-  const toast = useAppToast(); 
   const navigate = useNavigate();
   const location = useLocation();
   const query = new URLSearchParams(location.search);

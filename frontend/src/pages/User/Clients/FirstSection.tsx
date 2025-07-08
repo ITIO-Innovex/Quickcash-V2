@@ -13,13 +13,13 @@ import CustomFormModal from '@/components/CustomFormModal';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Box, Button, Typography, useTheme } from '@mui/material';
 import GenericTable from '../../../components/common/genericTable';
-import { useAppToast } from '@/utils/toast'; 
+import { useAppToast } from '@/utils/toast';
 import 'react-toastify/dist/ReactToastify.css';
 const url = import.meta.env.VITE_NODE_ENV == 'production' ? 'api' : 'api';
 
 const FirstSection = () => {
   const theme = useTheme();
-  const toast = useAppToast(); 
+  const toast = useAppToast();
   const [open, setOpen] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [showFilter, setShowFilter] = useState(false);
@@ -42,7 +42,8 @@ const FirstSection = () => {
     try {
       const result = await api.get(`/${url}/v1/client/list/${id}`);
       if (result.data.status === 201) {
-        setCurrentData(result.data.data);
+        const reversedData = result.data.data.reverse(); // Reverse the array
+        setCurrentData(reversedData);
       }
     } catch (error) {
       console.error('Error fetching clients:', error);
@@ -124,10 +125,10 @@ const FirstSection = () => {
 
   const editFields = [
     { name: 'firstName', label: 'First Name', type: 'text', required: true },
-    { name: 'lastName', label: 'Last Name', type: 'text' ,required: true},
+    { name: 'lastName', label: 'Last Name', type: 'text', required: true },
     { name: 'email', label: 'Email', type: 'email', required: true },
-    { name: 'mobile', label: 'Mobile', type: 'text',required: true },
-    { name: 'country', label: 'Country', type: 'text',required: true },
+    { name: 'mobile', label: 'Mobile', type: 'text', required: true },
+    { name: 'country', label: 'Country', type: 'text', required: true },
   ];
 
   const handleDelete = (row: any) => {
@@ -224,13 +225,13 @@ const FirstSection = () => {
       <Box
         sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center', }}
       >
-        <Button startIcon={<Filter size={20} />} onClick={handleFilter}sx={{ color: theme.palette.navbar.text }} >
+        <Button startIcon={<Filter size={20} />} onClick={handleFilter} sx={{ color: theme.palette.navbar.text }} >
           {' '}
           Filter{' '}
         </Button>
       </Box>
       {showFilter && (
-        <CommonFilter label="Search any field"  value={filterText} onChange={handleGlobalSearch} width="200px" />
+        <CommonFilter label="Search any field" value={filterText} onChange={handleGlobalSearch} width="200px" />
       )}
       {currentData.length ? (
         <GenericTable columns={columns} data={currentData} />
@@ -283,10 +284,10 @@ const FirstSection = () => {
               <Typography>{selectedRow.country}</Typography>
             </Box>
 
-             <Box display="flex" justifyContent="flex-end" gap={2} mt={3}>
-            <CustomButton onClick={handleClose}>
-              <span className="button-text">Close</span>
-            </CustomButton>
+            <Box display="flex" justifyContent="flex-end" gap={2} mt={3}>
+              <CustomButton onClick={handleClose}>
+                <span className="button-text">Close</span>
+              </CustomButton>
             </Box>
           </>
         )}
@@ -295,10 +296,10 @@ const FirstSection = () => {
       <ViewClientModal client={selectedClient} onClose={() => setViewModalOpen(false)} />
 
       {/* Edit Modal */}
-      <CustomFormModal open={editModalOpen} title="Edit Client" onClose={() => setEditModalOpen(false)} onSubmit={handleSubmit} initialValues={selectedRow} fields={editFields}/>
+      <CustomFormModal open={editModalOpen} title="Edit Client" onClose={() => setEditModalOpen(false)} onSubmit={handleSubmit} initialValues={selectedRow} fields={editFields} />
 
       {/* Delete Modal */}
-      <CustomModal open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Confirm Delete" sx={{backgroundColor:theme.palette.background.default}} >
+      <CustomModal open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Confirm Delete" sx={{ backgroundColor: theme.palette.background.default }} >
         <Typography>
           Are you sure you want to delete this client's data?
         </Typography>

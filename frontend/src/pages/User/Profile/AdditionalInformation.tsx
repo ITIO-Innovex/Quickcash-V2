@@ -25,7 +25,7 @@ const AdditionalInformation = () => {
           },
         }
       );
-      console.log("User Details:", result.data);
+      // console.log("User Details:", result.data);
       if (result?.data?.status === 201) {
         setUserDetails(result.data.data);
       }

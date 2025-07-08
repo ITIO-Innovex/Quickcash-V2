@@ -10,6 +10,8 @@ import { Box, Button, Typography, useTheme } from '@mui/material';
 import { jwtDecode } from 'jwt-decode';
 import api from '@/helpers/apiHelper';
 import getSymbolFromCurrency from 'currency-symbol-map';
+import TransactionDetailModal from '@/components/common/transactionDetailModal';
+import moment from 'moment';
 
 interface JwtPayload {
   sub: string;
@@ -63,7 +65,22 @@ const FirstSection = () => {
   useEffect(() => {
     getTransactionsList();
   }, []);
-
+  const getListById = async (id: any) => {
+    await api.get(`/${url}/v1/transaction/${id}`
+    )
+      .then(result => {
+        if (result.data.status == 201) {
+          setSelectedRow(result.data.data[0]);
+          setOpen(true);
+        }
+      })
+      .catch(error => {
+        console.log("error", error);
+      })
+  }
+  useEffect(() => {
+    console.log("SelectedRow in modal:", selectedRow);
+  }, [selectedRow]);
   const handleFilter = () => setShowFilter((prev) => !prev);
 
   const handleGlobalSearch = (text: string) => {
@@ -83,8 +100,7 @@ const FirstSection = () => {
   };
 
   const handleActionClick = (row: any) => {
-    setSelectedRow(row);
-    setOpen(true);
+    getListById(row._id);
   };
 
   const handleClose = () => {
@@ -129,37 +145,65 @@ const FirstSection = () => {
       field: 'amount',
       headerName: 'Amount',
       render: (row: any) => {
+        const symbolFrom = getSymbolFromCurrency(row?.from_currency);
+        const symbolTo = getSymbolFromCurrency(row?.to_currency);
+        const fee = parseFloat(row?.fee || 0);
+        const amount = parseFloat(row?.amount || 0);
+        const conversionAmount = parseFloat(row?.conversionAmount || 0);
+
+        // Debit Case
         if (row?.extraType === 'debit') {
           return (
             <span>
-              -{getSymbolFromCurrency(row?.from_currency)}
-              {(parseFloat(row?.amount) + parseFloat(row?.fee || 0)).toFixed(2)}
+              -{symbolFrom}
+              {(amount + fee).toFixed(2)}
             </span>
           );
         }
-        // Credit logic
-        if (row?.tr_type === 'Stripe') {
-          return (
-            <span>
-              +{getSymbolFromCurrency(row?.from_currency)}
-              {parseFloat(row?.amount).toFixed(2)}
-            </span>
-          );
+
+        // Stripe or conversion-based logic
+        if (row?.conversionAmount && !row?.receipient) {
+          if (row?.tr_type === 'Stripe') {
+            // Stripe: show converted (to from_currency)
+            return (
+              <span>
+                +{symbolFrom}
+                {conversionAmount.toFixed(2)}
+              </span>
+            );
+          } else if (row?.tr_type === 'UPI' || row?.trans_type === 'Exchange') {
+            return (
+              <span>
+                +{symbolTo}
+                {conversionAmount.toFixed(2)}
+              </span>
+            );
+          } else {
+            return (
+              <span>
+                +{symbolFrom}
+                {conversionAmount.toFixed(2)}
+              </span>
+            );
+          }
         }
+
+        // Default Credit Case
         return (
           <span>
-            +{getSymbolFromCurrency(row?.to_currency)}
-            {parseFloat(row?.amount).toFixed(2)}
+            +{symbolTo}
+            {amount.toFixed(2)}
           </span>
         );
       }
     },
+
     {
       field: 'balance',
       headerName: 'Balance',
       render: (row: any) => `$${parseFloat(row.balance).toFixed(2)}`,
     },
-      {
+    {
       field: 'status',
       headerName: 'Status',
       render: (row: any) => {
@@ -233,27 +277,141 @@ const FirstSection = () => {
         </Typography>
       )}
 
-      <CustomModal open={open} onClose={handleClose} title="Statement Details">
-        <div className="header-divider" />
-        <Box sx={{ mt: 2 }}>
-          {[
-            ['Date', selectedRow?.date],
-            ['Transaction ID', selectedRow?.trx],
-            ['Type', selectedRow?.trans_type],
-            ['Amount', `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.amount || 0).toFixed(2)}`],
-            ['Balance', `${getSymbolFromCurrency(selectedRow?.to_currency)}${parseFloat(selectedRow?.balance || 0).toFixed(2)}`],
-            ['Status', selectedRow?.status],
-          ].map(([label, value]) => (
-            <Box display="flex" justifyContent="space-between" mb={2} key={label}>
-              <Typography><strong>{label}:</strong></Typography>
-              <Typography>{value}</Typography>
-            </Box>
-          ))}
-          <Button className="custom-button" onClick={handleClose} sx={{ mt: 3 }}>
-            <span className="button-text">Close</span>
-          </Button>
-        </Box>
-      </CustomModal>
+
+      <TransactionDetailModal
+        open={open}
+        onClose={handleClose}
+        title="Transaction Details"
+        transactionData={{
+          // ✅ Transaction Info
+          transactionInfo: selectedRow && {
+            "Trx": selectedRow?.trx,
+            "Requested Date": selectedRow?.createdAt
+              ? moment(selectedRow?.createdAt).local().format("YYYY-MM-DD hh:mm:ss A")
+              : "-",
+            "Fee":
+              selectedRow?.extraType === "debit"
+                ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`
+                : selectedRow?.tr_type === "Stripe"
+                  ? `${getSymbolFromCurrency(selectedRow?.to_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`
+                  : selectedRow?.trans_type === "Exchange"
+                    ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`
+                    : `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`,
+            "Bill Amount":
+              selectedRow?.extraType === "debit"
+                ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`
+                : selectedRow?.tr_type === "Stripe"
+                  ? `${getSymbolFromCurrency(selectedRow?.to_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`
+                  : selectedRow?.trans_type === "Exchange"
+                    ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`
+                    : `${getSymbolFromCurrency(selectedRow?.from_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`,
+            "Transaction Type": selectedRow?.receipient
+              ? "Transfer Money"
+              : `${selectedRow?.extraType} - ${selectedRow?.trans_type}`,
+            "Conversion Info": selectedRow?.receipient && selectedRow?.conversionAmount
+              ? `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount})`
+              : !selectedRow?.receipient && selectedRow?.conversionAmount
+                ? (() => {
+                  if (selectedRow?.tr_type === "Stripe") {
+                    return `(Convert ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount})`;
+                  } else if (selectedRow?.tr_type === "UPI") {
+                    return `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount})`;
+                  } else if (selectedRow?.trans_type === "Exchange") {
+                    return `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount})`;
+                  } else {
+                    return `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount})`;
+                  }
+                })()
+                : "--",
+            "Transaction Status":
+              ["succeeded", "success", "Success", "Complete", "Completed"].includes(selectedRow?.status)
+                ? "Success"
+                : selectedRow?.status,
+
+            "Settlement Date":
+              selectedRow?.status &&
+                ["Complete", "Success", "succeeded"].includes(selectedRow?.status)
+                ? moment(selectedRow?.updatedAt).local().format("YYYY-MM-DD hh:mm:ss A")
+                : "--",
+            "Trans Amt":
+              (selectedRow?.receipient
+                ? getSymbolFromCurrency(selectedRow?.from_currency)
+                : selectedRow?.extraType === "debit"
+                  ? getSymbolFromCurrency(selectedRow?.from_currency)
+                  : selectedRow?.tr_type === "Stripe"
+                    ? getSymbolFromCurrency(selectedRow?.to_currency)
+                    : selectedRow?.trans_type === "Exchange"
+                      ? getSymbolFromCurrency(selectedRow?.from_currency)
+                      : getSymbolFromCurrency(selectedRow?.from_currency)) + (selectedRow?.amount || ""),
+          },
+          customerInfo: {
+            "Sender Name":
+              selectedRow?.tr_type === "UPI"
+                ? selectedRow?.upi_email
+                : selectedRow?.tr_type === "bank-transfer"
+                  ? selectedRow?.receipient
+                    ? selectedRow?.senderAccountDetails?.[0]?.name
+                    : selectedRow?.senderAccountDetails?.[0]?.name
+                  : selectedRow?.extraType === "credit"
+                    ? selectedRow?.transferAccountDetails?.[0]?.name
+                    : selectedRow?.senderAccountDetails?.[0]?.name,
+
+            "Sender Account":
+              selectedRow?.tr_type === "UPI"
+                ? selectedRow?.upi_id
+                : selectedRow?.tr_type === "bank-transfer"
+                  ? selectedRow?.receipient
+                    ? selectedRow?.senderAccountDetails?.[0]?.iban
+                    : selectedRow?.senderAccountDetails?.[0]?.iban
+                  : selectedRow?.extraType === "credit"
+                    ? selectedRow?.transferAccountDetails?.[0]?.iban
+                    : selectedRow?.senderAccountDetails?.[0]?.iban,
+
+            "Sender Address":
+              selectedRow?.tr_type === "UPI"
+                ? selectedRow?.upi_contact
+                : selectedRow?.tr_type === "bank-transfer"
+                  ? selectedRow?.receipient
+                    ? selectedRow?.senderAccountDetails?.[0]?.address
+                    : selectedRow?.senderAccountDetails?.[0]?.address
+                  : selectedRow?.extraType === "credit"
+                    ? selectedRow?.transferAccountDetails?.[0]?.address
+                    : selectedRow?.senderAccountDetails?.[0]?.address,
+
+            "Receiver Name":
+              selectedRow?.extraType === "credit"
+                ? selectedRow?.senderAccountDetails?.[0]?.name
+                : selectedRow?.receipient
+                  ? selectedRow?.recAccountDetails?.[0]?.name
+                  : selectedRow?.transferAccountDetails?.[0]?.name,
+
+            "Receiver Account":
+              selectedRow?.extraType === "credit"
+                ? selectedRow?.senderAccountDetails?.[0]?.iban
+                : selectedRow?.receipient
+                  ? selectedRow?.recAccountDetails?.[0]?.iban
+                  : selectedRow?.transferAccountDetails?.[0]?.iban,
+
+            "Receiver Address":
+              selectedRow?.extraType === "credit"
+                ? selectedRow?.senderAccountDetails?.[0]?.address
+                : selectedRow?.receipient
+                  ? selectedRow?.recAccountDetails?.[0]?.address
+                  : selectedRow?.transferAccountDetails?.[0]?.address,
+          }
+        }}
+        dialogContentSx={{
+          backgroundColor: theme.palette.background.default,
+          color: theme.palette.text.primary,
+        }}
+        cardSx={{
+          boxShadow: "none",
+          border: "1px solid #ddd",
+          backgroundColor: theme.palette.background.default,
+        }}
+        buttonSx={{ color: "white", borderColor: "white" }}
+      />
+
     </Box>
   );
 };

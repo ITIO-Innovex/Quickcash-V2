@@ -1,5 +1,5 @@
 import { MenuItem, Select } from '@mui/material';
-import { Box, Typography, useTheme } from '@mui/material'; 
+import { Box, Typography, useTheme } from '@mui/material';
 import ReactCountryFlag from 'react-country-flag';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
@@ -13,6 +13,7 @@ import GenericTable from '../../../../components/common/genericTable';
 import CustomButton from '@/components/CustomButton';
 import admin from '@/helpers/adminApiHelper';
 import axios from 'axios';
+import getSymbolFromCurrency from 'currency-symbol-map';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 const FirstSection = () => {
@@ -20,9 +21,9 @@ const FirstSection = () => {
   const [open, setOpen] = useState(false);
   const [modalStatus, setModalStatus] = useState('completed');
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
-  const [list,setList] = useState<any>();
- const [currentData, setCurrentData] = useState<any[]>([]);
- const [accountsList, setAccountsList] = useState<any[]>([]);
+  const [list, setList] = useState<any>();
+  const [currentData, setCurrentData] = useState<any[]>([]);
+  const [accountsList, setAccountsList] = useState<any[]>([]);
 
   const handleOpen = (row: any) => {
     setSelectedRow(row);
@@ -42,22 +43,22 @@ const FirstSection = () => {
 
   const translist = async () => {
     await admin.get(`/${url}/v1/crypto/translist`,
-   )
-    .then(result => {
-      if(result?.data?.status == 201) {
-        setList(result?.data?.data);
-        setCurrentData(result.data.data);
+    )
+      .then(result => {
+        if (result?.data?.status == 201) {
+          setList(result?.data?.data);
+          setCurrentData(result.data.data);
 
-      }
-    })
-    .catch(error => {
-      console.log(error);
-    });
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      });
   }
 
- useEffect(() => {
-      translist();
-    }, [])
+  useEffect(() => {
+    translist();
+  }, [])
 
   const getAllAccountsListOfUser = async (id: any) => {
     await admin.get(`/${url}/v1/admin/accountslist/${id}`)
@@ -72,12 +73,12 @@ const FirstSection = () => {
   };
 
   const columns = [
-     {
+    {
       field: 'createdAt',
       headerName: 'Date',
       render: (row: any) => row.createdAt ? row.createdAt.slice(0, 10) : '',
     },
-   {
+    {
       field: 'userDetails?.name',
       headerName: 'Username',
       render: (row: any) => row.userDetails?.[0]?.name || 'N/A',
@@ -85,28 +86,37 @@ const FirstSection = () => {
     {
       field: 'userDetails?.email',
       headerName: 'Email',
-      render: (row: any) => row.userDetails?.[0]?.name || 'N/A',
+      render: (row: any) => row.userDetails?.[0]?.email || 'N/A',
     },
     { field: 'side', headerName: 'Type' },
-     {
-         field: 'coin',
-         headerName: 'Coin',
-         render: (row: any) => (
-           <Box display="flex" alignItems="center" gap={1}>
-             <img
-               src={`https://assets.coincap.io/assets/icons/${ row?.coin?.split("_")[0].replace("_TEST","").toLowerCase()}@2x.png`}
-               alt={row.coin}
-               width={20}
-               height={20}
-               style={{ objectFit: 'contain' }}
-               onError={(e) => (e.currentTarget.style.display = 'none')}
-             />
-             <span>{row?.coin?.replace("_TEST","")}</span>
-           </Box>
-         )
-       },
-    { field: 'amount', headerName: 'Amount' },
-     {
+    {
+      field: 'coin',
+      headerName: 'Coin',
+      render: (row: any) => (
+        <Box display="flex" alignItems="center" gap={1}>
+          <img
+            src={`https://assets.coincap.io/assets/icons/${row?.coin?.split("_")[0].replace("_TEST", "").toLowerCase()}@2x.png`}
+            alt={row.coin}
+            width={20}
+            height={20}
+            style={{ objectFit: 'contain' }}
+            onError={(e) => (e.currentTarget.style.display = 'none')}
+          />
+          <span>{row?.coin?.replace("_TEST", "")}</span>
+        </Box>
+      )
+    },
+    {
+      field: 'amount',
+      headerName: 'Amount',
+      render: (row: any) =>
+        row?.amount && row?.currencyType ? (
+          `${getSymbolFromCurrency(row.currencyType)}${parseFloat(row.amount).toFixed(2)}`
+        ) : (
+          'N/A'
+        ),
+    },
+    {
       field: 'status',
       headerName: 'Status',
       render: (row: any) => (
@@ -120,7 +130,7 @@ const FirstSection = () => {
       headerName: 'Action',
       render: (row: any) => (
         <VisibilityIcon
-          sx={{ cursor: 'pointer' }} 
+          sx={{ cursor: 'pointer' }}
           onClick={() => handleOpen(row)}
         />
       )
@@ -130,8 +140,8 @@ const FirstSection = () => {
   const accountsToShow = accountsList;
   return (
     <Box>
-    
-       {currentData ? (
+
+      {currentData ? (
         <GenericTable columns={columns} data={currentData} />
       ) : (
         <Typography variant="body1" sx={{ mt: 2 }}>
@@ -154,13 +164,16 @@ const FirstSection = () => {
             </Box>
 
             <Box display="flex" justifyContent="space-between" mb={2}>
-              <Typography><strong>Username:</strong></Typography>
-              <Typography>{selectedRow.userDetails?.[0]?.name}</Typography>
+              <Typography><strong>Amount:</strong></Typography>
+              <Typography>{getSymbolFromCurrency(selectedRow.currencyType)}{selectedRow.amount}</Typography>
             </Box>
-
             <Box display="flex" justifyContent="space-between" mb={2}>
-              <Typography><strong>email:</strong></Typography>
-              <Typography>{selectedRow.userDetails?.[0]?.email}</Typography>
+              <Typography><strong>Number Of Coins:</strong></Typography>
+              <Typography>{selectedRow.noOfCoins}</Typography>
+            </Box>
+            <Box display="flex" justifyContent="space-between" mb={2}>
+              <Typography><strong>Fee:</strong></Typography>
+              <Typography>{getSymbolFromCurrency(selectedRow.currencyType)}{selectedRow.fee}</Typography>
             </Box>
 
             <Box display="flex" justifyContent="space-between" mb={2}>
@@ -170,27 +183,22 @@ const FirstSection = () => {
 
             <Box display="flex" justifyContent="space-between" mb={2}>
               <Typography><strong>Coin:</strong></Typography>
-              <Typography>{selectedRow.coin?.replace("_TEST","")}</Typography>
-            </Box>
-
-            <Box display="flex" justifyContent="space-between" mb={2}>
-              <Typography><strong>Amount:</strong></Typography>
-              <Typography>{selectedRow.amount}</Typography>
+              <Typography>{selectedRow.coin?.replace("_TEST", "")}</Typography>
             </Box>
 
             <Box display="flex" justifyContent="space-between" mb={2}>
               <Typography><strong>Status:</strong></Typography>
               <Typography>{selectedRow.status}</Typography>
             </Box>
-          {/* Account Cards section */}
+            {/* Account Cards section */}
             <Box className="accounts-list-section">
-             <Box className="accounts-list-header">Accounts List</Box>
+              <Box className="accounts-list-header">Accounts List</Box>
               <Box className="accounts-list-grid">
                 {accountsToShow.length === 0 ? (
                   <Typography>No accounts found.</Typography>
                 ) : (
                   accountsToShow.map((acc) => (
-                    <Box className="account-card" key={acc._id} sx={{backgroundColor:theme.palette.background.gray}} >
+                    <Box className="account-card" key={acc._id} sx={{ backgroundColor: theme.palette.background.gray }} >
                       <Box className="account-card-header">
                         <ReactCountryFlag countryCode={acc.country} svg className="account-flag" />
                         <span className="account-currency">{acc.currency}</span>
@@ -202,7 +210,7 @@ const FirstSection = () => {
                   ))
                 )}
               </Box>
-              <Box className="accounts-status-row">
+              {/* <Box className="accounts-status-row">
                 <span>Status</span>
                 <Select
                   value={modalStatus}
@@ -213,10 +221,10 @@ const FirstSection = () => {
                   <MenuItem value="completed">Completed</MenuItem>
                   <MenuItem value="declined">Declined</MenuItem>
                 </Select>
-              </Box>
+              </Box> */}
             </Box>
-             <Box display="flex" justifyContent="flex-end" gap={2} >
-            <CustomButton onClick={handleClose}>Close</CustomButton>
+            <Box display="flex" justifyContent="flex-end" gap={2} >
+              <CustomButton onClick={handleClose}>Close</CustomButton>
             </Box>
           </>
         )}

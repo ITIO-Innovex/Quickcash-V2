@@ -1,0 +1,35 @@
+.country-flag img,
+.country-flag svg,
+.country-card .country-flag,
+.country-card-content .country-flag {
+  max-width: 40px !important;
+  max-height: 40px !important;
+  width: 40px !important;
+  height: 40px !important;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+.country-card {
+  overflow: hidden;
+  min-height: 180px;
+  max-width: 220px;
+  box-sizing: border-box;
+}
+
+.country-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.MuiMenuItem-root .MuiBox-root .country-flag img,
+.MuiMenuItem-root .MuiBox-root .country-flag svg {
+  max-width: 20px !important;
+  max-height: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  object-fit: contain;
+} 

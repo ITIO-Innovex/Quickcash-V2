@@ -2,12 +2,19 @@ import { Box, Typography, useTheme } from '@mui/material';
 import CustomModal from '@/components/CustomModal';
 import CustomButton from '@/components/CustomButton';
 import GenericTable from '../../../components/common/genericTable';
+import getSymbolFromCurrency from 'currency-symbol-map';
 
 const invoiceColumns = [
   { field: 'dateadded', headerName: 'Transaction Date' },
   { field: '_id', headerName: 'Transaction Id' },
-  { field: 'amount', headerName: 'Amount' },
-  { field: 'convertAmount', headerName: 'Paid Amount' },
+  {
+    field: 'amount',
+    headerName: 'Paid Amount',
+    render: (item: any) =>
+      item?.toCurrency && item?.convertAmount
+        ? `${getSymbolFromCurrency(item.toCurrency)}${item.convertAmount}`
+        : 'N/A',
+  },
   { field: 'trans_type', headerName: 'Payment Mode' },
 ];
 

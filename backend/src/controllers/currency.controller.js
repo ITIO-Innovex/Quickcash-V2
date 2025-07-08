@@ -245,6 +245,55 @@ module.exports = {
     })
 
   },
+  // This is used for fetching combined currency and country data for frontend
+  currencyWithCountryList: async(req,res) => {
+    try {
+      // Get all currencies
+      const currencies = await Currency.find({}).sort({defaultc: -1});
+      
+      if(!currencies || currencies.length === 0) {
+        return res.status(402).json({
+          status: 402,
+          message: "Error while fetching currency list!!!",
+          data: null
+        });
+      }
+
+      // Get all countries
+      const countries = await Countries.find({});
+      
+      // Combine currency and country data
+      const combinedData = currencies.map(currency => {
+        // Find matching country by currency code
+        const matchingCountry = countries.find(country => 
+          country.currency === currency.base_code
+        );
+        
+        return {
+          _id: currency._id,
+          currency: currency.base_code,
+          currencyName: currency.currencyName,
+          country: matchingCountry ? matchingCountry.iso2 : currency.base_code.substring(0, 2),
+          countryName: matchingCountry ? matchingCountry.name : '',
+          status: currency.status,
+          defaultc: currency.defaultc
+        };
+      });
+
+      return res.status(201).json({
+        status: 201,
+        message: "Currency with country list is Successfully fetched",
+        data: combinedData
+      });
+
+    } catch (error) {
+      return res.status(500).json({
+        status: 500,
+        message: "Something went wrong",
+        data: null
+      });
+    }
+  },
   // This is used for add currency data
   exChangeCurrency: async(req,res) => {
 

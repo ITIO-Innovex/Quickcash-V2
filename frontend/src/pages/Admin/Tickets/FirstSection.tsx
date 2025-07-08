@@ -36,7 +36,7 @@ const FirstSection = () => {
     await HandleUpdateStatus(selectedRow._id, selectedRow.user);
   };
   const handleCancel = () => {
-    // handle cancel logic (close modal)
+    setOpen(false);
   };
 
 
@@ -131,7 +131,7 @@ const FirstSection = () => {
     {
       field: 'message',
       headerName: 'Message',
-      render: (row: any) => row.message ? `${row.message.slice(0, 20)}...` : '',
+      render: (row: any) => row.message ? `${row.message.slice(0, 50)}...` : '',
     },
     {
       field: 'status',

@@ -302,29 +302,29 @@ const FirstSection = () => {
     { field: 'mobile', headerName: 'Mobile' },
     { field: 'country', headerName: 'Country' },
     { field: 'defaultCurrency', headerName: 'Currency' },
-    {
-      field: 'status',
-      headerName: 'Status',
-      render: (row: any) => (
-        <label className="switch">
-          <input
-            type="checkbox"
-            checked={row.status}
-            onChange={(e) => handleChange(e, row?._id)}
-          />
-          <span className="slider"></span>
-        </label>
-      ),
-    },
+    // {
+    //   field: 'status',
+    //   headerName: 'Status',
+    //   render: (row: any) => (
+    //     <label className="switch">
+    //       <input
+    //         type="checkbox"
+    //         checked={row.status}
+    //         onChange={(e) => handleChange(e, row?._id)}
+    //       />
+    //       <span className="slider"></span>
+    //     </label>
+    //   ),
+    // },
     {
       field: 'suspend',
-      headerName: 'Suspend',
+      headerName: 'Suspend/Active',
       render: (row: any) => (
         <label className="switch">
           <input
             type="checkbox"
             checked={row.suspend}
-            onChange={(e) => handleChangeSuspend(e, row?._id)}
+            onChange={(e) => handleChangeSuspend(e, row?._id)}            
           />
           <span className="slider"></span>
         </label>

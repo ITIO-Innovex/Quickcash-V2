@@ -116,7 +116,7 @@ const UserLogin = () => {
       if (!validate("email", email) && !validate("password", password)) {
         const result = await axios.post(`/${url}/v1/user/login`, { email, password });
 
-        console.log('Login response:', result.data);
+        console.log('Login response:', result);
         if (result.status === 200) {
           await addLoginSession(result.data.data._id);
           toast.success(`${result.data.data.name} is Logged In Successfully!!!`);

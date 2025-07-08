@@ -199,12 +199,21 @@ const FirstSection = () => {
     {
       field: 'status',
       headerName: 'Status',
-      render: (row: any) => (
-        <span className={`status-chip ${row.status.toLowerCase()}`}>
-          {row.status}
-        </span>
-      ),
+      render: (row: any) => {
+        const rawStatus = row.status?.toLowerCase();
+
+        const isSuccess = ['succeeded', 'success', 'complete', 'successful'].includes(rawStatus);
+        const displayText = isSuccess ? 'Success' : row.status;
+        const statusClass = isSuccess ? 'success' : rawStatus; // force same class for all success types
+
+        return (
+          <span className={`status-chip ${statusClass}`}>
+            {displayText}
+          </span>
+        );
+      }
     },
+
     {
       field: 'action',
       headerName: 'Action',
@@ -355,51 +364,14 @@ const FirstSection = () => {
                     ? details[0]?.recAccountDetails?.[0]?.address
                     : details[0]?.transferAccountDetails?.[0]?.address) || '-',
               }}
-            />
-
-            <div className="header-divider" />
-            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
-              <Typography>
-                <strong>Date:</strong>
-              </Typography>
-              <Typography>{details[0]?.createdAt ? details[0]?.createdAt.slice(0, 10) : '-'}</Typography>
-            </Box>
-
-            <Box display="flex" justifyContent="space-between" mb={2}>
-              <Typography>
-                <strong>Transaction ID:</strong>
-              </Typography>
-              <Typography>{details[0]?.trx || '-'}</Typography>
-            </Box>
-
-            <Box display="flex" justifyContent="space-between" mb={2}>
-              <Typography>
-                <strong>Type:</strong>
-              </Typography>
-              <Typography>{details[0]?.trans_type || '-'}</Typography>
-            </Box>
-
-            <Box display="flex" justifyContent="space-between" mb={2}>
-              <Typography>
-                <strong>Amount:</strong>
-              </Typography>
-              <Typography>{details[0]?.conversionAmount !== undefined ? details[0]?.conversionAmount : '-'}</Typography>
-            </Box>
-
-            <Box display="flex" justifyContent="space-between" mb={2}>
-              <Typography>
-                <strong>details:</strong>
-              </Typography>
-              <Typography>{details[0]?.info || '-'}</Typography>
-            </Box>
-            <Typography>{details[0]?.createdAt ? details[0]?.createdAt.slice(0, 10) : '-'}</Typography>
+            />   
             <Typography className="section-title">Bank Status</Typography>
             <KeyValueDisplay
               data={{
                 'Trx': details[0]?.trx || '-',
-                'Transfer Amount': details[0]?.amount !== undefined ? `$${details[0]?.amount}` : '-',
-                'Settle Amount': details[0]?.conversionAmount !== undefined ? `$${details[0]?.conversionAmount}` : '-',
-                'TransactionStatus': details[0]?.status || '-',
+                'Transfer Amount': details[0]?.amount !== undefined ? `$${details[0]?.amount} (${details[0]?.info || '-'})` : '-',
+                'Settle Date': moment(details[0]?.createdAt).format('YYYY-MM-DD hh:mm:ss A'),
+                'Transaction Status': details[0]?.status || '-',
               }}
             />
 
