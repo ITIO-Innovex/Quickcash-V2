@@ -1083,6 +1083,7 @@ const filteredSwapCoins = swapRawCoins.filter((coin) => coin.coin !== fromCoin);
                           console.log('Checkbox changed to:', e.target.checked);
                           setIsConfirmed(e.target.checked);
                         }}
+                           disabled={Boolean(errorMessage)}
                         sx={{
                           color: theme.palette.text.secondary,
                           '&.Mui-checked': {

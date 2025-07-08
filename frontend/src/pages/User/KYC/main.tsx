@@ -13,7 +13,9 @@ const KYCMain = () => {
   const theme = useTheme();
   const [currentStep, setCurrentStep] = useState(1);
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
-  
+  const [frontDocument, setFrontDocument] = useState<{ raw: File; preview: string } | null>(null);
+  const [backDocument, setBackDocument] = useState<{ raw: File; preview: string } | null>(null);
+
   const handleEmailVerified = () => {
     setVerifyModalOpen(false);
   };
@@ -23,9 +25,10 @@ const KYCMain = () => {
       case 1:
         return <ContactDetails onNext={() => setCurrentStep(2)} />;
       case 2:
-        return <DocumentDetails onNext={() => setCurrentStep(3)} onBack={() => setCurrentStep(1)} />;
+        return  <DocumentDetails onNext={() => setCurrentStep(3)}  onBack={() => setCurrentStep(1)} setFrontDocument={setFrontDocument} setBackDocument={setBackDocument}/>
       case 3:
-        return <ResidentialAddress onBack={() => setCurrentStep(2)} />;
+        return <ResidentialAddress onBack={() => setCurrentStep(2)} frontDocument={frontDocument}
+      backDocument={backDocument}/>;
       default:
         return <ContactDetails onNext={() => setCurrentStep(2)} />;
     }
@@ -49,6 +52,7 @@ const KYCMain = () => {
         open={verifyModalOpen}
         onClose={() => setVerifyModalOpen(false)}
         onProceed={handleEmailVerified}
+        email={''} 
       />
     </Box>
   );

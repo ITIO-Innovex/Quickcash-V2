@@ -1,14 +1,24 @@
 
 import React from 'react';
-import { Add } from '@mui/icons-material';
-import CustomButton from '../../../components/CustomButton';
 import { Box } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import {useNavigate } from 'react-router-dom';
+import CustomButton from '../../../components/CustomButton';
 
 interface InvoiceActionsProps {
   activeTab: 'invoice' | 'quote';
 }
 
 const InvoiceActions: React.FC<InvoiceActionsProps> = ({ activeTab }) => {
+  const navigate = useNavigate();
+
+  const handleNewClick = () => {
+  if (activeTab === 'invoice') {
+    navigate('/invoice-section');
+  } else {
+    console.log('Quote selected – no navigation');
+  }
+};
   return (
     <Box className="invoice-actions">
       <CustomButton>
