@@ -14,12 +14,12 @@ const SecondRightSection = ({ summary, loaderResult }: SecondRightSectionProps) 
       icon: <User className="stat-icon" />,
       className: 'card-green',
     },
-    {
-      label: 'New Users',
-      value: (summary?.totalUsers ?? 0) - (summary?.pendingUsers ?? 0),
-      icon: <Banknote className="stat-icon" />,
-      className: 'card-teal',
-    },
+    // {
+    //   label: 'New Users',
+    //   value: (summary?.totalUsers ?? 0) - (summary?.pendingUsers ?? 0),
+    //   icon: <Banknote className="stat-icon" />,
+    //   className: 'card-teal',
+    // },
     {
       label: 'Pending Users',
       value: summary?.pendingUsers ?? 0,

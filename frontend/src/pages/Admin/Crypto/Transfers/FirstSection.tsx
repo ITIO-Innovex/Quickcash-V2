@@ -1,4 +1,4 @@
-import { MenuItem, Select } from '@mui/material';
+import { Button, MenuItem, Select } from '@mui/material';
 import { Box, Typography, useTheme } from '@mui/material';
 import ReactCountryFlag from 'react-country-flag';
 import jsPDF from 'jspdf';
@@ -9,15 +9,19 @@ import { FileSpreadsheet, FileText } from 'lucide-react';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CustomModal from '../../../../components/CustomModal';
 import GenericTable from '../../../../components/common/genericTable';
+import { useAppToast } from '@/utils/toast';
 
 import CustomButton from '@/components/CustomButton';
 import admin from '@/helpers/adminApiHelper';
 import axios from 'axios';
 import getSymbolFromCurrency from 'currency-symbol-map';
+import api from '@/helpers/apiHelper';
+import { toast } from 'sonner';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 const FirstSection = () => {
   const theme = useTheme();
+  const toast = useAppToast();
   const [open, setOpen] = useState(false);
   const [modalStatus, setModalStatus] = useState('completed');
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
@@ -138,6 +142,32 @@ const FirstSection = () => {
   ];
 
   const accountsToShow = accountsList;
+  const [status, setStatus] = React.useState<any>('');
+  const [loaderr, setLoaderr] = React.useState<boolean>(false);
+
+  const HandleUpdateCrypto = async (row: any) => {
+    setLoaderr(true);
+    await admin.patch(`/${url}/v1/crypto/crypto-update`, {
+      id: row?._id,
+      status: modalStatus,
+      amount: row?.amount,
+      userid: row?.user || row?.userDetails?.[0]?._id,
+      currencyType: row?.currencyType || row?.fromCurrency
+    })
+      .then(result => {
+        if (result.data.status == 201) {
+          setOpen(false);
+          setLoaderr(false);
+          toast.success(result?.data?.message);
+          translist();
+        }
+      })
+      .catch(error => {
+        console.log(error);
+        setLoaderr(false);
+        toast.error(error?.response?.data?.message);
+      });
+  }
   return (
     <Box>
 
@@ -210,21 +240,25 @@ const FirstSection = () => {
                   ))
                 )}
               </Box>
-              {/* <Box className="accounts-status-row">
-                <span>Status</span>
-                <Select
-                  value={modalStatus}
-                  onChange={(e) => setModalStatus(e.target.value)}
-                  size="small"
-                  className="accounts-status-select"
-                >
-                  <MenuItem value="completed">Completed</MenuItem>
-                  <MenuItem value="declined">Declined</MenuItem>
-                </Select>
-              </Box> */}
+              {selectedRow?.status === "pending" && (
+                <Box className="accounts-status-row w-100">
+                  <span>Status</span>
+                  <Select
+                    value={modalStatus}
+                    onChange={(e) => setModalStatus(e.target.value)}
+                    size="small"
+                    className="accounts-status-select"
+                  >
+                    <MenuItem value="completed">Approved</MenuItem>
+                    <MenuItem value="declined">Declined</MenuItem>
+                  </Select>
+                </Box>
+              )}
             </Box>
             <Box display="flex" justifyContent="flex-end" gap={2} >
-              <CustomButton onClick={handleClose}>Close</CustomButton>
+              <CustomButton onClick={() => HandleUpdateCrypto(selectedRow)}
+                loading={loaderr}>Submit</CustomButton>
+              <Button className="Custom-button" onClick={handleClose}>Close</Button>
             </Box>
           </>
         )}
