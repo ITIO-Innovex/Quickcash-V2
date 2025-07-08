@@ -56,13 +56,13 @@ const TransactionHistory = () => {
       }
       if (result.data.status === 201) {
         const transactions = result.data.data.map((transaction: any) => {
-          const isDebit = transaction?.rec || transaction?.extraType === "debit" || transaction?.tr_type === "Stripe";
+          const isDebit = transaction?.extraType === "debit";
           return ({
             date: new Date(transaction.createdAt).toLocaleDateString(),
             trx: transaction.trx,
             type: transaction.trans_type,
             amount: `${isDebit ? '-' : '+'}${isDebit ? getSymbolFromCurrency(transaction?.from_currency) : getSymbolFromCurrency(transaction?.to_currency)}${parseFloat(transaction?.amount ?? 0).toFixed(2)}`,
-            balance : `${isDebit ? getSymbolFromCurrency(transaction?.from_currency) : getSymbolFromCurrency(transaction?.to_currency)}${parseFloat(transaction?.postBalance ?? 0).toFixed(2)}`,
+            balance : `${isDebit ? getSymbolFromCurrency(transaction?.from_currency) : getSymbolFromCurrency(transaction?.from_currency)}${parseFloat(transaction?.postBalance ?? 0).toFixed(2)}`,
             status: (
               <Chip
                 label={transaction.status.toUpperCase()}
