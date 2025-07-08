@@ -164,39 +164,6 @@ const FirstSection = () => {
         setReceipintList([]);
       })
   }
-
-  const userData = [
-    {
-      date: '2025-05-01',
-      username: 'alpha',
-      email: 'a@example.com',
-      mobile: '1234567890',
-      country: 'India',
-      currency: 'INR',
-      status: true,
-      suspend: false,
-    },
-    {
-      date: '2025-05-02',
-      username: 'bravo',
-      email: 'b@example.com',
-      mobile: '9876543210',
-      country: 'USA',
-      currency: 'USD',
-      status: false,
-      suspend: false,
-    },
-    {
-      date: '2025-05-03',
-      username: 'charlie',
-      email: 'c@example.com',
-      mobile: '5556667777',
-      country: 'UK',
-      currency: 'GBP',
-      status: false,
-      suspend: false,
-    },
-  ];
   const [fullData, setFullData] = useState<any[]>([]);
   const [currentData, setCurrentData] = useState<any[]>([]);
 
