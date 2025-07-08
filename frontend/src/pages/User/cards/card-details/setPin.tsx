@@ -16,7 +16,7 @@ const SetPinForm: React.FC<SetPinFormProps> = ({ cardNumber, cardHolder, expiryD
     if (pin.length === 3) {
       onSubmit(pin);
     } else {
-      alert('PIN must be exactly 4 digits');
+      alert('PIN must be exactly 3 digits');
     }
   };
 
@@ -28,7 +28,7 @@ const SetPinForm: React.FC<SetPinFormProps> = ({ cardNumber, cardHolder, expiryD
 
       <TextField
         className="custom-textfield"
-        label="Set 4-digit PIN"
+        label="Set 3-digit PIN"
         variant="outlined"
         value={pin}
         onInput={(e: React.ChangeEvent<HTMLInputElement>) => {

@@ -8,11 +8,12 @@ import {
   useTheme,
 } from '@mui/material';
 import axios from 'axios';
-import { useAccount } from './useAccount'; 
+import { useAccount } from './useAccount';
 import { useNavigate } from 'react-router-dom';
 import CustomTextField from '@/components/CustomTextField';
 import CustomButton from '@/components/CustomButton';
 import api from '@/helpers/apiHelper';
+import { useAppToast } from '@/utils/toast';
 
 const currencyRates: { [key: string]: number } = {
   USD: 1,
@@ -32,6 +33,7 @@ const LoadCardForm = ({
   currencySymbols,
 }) => {
   const theme = useTheme();
+  const toast = useAppToast();
   const navigate = useNavigate();
   const [amount, setAmount] = useState<number>(0);
   const [depositFee, setDepositFee] = useState<number>(0.0);
@@ -101,7 +103,7 @@ const LoadCardForm = ({
           }
         );
         if (response.data.status) {
-          alertnotify('Amount updated successfully', 'success');
+          toast.success('Amount updated successfully');
 
           const newBalance = response.data.data?.cardBalance;
 
@@ -128,7 +130,7 @@ const LoadCardForm = ({
         }
 
       } else {
-        alertnotify('Please enter a valid amount', 'error');
+        toast.error('Please enter a valid amount');
       }
     } catch (error) {
       console.error('Error updating card amount:', error);
@@ -137,7 +139,7 @@ const LoadCardForm = ({
           localStorage.clear();
           navigate('/');
         } else {
-          alertnotify(error.response.data.message, 'error');
+          toast.error(error.response.data.message);
         }
       }
     }
@@ -190,7 +192,7 @@ const LoadCardForm = ({
           size="small"
           InputProps={{
             startAdornment: (
-              <InputAdornment position="start" sx={{color:theme.palette.text.gray}}>
+              <InputAdornment position="start" sx={{ color: theme.palette.text.gray }}>
                 {currencySymbols[selectedCurrency] || selectedCurrency}
               </InputAdornment>
             ),
@@ -212,7 +214,7 @@ const LoadCardForm = ({
       </Box>
 
       <CustomButton fullWidth onClick={handleGetLoadCard}>
-        GET LOAD CARD
+        ADD BALANCE
       </CustomButton>
     </Box>
   );

@@ -20,7 +20,19 @@ interface JwtPayload {
     type: string;
   };
 }
-
+const currencySymbols: { [key: string]: string } = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  INR: "₹",
+  JPY: "¥",
+  AUD: "A$",
+  CAD: "C$",
+  CHF: "Fr",
+  CNY: "¥",
+  SGD: "S$",
+  NZD: "NZ$",
+};
 interface Account {
   _id: string;
   currency: string;
@@ -88,6 +100,15 @@ const CardBalance: React.FC<CardBalanceProps> = ({ card }) => {
 
     fetchCards();
   }, [accountId]);
+  const formatDecimalValue = (value: number): string => {
+    return value.toFixed(2);
+  };
+  const renderCurrencyAmount = (loading, value, currency) => {
+    if (loading) return 'Loading...';
+    const symbol = currencySymbols[currency] || currency || '₹';
+    const formatted = typeof value === 'number' ? formatDecimalValue(value) : '0.00';
+    return `${symbol} ${formatted}`;
+  };
 
   return (
     <>
@@ -139,22 +160,20 @@ const CardBalance: React.FC<CardBalanceProps> = ({ card }) => {
             <Box className="balance-row" sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography className="balance-label">Card Balance</Typography>
               <Typography variant="h6" color="success.main">
-                {loading ? 'Loading...' : card && typeof card.amount === 'number'
-                  ? `₹ ${card.amount.toFixed(2)}`
-                  : '₹ 0.00'}
+                {renderCurrencyAmount(loading, card?.amount, card?.currency)}
+
+
               </Typography>
             </Box>
             <Box className="balance-row" sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography className="balance-label">Daily Limit</Typography>
-              <Typography>{loading ? 'Loading...' : card && typeof card.dailyLimit === 'number'
-                ? `₹ ${card.dailyLimit.toFixed(2)}`
-                : '₹ 0.00'}</Typography>
+              <Typography>{renderCurrencyAmount(loading, card?.dailyLimit, card?.currency)}
+              </Typography>
             </Box>
             <Box className="balance-row" sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography className="balance-label">Monthly Limit</Typography>
-              <Typography>{loading ? 'Loading...' : card && typeof card.monthlyLimit === 'number'
-                ? `₹ ${card.monthlyLimit.toFixed(2)}`
-                : '₹ 0.00'}</Typography>
+              <Typography>{renderCurrencyAmount(loading, card?.monthlyLimit, card?.currency)}
+              </Typography>
             </Box>
           </Stack>
         </Card>

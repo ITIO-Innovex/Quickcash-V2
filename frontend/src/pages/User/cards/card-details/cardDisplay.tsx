@@ -8,8 +8,9 @@ import SetPinForm from "./setPin";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useAppToast } from '@/utils/toast'; 
+import { useAppToast } from '@/utils/toast';
 import api from "@/helpers/apiHelper";
+import ReactCountryFlag from "react-country-flag";
 
 interface JwtPayload {
   sub: string;
@@ -61,7 +62,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
 }) => {
 
   const theme = useTheme();
-  const toast = useAppToast(); 
+  const toast = useAppToast();
   const url: string =
     import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
   const navigate = useNavigate();
@@ -104,7 +105,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
     filter: "grayscale(100%)",
   });
 
- 
+
 
   // Fetch cards list on component mount
   useEffect(() => {
@@ -139,7 +140,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           localStorage.clear();
           navigate("/");
         } else {
-           toast.error(error.response?.data?.message || "Error fetching cards");
+          toast.error(error.response?.data?.message || "Error fetching cards");
         }
       }
     };
@@ -190,7 +191,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           localStorage.clear();
           navigate("/");
         } else {
-           toast.error(error.response.data.message);
+          toast.error(error.response.data.message);
         }
       });
   };
@@ -198,12 +199,12 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
     const activeCard = cardsDetails[currentCardIndex] as CardDetails | undefined;
 
     if (!activeCard) {
-       toast.error("Please select a card to freeze");
+      toast.error("Please select a card to freeze");
       return;
     }
 
     if (isCardFrozen(activeCard._id)) {
-       toast.error("Card is already frozen");
+      toast.error("Card is already frozen");
       return;
     }
 
@@ -223,9 +224,9 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
 
         if (isFrozen) {
           setFrozenCards((prev) => [...prev, activeCard._id]);
-           toast.success("Card has been frozen successfully");
+          toast.success("Card has been frozen successfully");
         } else {
-           toast.error("Failed to freeze card");
+          toast.error("Failed to freeze card");
         }
 
         getCardsList(); // always refresh data
@@ -237,7 +238,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           localStorage.clear();
           navigate("/");
         } else {
-           toast.error(error.response.data.message);
+          toast.error(error.response.data.message);
         }
       }
     }
@@ -246,12 +247,12 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
     const activeCard = cardsDetails[currentCardIndex] as CardDetails | undefined;
 
     if (!activeCard) {
-       toast.error("Please select a card to unfreeze");
+      toast.error("Please select a card to unfreeze");
       return;
     }
 
     if (!isCardFrozen(activeCard._id)) {
-       toast.error("Card is not frozen");
+      toast.error("Card is not frozen");
       return;
     }
 
@@ -273,9 +274,9 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           setFrozenCards((prev) =>
             prev.filter((cardId) => cardId !== activeCard._id)
           );
-           toast.success("Card has been unfrozen successfully");
+          toast.success("Card has been unfrozen successfully");
         } else {
-           toast.error("Failed to unfreeze card");
+          toast.error("Failed to unfreeze card");
         }
 
         getCardsList(); // always refresh data
@@ -287,7 +288,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           localStorage.clear();
           navigate("/");
         } else {
-           toast.error(error.response.data.message);
+          toast.error(error.response.data.message);
         }
       }
     }
@@ -313,7 +314,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
       setLoadCardDetails(activeCard);
       setIsLoadCardModalOpen(true);
     } else {
-       toast.error("No active card selected");
+      toast.error("No active card selected");
     }
   };
   const handleCloseLoadCard = () => {
@@ -330,7 +331,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
       setTransactionCardDetails(activeCard);
       setIsTransactionModalOpen(true);
     } else {
-       toast.error("No active card selected");
+      toast.error("No active card selected");
     }
   };
   interface HandleUpdateTransactionLimitProp {
@@ -364,7 +365,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           monthlyLimit: response.data.data.monthlyLimit,
         }));
 
-         toast.error("Card limits updated successfully");
+        toast.error("Card limits updated successfully");
         getCardsList();
       }
     } catch (error) {
@@ -374,7 +375,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           localStorage.clear();
           navigate("/");
         } else {
-           toast.error(error.response.data.message);
+          toast.error(error.response.data.message);
         }
       }
     }
@@ -399,13 +400,13 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
       );
 
       if (response.data.status === "201") {
-         toast.success("Card Pin has been updated Successfully");
+        toast.success("Card Pin has been updated Successfully");
         setIsSetPinModalOpen(false);
       }
     } catch (error) {
       console.error("Error changing pin:", error);
       if (axios.isAxiosError(error) && error.response) {
-         toast.error(error.response.data.message);
+        toast.error(error.response.data.message);
       }
     }
   }
@@ -426,7 +427,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
         },
       });
 
-      if (response.data.status === "201") {
+      if (response.data.status === 201) {
         setViewCrd(response.data.data);
       }
     } catch (error) {
@@ -436,7 +437,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           localStorage.clear();
           navigate("/");
         } else {
-           toast.error(error.response.data.message);
+          toast.error(error.response.data.message);
         }
       }
     }
@@ -492,7 +493,18 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
                         justifyContent="space-between"
                       >
                         <Box className="chip" />
-                        <Box className="flag">{card.country || "🏳️"}</Box>
+                        <Box className="flag">  <ReactCountryFlag
+                          countryCode={card.currency.slice(0, 2)}
+                          svg
+                          style={{
+                            width: "1.5em",
+                            height: "1.5em",
+                            borderRadius: "50%",
+                          }}
+                          cdnUrl="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.4.3/flags/1x1/"
+                          cdnSuffix="svg"
+                          title={card.currency}
+                        /></Box>
                       </Box>
 
                       <Box mt={2}>
@@ -547,7 +559,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
                         onClick={(e) => {
                           e.stopPropagation();
                           handleClickOpenPin(card._id);
-                        }}
+                        }} disabled={isFrozen}
                       >
                         SET PIN
                       </Button>
@@ -590,6 +602,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
               }
             }}
             sx={{
+              fontSize: "12px",
               backgroundColor: isCardFrozen(cardsDetails[currentCardIndex]?._id || '')
                 ? "#585858"
                 : "#483594",
@@ -607,17 +620,17 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           </Button>
 
 
-          <Button className="action-button" onClick={handleTransactionLimitClick}>
+          <Button className="action-button" onClick={handleTransactionLimitClick} disabled={isFrozen}>
             Transaction Limit
           </Button>
-          <Button className="action-button">Manage Card</Button>
+          <Button className="action-button" disabled={isFrozen}>Manage Card</Button>
         </Box>
       </Box>
 
       <CustomModal
         open={isLoadCardModalOpen}
         onClose={handleCloseLoadCard}
-        title="Load Card Details"
+        title="Add Wallet Balance"
         maxWidth="sm"
         sx={{ backgroundColor: theme.palette.background.default }}
       >
@@ -633,7 +646,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
       </CustomModal>
 
 
-      <CustomModal open={isTransactionModalOpen} onClose={handleCloseTransactionLimit} title="Transaction Limit" maxWidth="sm" sx={{backgroundColor:theme.palette.background.default}}>
+      <CustomModal open={isTransactionModalOpen} onClose={handleCloseTransactionLimit} title="Transaction Limit" maxWidth="sm" sx={{ backgroundColor: theme.palette.background.default }}>
         <TransactionForm
           transactionCardDetails={transactionCardDetails}
           currency={transactionCardDetails?.currency}
