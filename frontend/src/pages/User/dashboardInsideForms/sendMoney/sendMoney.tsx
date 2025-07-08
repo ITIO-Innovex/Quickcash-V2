@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft } from "lucide-react";
 import {
@@ -9,8 +10,6 @@ import {
   StepLabel,
   useTheme,
   useMediaQuery,
-  Alert,
-  Slide,
 } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 import './sendMoney.css';
@@ -21,9 +20,6 @@ import TransferDetailsStep from './TransferDetailsStep';
 import { jwtDecode } from 'jwt-decode';
 import { JwtPayload } from '@/types/jwt';
 import { useAccount } from '@/hooks/useAccount';
-import { useCurrency } from '@/hooks/useCurrency';
-import StatusModal from './StatusModal';
-import { getRecommendedTransferMethod, getAvailableTransferMethods } from '@/utils/transferMethodUtils';
 
 // Define beneficiary interface for type safety
 interface Beneficiary {
@@ -54,23 +50,13 @@ const SendMoney = () => {
     receivingOption: 'bank_account', // Set statically
     transferMethod: '',
     beneficiaryData: {},
-    // New fields for automatic transfer method selection
-    destinationCountry: '',
-    destinationCurrency: '',
-    recommendedTransferMethod: '',
-    availableTransferMethods: [],
-    transferMethodDetails: null,
   });
-
-  const [statusModalOpen, setStatusModalOpen] = useState(false);
-  const [statusModalStatus, setStatusModalStatus] = useState<'pending' | 'success' | 'error'>('pending');
 
   // Step labels for the stepper component
   const steps = ['Select Destination', 'Select Currencies', 'Transfer Method', 'Transfer Details'];
 
   // API integeration for sending money by Pawnesh Kumar
   const {list} = useAccount(accountId?.data?.id);
-  const { currencyList } = useCurrency();
   const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
   const handleBack = () => {
     navigate("/dashboard");
@@ -100,19 +86,10 @@ const SendMoney = () => {
   // Handle beneficiary selection and move to currency step
   const handleBeneficiarySelect = (beneficiary: Beneficiary) => {
     setSelectedBeneficiary(beneficiary);
-    // Auto-fetch recommended transfer method and available methods
-    const recommendedMethod = getRecommendedTransferMethod(beneficiary.country, beneficiary.currency);
-    const availableMethods = getAvailableTransferMethods(beneficiary.country, beneficiary.currency);
     updateFormData({
       toCurrency: beneficiary.currency,
       selectedCountry: beneficiary.country,
-      beneficiaryData: beneficiary,
-      recommendedTransferMethod: recommendedMethod.methodId,
-      availableTransferMethods: availableMethods.map(m => m.methodId),
-      transferMethod: recommendedMethod.methodId,
-      transferMethodDetails: recommendedMethod,
-      destinationCountry: beneficiary.country,
-      destinationCurrency: beneficiary.currency
+      beneficiaryData: beneficiary
     });
     setActiveStep(1); // Move to currency selection step
   };
@@ -127,37 +104,6 @@ const SendMoney = () => {
     }
   }, [location.state]);
 
-  // On mount, check for ?step=2 in the URL and set activeStep accordingly
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const stepParam = params.get('step');
-    if (stepParam === '2') {
-      setActiveStep(1); // Step 2 (Select Currencies) is index 1
-      // Fetch selected currency and transfer method from localStorage
-      const beneficiaryData = JSON.parse(localStorage.getItem('beneficiaryData') || '{}');
-      const selectedCurrency = beneficiaryData.currency;
-      const selectedTransferMethod = beneficiaryData.selectedMethod;
-      console.log("currency",selectedCurrency);
-      if (selectedCurrency) {
-        updateFormData({
-          toCurrency: selectedCurrency,
-          destinationCurrency: selectedCurrency
-        });
-      }
-      if (selectedTransferMethod) {
-        updateFormData({
-          transferMethod: selectedTransferMethod
-        });
-      }
-    }
-  }, [location.search]);
-
-  // Handler to show status modal
-  const handleShowStatusModal = (status: 'pending' | 'success' | 'error' = 'pending') => {
-    setStatusModalStatus(status);
-    setStatusModalOpen(true);
-  };
-
   // Step 1: Destination Selection Component - Choose country or go to beneficiary selection
   const renderStepContent = () => {
     switch (activeStep) {
@@ -169,7 +115,7 @@ const SendMoney = () => {
             onNext={handleNext}
             onBeneficiaryTab={handleBeneficiaryTab}
             onSelectBeneficiary={handleBeneficiarySelect}
-            currencyList={currencyList}
+            currencyList={list}
           />
         );
       case 1:
@@ -181,6 +127,7 @@ const SendMoney = () => {
             onNext={handleNext}
             onPrevious={handlePrevious}
             selectedBeneficiary={selectedBeneficiary}
+            currencyList={list}
           />
         );
       case 2:
@@ -200,8 +147,6 @@ const SendMoney = () => {
             formData={formData}
             updateFormData={updateFormData}
             onPrevious={handlePrevious}
-            onShowStatusModal={handleShowStatusModal}
-            pending={statusModalStatus === 'pending'}
           />
         );
       default:
@@ -256,11 +201,6 @@ const SendMoney = () => {
       <Box className="step-content">
         {renderStepContent()}
       </Box>
-      <StatusModal
-        open={statusModalOpen}
-        status={statusModalStatus}
-        onClose={() => setStatusModalOpen(false)}
-      />
     </Box>
   );
 };

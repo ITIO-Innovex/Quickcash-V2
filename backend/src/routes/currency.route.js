@@ -10,7 +10,6 @@ const {
   getExchangeValue,
   exChangeCurrency,
   updateCurrencyDefaultStatus,
-  currencyWithCountryList,
   // removeCurrencyDefaultStatus
  } = require('../controllers/currency.controller');
 const { verifyToken } = require('../middlewares/auth.middleware');
@@ -20,7 +19,6 @@ router.route('/add').post(addCurrency);
 router.route('/list').get(list);
 router.route('/currency-list').get(currencyList);
 router.route('/country-list').get(countryList);
-router.route('/currency-with-country').get(currencyWithCountryList);
 router.route('/:id').get(verifyToken,currencyById);
 router.route('/exchange').post(verifyToken,exChangeCurrency);
 router.route('/getExchange').post(verifyToken,getExchangeValue);
