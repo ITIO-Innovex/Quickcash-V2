@@ -122,7 +122,7 @@ const invoiceUserClientRoute =   require('./routes/client.route');
 const ManualPaymentRoute     =   require('./routes/manualPayment.route');
 const QuoteRoute             =   require('./routes/quote.route');
 const DigitalSignatureRoute  =   require('./routes/DigitalSignature/index.js');    //Digital Signature route Import 
-const TransferMethodRoute    =   require('./routes/transferMethod.route');
+// const TransferMethodRoute    =   require('./routes/transferMethod.route');
 
 // const offerRoutes = require('./routes/p2poffer.route');
 // const tradeRoutes = require('./routes/p2ptrade.route');
@@ -784,77 +784,77 @@ async function convertCurrencyAmount(from,to,amount) {
     }
   }
 }
-const getBase64FromUrl = async (url, autosign) => {
-  const response = await axios.get(url, { responseType: 'arraybuffer' });
-  const buffer = Buffer.from(response.data, 'binary');
-  const base64 = buffer.toString('base64');
-  const prefix = 'data:application/pdf;base64,';
-  return autosign ? `${prefix}${base64}` : base64;
-};
+// const getBase64FromUrl = async (url, autosign) => {
+//   const response = await axios.get(url, { responseType: 'arraybuffer' });
+//   const buffer = Buffer.from(response.data, 'binary');
+//   const base64 = buffer.toString('base64');
+//   const prefix = 'data:application/pdf;base64,';
+//   return autosign ? `${prefix}${base64}` : base64;
+// };
  
-const convertPdfArrayBuffer = async (url) => {
-  const response = await axios.get(url, { responseType: 'arraybuffer' });
-  return Buffer.from(response.data, 'binary');
-};
+// const convertPdfArrayBuffer = async (url) => {
+//   const response = await axios.get(url, { responseType: 'arraybuffer' });
+//   return Buffer.from(response.data, 'binary');
+// };
  
-// Endpoint 1: Get Base64 of PDF
-app.get('/pdf-base64', async (req, res) => {
-  const encodedUrl = req.query.url;
-  const autosign = req.query.autosign === 'true';
-  if (!encodedUrl) return res.status(400).send('Missing PDF URL');
+// // Endpoint 1: Get Base64 of PDF
+// app.get('/pdf-base64', async (req, res) => {
+//   const encodedUrl = req.query.url;
+//   const autosign = req.query.autosign === 'true';
+//   if (!encodedUrl) return res.status(400).send('Missing PDF URL');
  
-  try {
-    const decodedUrl = decodeURIComponent(encodedUrl);
-    const base64 = await getBase64FromUrl(decodedUrl, autosign);
-    res.send(base64);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Failed to fetch or convert PDF');
-  }
-});
+//   try {
+//     const decodedUrl = decodeURIComponent(encodedUrl);
+//     const base64 = await getBase64FromUrl(decodedUrl, autosign);
+//     res.send(base64);
+//   } catch (err) {
+//     console.error(err.message);
+//     res.status(500).send('Failed to fetch or convert PDF');
+//   }
+// });
  
-app.get('/pdf-buffer', async (req, res) => {
-  const encodedUrl = req.query.url;
-  if (!encodedUrl) return res.status(400).send('Missing PDF URL');
+// app.get('/pdf-buffer', async (req, res) => {
+//   const encodedUrl = req.query.url;
+//   if (!encodedUrl) return res.status(400).send('Missing PDF URL');
  
-  try {
-    const decodedUrl = decodeURIComponent(encodedUrl);
-    const buffer = await convertPdfArrayBuffer(decodedUrl);
-    res.setHeader('Content-Type', 'application/pdf');
-    res.send(buffer);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Failed to fetch PDF buffer');
-  }
-});
+//   try {
+//     const decodedUrl = decodeURIComponent(encodedUrl);
+//     const buffer = await convertPdfArrayBuffer(decodedUrl);
+//     res.setHeader('Content-Type', 'application/pdf');
+//     res.send(buffer);
+//   } catch (err) {
+//     console.error(err.message);
+//     res.status(500).send('Failed to fetch PDF buffer');
+//   }
+// });
  
-app.post('/generate-httpsnippet', (req, res) => {
-  try {
-    const snippet = new HTTPSnippet(req.body);
-    const output = {};
+// app.post('/generate-httpsnippet', (req, res) => {
+//   try {
+//     const snippet = new HTTPSnippet(req.body);
+//     const output = {};
  
-    for (const target of availableTargets()) {
-      const { key: targetKey, clients } = target;
-      for (const client of clients) {
-        const { key: clientKey } = client;
-        try {
-          const code = snippet.convert(targetKey, clientKey);
-          if (code) {
-            output[`${targetKey}-${clientKey}`] = code;
-          }
-        } catch (e) {
-          console.log(e);
-          // console.warn(`Failed for ${targetKey}/${clientKey}:`, e.message);
-        }
-      }
-    }
+//     for (const target of availableTargets()) {
+//       const { key: targetKey, clients } = target;
+//       for (const client of clients) {
+//         const { key: clientKey } = client;
+//         try {
+//           const code = snippet.convert(targetKey, clientKey);
+//           if (code) {
+//             output[`${targetKey}-${clientKey}`] = code;
+//           }
+//         } catch (e) {
+//           console.log(e);
+//           // console.warn(`Failed for ${targetKey}/${clientKey}:`, e.message);
+//         }
+//       }
+//     }
  
-    res.json(output);
-  } catch (err) {
-    console.error('Invalid HAR input:', err);
-    res.status(500).json({ error: 'Invalid HAR input', details: err.message });
-  }
-});
+//     res.json(output);
+//   } catch (err) {
+//     console.error('Invalid HAR input:', err);
+//     res.status(500).json({ error: 'Invalid HAR input', details: err.message });
+//   }
+// });
 // This responsible for connecting database to express nodejs
 connectDB()
   .then(result => {
