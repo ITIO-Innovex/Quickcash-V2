@@ -26,24 +26,24 @@ const linkedinAuthRoutes = require('./routes/linkedin.route');
 const chatSocket = require('../socket/chat.socket.js');
 // Created cors setting here, as we setup socket and server on different port
 
-// const io = socketIo(server, {
-//   path:'/socket.io',
-//   cors: {
-//     origin: 'https://quickcash.oyefin.com',
-//     methods: ["GET", "POST"],
-//     transports: ["polling"],
-//     credentials: true
-//   },
-//   allowEIO4: true
-// });
-
 const io = socketIo(server, {
+  path:'/socket.io',
   cors: {
-    origin: '*',
-    transports: ["polling"]
+    origin: 'https://quickcash.oyefin.com',
+    methods: ["GET", "POST"],
+    transports: ["polling"],
+    credentials: true
   },
   allowEIO4: true
 });
+
+// const io = socketIo(server, {
+//   cors: {
+//     origin: '*',
+//     transports: ["polling"]
+//   },
+//   allowEIO4: true
+// });
 
 app.use(bodyParser.json({limit: "50mb"}));
 app.use(bodyParser.urlencoded({limit: "50mb", extended: true, parameterLimit:50000}));
@@ -122,7 +122,7 @@ const invoiceUserClientRoute =   require('./routes/client.route');
 const ManualPaymentRoute     =   require('./routes/manualPayment.route');
 const QuoteRoute             =   require('./routes/quote.route');
 const DigitalSignatureRoute  =   require('./routes/DigitalSignature/index.js');    //Digital Signature route Import 
-
+const TransferMethodRoute    =   require('./routes/transferMethod.route');
 
 // const offerRoutes = require('./routes/p2poffer.route');
 // const tradeRoutes = require('./routes/p2ptrade.route');
@@ -401,6 +401,7 @@ app.use('/api/v1/manualPayment', ManualPaymentRoute); // Invoice Manual Payment 
 app.use('/api/v1/quote', QuoteRoute); // Quote Route
 // ===========DigitalSignature Route =================
 app.use('/api/v1/digital-signature', DigitalSignatureRoute);
+app.use('/api/v1/transfer', TransferMethodRoute);
 // ===========DigitalSignature Route End =============
 //app.use('/api/v1/p2p', paymentDetailRoutes); // Payment Details Route
 // Google Authentication Routes
