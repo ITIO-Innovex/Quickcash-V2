@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Box, Typography, Grid, useTheme } from '@mui/material';
-import CustomInput from '@/components/CustomInputField';
 import CustomButton from '@/components/CustomButton';
-import OTPVerificationModal from '@/modal/otpVerificationModal';
+import CustomInput from '@/components/CustomInputField';
 import EmailVerifyModal from '@/modal/emailVerifyModal';
+import OTPVerificationModal from '@/modal/otpVerificationModal';
+import { Box, Typography, Grid, useTheme } from '@mui/material';
 
 interface ContactDetailsProps {
   onNext: () => void;
@@ -32,6 +32,20 @@ const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
     { label: '+44', value: '+44' },
     { label: '+91', value: '+91' },
   ];
+  
+  React.useEffect(() => {
+  const userData = localStorage.getItem('userData');
+  if (userData) {
+    try {
+      const parsed = JSON.parse(userData);
+      if (parsed.email) {
+        setEmail(parsed.email);
+      }
+    } catch (err) {
+      console.error('[❌ ERROR PARSING userData]:', err);
+    }
+  }
+}, []);
 
   const handleVerifyClick = (target: 'email' | 'primary' | 'additional') => {
     if (target === 'email' && email.trim()) {
@@ -90,7 +104,7 @@ const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
                 <Box className="unified-phone-input"> 
                   <Box > 
                     <input
-                    className="phone-number-input-merged"
+                    className="email-input-merged"
                       value={email}
                       disabled={isEmailVerified}
                       onChange={(e) => setEmail(e.target.value)}
@@ -219,10 +233,12 @@ const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
         onClose={() => setOtpModalOpen(false)}
         onVerifySuccess={handleOtpVerifySuccess}
         phoneNumber={getPhoneNumber()}
+        target={verificationTarget}
       />
 
       {/* Email Verify Modal */}
       <EmailVerifyModal
+        email={email}
         open={emailModalOpen}
         onClose={() => setEmailModalOpen(false)}
         onProceed={handleEmailVerifySuccess}

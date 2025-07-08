@@ -199,7 +199,7 @@ const handleDeleteRow = (id: number) => {
   return (
     <Box className="dashboard-container" sx={{ p: 3 }}>
 
-      <PageHeader title={`Edit Invoice / ${invoiceData?.invoice_number || id}`} />
+      <PageHeader title={`Add Invoice / ${invoiceData?.invoice_number || id}`} />
 
       {invoiceData && (
         <>
