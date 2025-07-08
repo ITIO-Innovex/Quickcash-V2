@@ -61,8 +61,21 @@ const TransactionHistory = () => {
             date: new Date(transaction.createdAt).toLocaleDateString(),
             trx: transaction.trx,
             type: transaction.trans_type,
-            amount: `${isDebit ? '-' : '+'}${isDebit ? getSymbolFromCurrency(transaction?.from_currency) : getSymbolFromCurrency(transaction?.to_currency)}${parseFloat(transaction?.amount ?? 0).toFixed(2)}`,
-            balance : `${isDebit ? getSymbolFromCurrency(transaction?.from_currency) : getSymbolFromCurrency(transaction?.from_currency)}${parseFloat(transaction?.postBalance ?? 0).toFixed(2)}`,
+            amount: `${isDebit ? '-' : '+'}${
+              isDebit
+                ? getSymbolFromCurrency(transaction?.from_currency)
+                : transaction?.trans_type == "Exchange"
+                ? getSymbolFromCurrency(transaction?.from_currency)
+                : getSymbolFromCurrency(transaction?.to_currency)
+            }${parseFloat(transaction?.amount || 0).toFixed(2)}`,
+            balance: `${
+              isDebit
+                ? getSymbolFromCurrency(transaction?.from_currency)
+                : transaction?.trans_type === "Exchange"
+                ? getSymbolFromCurrency(transaction?.to_currency)
+                : getSymbolFromCurrency(transaction?.from_currency)
+            }${parseFloat(transaction?.postBalance ?? 0).toFixed(2)}`
+            ,
             status: (
               <Chip
                 label={transaction.status.toUpperCase()}
