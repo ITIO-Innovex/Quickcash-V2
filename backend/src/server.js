@@ -401,7 +401,7 @@ app.use('/api/v1/manualPayment', ManualPaymentRoute); // Invoice Manual Payment 
 app.use('/api/v1/quote', QuoteRoute); // Quote Route
 // ===========DigitalSignature Route =================
 app.use('/api/v1/digital-signature', DigitalSignatureRoute);
-app.use('/api/v1/transfer', TransferMethodRoute);
+// app.use('/api/v1/transfer', TransferMethodRoute);
 // ===========DigitalSignature Route End =============
 //app.use('/api/v1/p2p', paymentDetailRoutes); // Payment Details Route
 // Google Authentication Routes
