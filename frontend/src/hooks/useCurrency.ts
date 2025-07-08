@@ -11,7 +11,7 @@ export const useCurrency = () => {
  },[]);
 
  const getList = async () => {
-  await axios.get(`/${url}/v1/currency/list`)
+  await axios.get(`/${url}/v1/currency/currency-with-country`)
   .then(result => {
   if(result.data.status == 201) {
     setCurrencyList(result?.data?.data);
