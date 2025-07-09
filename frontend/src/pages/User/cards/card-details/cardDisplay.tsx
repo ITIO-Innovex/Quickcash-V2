@@ -31,6 +31,7 @@ interface CardDisplayProps {
   prevCard: () => void;
   nextCard: () => void;
   setCurrentCardIndex: (index: number) => void;
+  onRefreshCards?: () => void;
 }
 interface CardDetails {
   _id: string;
@@ -50,15 +51,11 @@ interface CardDetails {
 
 const CardDisplay: React.FC<CardDisplayProps> = ({
   currentCardIndex,
+  cardsDetails,
   prevCard,
   nextCard,
   setCurrentCardIndex,
-}: {
-  currentCardIndex: number;
-  cardsDetails: any[];
-  prevCard: () => void;
-  nextCard: () => void;
-  setCurrentCardIndex: (index: number) => void;
+  onRefreshCards,
 }) => {
 
   const theme = useTheme();
@@ -67,11 +64,9 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
     import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
   const navigate = useNavigate();
 
-  const [cardsDetails, setCardDetails] = useState<CardDetails[]>([]);
   const [flippedCard, setFlippedCard] = useState<string | null>(null);
   const [frozenCards, setFrozenCards] = React.useState<string[]>([]);
   const [currentBalance, setCurrentBalance] = useState(0);
-  const [pin, setPin] = React.useState<string>("");
   const [viewCrd, setViewCrd] = React.useState<CardDetails | null>(null);
 
   const [transactionCardDetails, setTransactionCardDetails] =
@@ -107,46 +102,13 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
 
 
 
-  // Fetch cards list on component mount
+  // Update frozen cards when cardsDetails changes
   useEffect(() => {
-    const fetchCards = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          navigate("/");
-          return;
-        }
-        const accountId = jwtDecode<JwtPayload>(token)?.data?.id;
-        if (!accountId) {
-          navigate("/");
-          return;
-        }
-
-        const result = await api.get(`/${url}/v1/card/list/${accountId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (result.data.status === 201) {
-          const cards = result.data.data;
-          setCardDetails(cards);
-          const frozenIds = cards.filter(c => c.isFrozen).map(c => c._id);
-          setFrozenCards(frozenIds);
-        }
-        else {
-          toast.error("Failed to fetch cards");
-        }
-      } catch (error: any) {
-        if (error.response?.data?.status === 403) {
-          localStorage.clear();
-          navigate("/");
-        } else {
-          toast.error(error.response?.data?.message || "Error fetching cards");
-        }
-      }
-    };
-
-    fetchCards();
-  }, [navigate, url]);
+    if (cardsDetails && cardsDetails.length > 0) {
+      const frozenIds = cardsDetails.filter(c => c.isFrozen).map(c => c._id);
+      setFrozenCards(frozenIds);
+    }
+  }, [cardsDetails]);
 
   // const nextCard = () => {
   //   setCurrentCard((prev) => (cardsDetails.length ? (prev + 1) % cardsDetails.length : 0));
@@ -169,31 +131,9 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
     localStorage.getItem("token") as string
   );
   const getCardsList = async () => {
-
-    await api
-      .get(`/${url}/v1/card/list/${accountId?.data?.id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      })
-      .then((result) => {
-        if (result.data.status === 201) {
-          const cards = result.data.data;
-          setCardDetails(cards);
-          const frozenIds = cards.filter(c => c.isFrozen).map(c => c._id);
-          setFrozenCards(frozenIds);
-        }
-
-      })
-      .catch((error) => {
-        console.log("error", error);
-        if (error.response.data.status == 403) {
-          localStorage.clear();
-          navigate("/");
-        } else {
-          toast.error(error.response.data.message);
-        }
-      });
+    if (onRefreshCards) {
+      onRefreshCards();
+    }
   };
   const handleFreezeCard = async () => {
     const activeCard = cardsDetails[currentCardIndex] as CardDetails | undefined;
@@ -326,7 +266,6 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
 
   const handleTransactionLimitClick = () => {
     const activeCard = cardsDetails[currentCardIndex];
-    console.log("ActiveCard", currentCardIndex);
     if (activeCard) {
       setTransactionCardDetails(activeCard);
       setIsTransactionModalOpen(true);
@@ -392,14 +331,10 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           pin,
           cardId: cardId,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+      
       );
 
-      if (response.data.status === "201") {
+      if (response.data.status === 201) {
         toast.success("Card Pin has been updated Successfully");
         setIsSetPinModalOpen(false);
       }
@@ -639,7 +574,8 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           accountId={accountId}
           url={url}
           setLoadCardDetails={setLoadCardDetails}
-          setCardDetails={setCardDetails}
+          onRefreshCards={onRefreshCards}
+          onClose={handleCloseLoadCard}
           alertnotify={toast}
           currencySymbols={currencySymbols}
         />
@@ -669,10 +605,8 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           cardHolder={cardsDetails[currentCardIndex]?.name || "John Doe"}
           expiryDate={cardsDetails[currentCardIndex]?.expiry || "12/25"}
           onSubmit={(pin) => {
-            HandleChangePin(currentCardIndex.toString(), pin);
-
+            HandleChangePin(cardsDetails[currentCardIndex]?._id || '', pin);
           }}
-
         />
       </CustomModal>
     </>

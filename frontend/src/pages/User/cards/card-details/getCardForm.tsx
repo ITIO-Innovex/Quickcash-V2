@@ -8,15 +8,42 @@ import {
   Stack,
 } from '@mui/material';
 import CustomTextField from '@/components/CustomTextField';
+import axios from 'axios';
+import { useAppToast } from '@/utils/toast';
+import { jwtDecode } from 'jwt-decode';
+import api from '@/helpers/apiHelper';
+
+interface JwtPayload {
+  sub: string;
+  role: string;
+  iat: number;
+  exp: number;
+  data: {
+    defaultcurr: string;
+    email: string;
+    id: string;
+    name: string;
+    type: string;
+  };
+}
 
 interface GetCardFormProps {
   onClose: () => void;
   currencyOptions: string[];
+  onCardCreated?: () => void;
+  cardType: 'virtual' | 'physical'; // use cardType everywhere
 }
 
 interface Errors {
   name?: string;
   currency?: string;
+}
+
+const token = localStorage.getItem("token");
+let accountId: JwtPayload | null = null;
+
+if (token && typeof token === "string") {
+  accountId = jwtDecode<JwtPayload>(token);
 }
 
 const formatCardNumber = (num: string): string => {
@@ -143,7 +170,10 @@ const CardDisplay: React.FC<{
   );
 };
 
-const GetCardForm: React.FC<GetCardFormProps> = ({ onClose, currencyOptions }) => {
+const GetCardForm: React.FC<GetCardFormProps> = ({ onClose, currencyOptions, onCardCreated, cardType }) => {
+  const toast = useAppToast();
+  const url: string = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
+  
   const [state, setState] = useState({
     number: '',
     expiry: '',
@@ -154,6 +184,7 @@ const GetCardForm: React.FC<GetCardFormProps> = ({ onClose, currencyOptions }) =
 
   const [errors, setErrors] = useState<Errors>({});
   const [generateMode, setGenerateMode] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validate = (name: string, value: string): string => {
     switch (name) {
@@ -209,6 +240,48 @@ const GetCardForm: React.FC<GetCardFormProps> = ({ onClose, currencyOptions }) =
     setGenerateMode(false);
   };
 
+  const HandleCreateCard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    let valGet = "";
+    if (state.number.length < 16) {
+      valGet = "0".repeat(16 - state.number.length) + state.number;
+    } else {
+      valGet = state.number;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const response = await api.post(
+        `/${url}/v1/card/add`,
+        {
+          name: state.name,
+          user: accountId?.data?.id,
+          cardnumber: valGet,
+          expiry: state.expiry,
+          cvv: state.cvc,
+          account: accountId?.data?.id,
+          currency: state.currency,
+          cardType: cardType, // <-- use cardType, not type
+        },
+      );
+
+      if (response.data.status === 201) {
+        toast.success(response.data.message);
+        onCardCreated?.();
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error creating card:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Failed to create card. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = () => {
     const nameError = validate('name', state.name);
     const currencyError = validate('currency', state.currency);
@@ -217,18 +290,8 @@ const GetCardForm: React.FC<GetCardFormProps> = ({ onClose, currencyOptions }) =
 
     if (nameError || currencyError) return;
 
-    console.log('Submitting card details:', state);
-
-    // Reset form
-    setState({
-      number: '',
-      expiry: '',
-      cvc: '',
-      name: '',
-      currency: '',
-    });
-    setGenerateMode(true);
-    onClose();
+    // Call the API to create the card
+    HandleCreateCard(new Event('submit') as any);
   };
 
   return (
@@ -290,8 +353,9 @@ const GetCardForm: React.FC<GetCardFormProps> = ({ onClose, currencyOptions }) =
           variant="contained"
           sx={{ mt: 2 }}
           onClick={handleSubmit}
+          disabled={isSubmitting}
         >
-          SUBMIT
+          {isSubmitting ? 'CREATING CARD...' : 'SUBMIT'}
         </Button>
       )}
     </Box>

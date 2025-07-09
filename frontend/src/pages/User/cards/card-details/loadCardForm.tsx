@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Button,
-  TextField,
   MenuItem,
   InputAdornment,
   useTheme,
@@ -14,6 +12,7 @@ import CustomTextField from '@/components/CustomTextField';
 import CustomButton from '@/components/CustomButton';
 import api from '@/helpers/apiHelper';
 import { useAppToast } from '@/utils/toast';
+import { useFee } from '@/hooks/useFee';
 
 const currencyRates: { [key: string]: number } = {
   USD: 1,
@@ -28,7 +27,8 @@ const LoadCardForm = ({
   accountId,
   url,
   setLoadCardDetails,
-  setCardDetails,
+  onRefreshCards,
+  onClose,
   alertnotify,
   currencySymbols,
 }) => {
@@ -43,6 +43,11 @@ const LoadCardForm = ({
   const [cardBalance, setCardBalance] = useState<number | { $numberDecimal: string }>(
     loadCardDetails?.cardBalance || 0
   );
+  const DepositFeesd = useFee("Deposit");
+  const [accountBalance, setAccountBalance] = useState<number | { $numberDecimal: string }>(0);
+  const [convValue, setConvValue] = useState<number>(0);
+  const [acctDetails, setAcctDetails] = useState<any>(null);
+  const [currencyType, setCurrencyType] = useState<string>(selectedCurrency);
   useEffect(() => {
     if (loadCardDetails?.amount !== undefined) {
       const balance = parseFloat(loadCardDetails.amount);
@@ -58,22 +63,73 @@ const LoadCardForm = ({
 
   useEffect(() => {
     const account = availableAccounts.find((acc) => acc.currency === selectedCurrency);
-    if (account) setSelectedAccount(account._id);
+    if (account) {
+      setSelectedAccount(account._id);
+      setAccountBalance(account.amount);
+      setAcctDetails(account);
+      setCurrencyType(account.currency);
+    }
   }, [selectedCurrency, availableAccounts]);
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = parseFloat(e.target.value);
-    setAmount(inputValue || 0);
+  const HandleAmount = async (amt_val: any) => {
+    const parsedAmount = parseFloat(amt_val) || 0;
+    setAmount(parsedAmount);
+    let feeVal = 0;
+    let feeType = "";
 
-    if (inputValue > 0) {
-      const converted: { [key: string]: number } = {};
-      Object.keys(currencyRates).forEach((currency) => {
-        converted[currency] =
-          inputValue * (currencyRates[currency] / currencyRates[selectedCurrency]);
-      });
-      setConvertedAmounts(converted);
+    if (DepositFeesd?.feeCommision) {
+      feeVal = DepositFeesd?.feeCommision?.value;
+      feeType = DepositFeesd?.feeCommision?.commissionType;
+    }
+
+    let feeCharge: number;
+    if (feeType === "percentage") {
+      feeCharge = (parsedAmount * parseFloat(feeVal as any)) / 100;
     } else {
-      setConvertedAmounts({});
+      feeCharge = parseFloat(feeVal as any);
+    }
+
+    const minFeecharge =
+      feeCharge >= DepositFeesd?.feeCommision?.minimumValue
+        ? feeCharge
+        : DepositFeesd?.feeCommision?.minimumValue;
+
+    if (acctDetails?.currency !== loadCardDetails?.currency) {
+      setDepositFee(minFeecharge);
+      calCulateExChangeCurrencyValue(parsedAmount, minFeecharge);
+    } else {
+      setDepositFee(minFeecharge);
+      setConvValue(0); // No conversion needed
+    }
+  };
+
+  const calCulateExChangeCurrencyValue = async (amt: any, valDeposit: any) => {
+   if (!acctDetails || !loadCardDetails?.currency) return;
+
+    const options = {
+      method: "GET",
+      url: "https://currency-converter18.p.rapidapi.com/api/v1/convert",
+      params: {
+        from: acctDetails.currency, // FROM: selected account currency
+        to: loadCardDetails.currency, // TO: card currency
+        amount: amt,
+      },
+      headers: {
+        "X-RapidAPI-Key": import.meta.env.VITE_RAPID_API_KEY,
+        "X-RapidAPI-Host": import.meta.env.VITE_RAPID_API_HOST,
+      },
+    };
+
+    console.log("API options:", options);
+
+    try {
+      const response = await axios.request(options);
+      console.log("API response:", response.data);
+      if (response.data.success) {
+        setConvValue(response.data.result.convertedAmount);
+      }
+    } catch (error) {
+      console.error("API error:", error);
     }
   };
 
@@ -96,11 +152,7 @@ const LoadCardForm = ({
         const response = await api.patch(
           `/${url}/v1/card/update-amount/${loadCardDetails._id}`,
           { amount, currency: selectedCurrency },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
-            },
-          }
+          
         );
         if (response.data.status) {
           toast.success('Amount updated successfully');
@@ -119,13 +171,17 @@ const LoadCardForm = ({
               prev ? { ...prev, cardBalance: parsedBalance } : null
             );
 
-            setCardDetails((prevCards) =>
-              prevCards.map((card) =>
-                card._id === loadCardDetails._id
-                  ? { ...card, cardBalance: parsedBalance }
-                  : card
-              )
-            );
+            if (onRefreshCards) {
+              // Add a small delay to ensure the API has processed the update
+              setTimeout(() => {
+                onRefreshCards();
+              }, 500);
+            }
+          }
+          
+          // Close the modal after successful submission
+          if (onClose) {
+            onClose();
           }
         }
 
@@ -150,6 +206,7 @@ const LoadCardForm = ({
       ? parseFloat(value.$numberDecimal).toFixed(2)
       : parseFloat(value).toFixed(2);
 
+  console.log("Render: acctDetails", acctDetails, "card currency", loadCardDetails?.currency, "amount", amount, "convValue", convValue);
   return (
     <Box className="load-card-modal">
       <Box className="form-row">
@@ -173,7 +230,7 @@ const LoadCardForm = ({
         <Box className="form-group">
           {/* <label>Balance</label> */}
           <CustomTextField
-            value={`${currencySymbols[selectedCurrency] || ''} ${formatDecimalValue(cardBalance)}`}
+            value={`${currencySymbols[selectedCurrency] || ''} ${formatDecimalValue(accountBalance)}`}
             disabled
             fullWidth
             size="small"
@@ -186,7 +243,7 @@ const LoadCardForm = ({
         <CustomTextField
           type="number"
           value={amount}
-          onChange={handleAmountChange}
+          onChange={e => HandleAmount(e.target.value)}
           placeholder={`${currencySymbols[selectedCurrency] || ''} 0`}
           fullWidth
           size="small"
@@ -208,8 +265,7 @@ const LoadCardForm = ({
           Amount: {currencySymbols[selectedCurrency] || ''} {amount.toFixed(2)}
         </span>
         <span>
-          Conversion: {currencySymbols[selectedCurrency] || ''}{' '}
-          {convertedAmounts[selectedCurrency]?.toFixed(2) || '0.00'}
+          Conversion: {currencySymbols[loadCardDetails.currency] || loadCardDetails.currency} {convValue ? convValue.toFixed(2) : '0.00'}
         </span>
       </Box>
 

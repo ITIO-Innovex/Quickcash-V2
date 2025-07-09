@@ -6,6 +6,7 @@ import { useAccount } from './useAccount';
 import { jwtDecode } from 'jwt-decode';
 import CustomButton from '@/components/CustomButton';
 import api from '@/helpers/apiHelper';
+import CardList from './cardList';
 
 interface JwtPayload {
   sub: string;
@@ -47,16 +48,18 @@ if (token && typeof token === "string") {
 interface CardBalanceProps {
   card: any;
   loading?: boolean;
+  onRefreshCards?: () => void;
 }
 
-const CardBalance: React.FC<CardBalanceProps> = ({ card }) => {
+const CardBalance: React.FC<CardBalanceProps> = ({ card, onRefreshCards }) => {
 
   const theme = useTheme();
   const url: string =
     import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
 
+
   const { list: accounts } = useAccount(accountId?.data?.id);
-  const [cards, setCards] = useState<any[]>([]);
+  const [cardList, setCardList] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [cardType, setCardType] = useState<'virtual' | 'physical'>('virtual');
@@ -72,6 +75,23 @@ const CardBalance: React.FC<CardBalanceProps> = ({ card }) => {
     }
   }, [accounts]);
 
+  const fetchCardList = async () => {
+    setLoading(true);
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    const decoded = jwtDecode<JwtPayload>(token);
+    const accountId = decoded.data.id;
+    const res = await api.get(`/api/v1/card/list/${accountId}`);
+    if (res.data.status === 201) {
+      setCardList(res.data.data);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchCardList();
+  }, []);
+
   const handleGetCardClick = () => {
     setIsModalOpen(true);
   };
@@ -79,34 +99,28 @@ const CardBalance: React.FC<CardBalanceProps> = ({ card }) => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
-  useEffect(() => {
-    const fetchCards = async () => {
-      if (!accountId?.data?.id) return;
 
-      setLoading(true);
-      try {
-        const response = await api.get(`/${url}/${accountId.data.id}`);
-        const data = response.data;
-
-        if (data.status === 201) {
-          setCards(data.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch cards", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCards();
-  }, [accountId]);
+  const handleCardCreated = () => {
+    fetchCardList(); // refresh list after card is added
+    if (onRefreshCards) onRefreshCards();
+  };
   const formatDecimalValue = (value: number): string => {
     return value.toFixed(2);
   };
   const renderCurrencyAmount = (loading, value, currency) => {
     if (loading) return 'Loading...';
     const symbol = currencySymbols[currency] || currency || '₹';
-    const formatted = typeof value === 'number' ? formatDecimalValue(value) : '0.00';
+    
+    let numericValue = 0;
+    if (typeof value === 'number') {
+      numericValue = value;
+    } else if (typeof value === 'object' && value && '$numberDecimal' in value) {
+      numericValue = parseFloat(value.$numberDecimal);
+    } else if (typeof value === 'string') {
+      numericValue = parseFloat(value) || 0;
+    }
+    
+    const formatted = formatDecimalValue(numericValue);
     return `${symbol} ${formatted}`;
   };
 
@@ -160,7 +174,7 @@ const CardBalance: React.FC<CardBalanceProps> = ({ card }) => {
             <Box className="balance-row" sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography className="balance-label">Card Balance</Typography>
               <Typography variant="h6" color="success.main">
-                {renderCurrencyAmount(loading, card?.amount, card?.currency)}
+                {renderCurrencyAmount(loading, card?.cardBalance || card?.amount, card?.currency)}
 
 
               </Typography>
@@ -187,7 +201,12 @@ const CardBalance: React.FC<CardBalanceProps> = ({ card }) => {
         maxWidth="sm"
         sx={{ backgroundColor: theme.palette.background.default }}
       >
-        <GetCardForm onClose={handleCloseModal} currencyOptions={currencyOptions} />
+        <GetCardForm 
+          onClose={handleCloseModal} 
+          currencyOptions={currencyOptions} 
+          onCardCreated={handleCardCreated}
+          cardType={cardType}
+        />
       </CustomModal>
     </>
   );

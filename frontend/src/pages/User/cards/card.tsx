@@ -209,7 +209,7 @@ const Cards: React.FC = () => {
         maxWidth="sm"
         sx={{ backgroundColor: theme.palette.background.default }}
       >
-        <GetCardForm onClose={handleCloseModal} currencyOptions={currencyOptions} />
+       <GetCardForm onClose={handleCloseModal} currencyOptions={currencyOptions} cardType={selectedCardType} />
       </CustomModal>
     </>
     // </Container>

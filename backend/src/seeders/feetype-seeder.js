@@ -42,6 +42,12 @@ async function seedFeeType() {
             slug: "Swap",
             status: "active"
         },
+        {
+            description: "Deposit",
+            title: "Deposit",
+            slug: "Deposit",
+            status: "active"
+        },
     ]
 
      // Connect to the database
