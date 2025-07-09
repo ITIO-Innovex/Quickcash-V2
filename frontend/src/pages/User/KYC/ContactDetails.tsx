@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import 'react-phone-input-2/lib/style.css'; 
 import PhoneInput from 'react-phone-input-2';
+import { loadAndStoreKycData } from '@/api/kyc.api';
 import CustomButton from '@/components/CustomButton';
-import CustomInput from '@/components/CustomInputField';
 import EmailVerifyModal from '@/modal/emailVerifyModal';
 import OTPVerificationModal from '@/modal/otpVerificationModal';
 import { Box, Typography, Grid, useTheme } from '@mui/material';
@@ -28,61 +28,60 @@ const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [verificationTarget, setVerificationTarget] = useState<'primary' | 'additional'>('primary');
-
   
   React.useEffect(() => {
   const userData = localStorage.getItem('userData');
   if (userData) {
     try {
       const parsed = JSON.parse(userData);
-      if (parsed.email) setEmail(parsed.email);
-    } catch (err) {
-      console.error('[❌ ERROR PARSING userData]:', err);
-    }
-  }
-
-  // Load verified contact info
-  const kycData = localStorage.getItem('KycData');
-  if (kycData) {
-    try {
-      const parsed = JSON.parse(kycData);
-
       if (parsed.email) {
         setEmail(parsed.email);
-        setIsEmailVerified(true); // 🟢 Important
-      }
-
-      if (parsed.phone) {
-        const [primaryCode, ...primaryNumberParts] = parsed.phone.split(' ');
-        setPrimaryCountryCode(primaryCode);
-        setPrimaryPhone(primaryNumberParts.join(' '));
-        setIsPrimaryPhoneVerified(true);
-      }
-
-      if (parsed.additionalPhone) {
-        const [additionalCode, ...additionalNumberParts] = parsed.additionalPhone.split(' ');
-        setAdditionalCountryCode(additionalCode);
-        setAdditionalPhone(additionalNumberParts.join(' '));
-        setIsAdditionalPhoneVerified(true);
       }
     } catch (err) {
-      console.error('[❌ ERROR PARSING KycData]:', err);
+      console.error('[❌ ERROR PARSING userData]:', err);
     }
   }
 }, []);
-  
-  React.useEffect(() => {
-  const userData = localStorage.getItem('userData');
-  if (userData) {
-    try {
-      const parsed = JSON.parse(userData);
-      if (parsed.email) {
-        setEmail(parsed.email);
+
+React.useEffect(() => {
+  const fetchKyc = async () => {
+    const data = await loadAndStoreKycData(); // API + localStorage update
+    if (data) {
+      if (data.email) {
+        setEmail(data.email);
+        setIsEmailVerified(data.emailVerified);
       }
-    } catch (err) {
-      console.error('[❌ ERROR PARSING userData]:', err);
+
+      if (data.phone) {
+        const primaryCode = data.phone.slice(0, 3); // "+91"
+        const primaryRest = data.phone.slice(3); // "7894561230"
+        setPrimaryCountryCode(primaryCode);
+        setPrimaryPhone(primaryRest);
+        setIsPrimaryPhoneVerified(data.phonePVerified);
+      }
+
+      if (data.additionalPhone) {
+        const additionalCode = data.additionalPhone.slice(0, 3);
+        const additionalRest = data.additionalPhone.slice(3);
+        setAdditionalCountryCode(additionalCode);
+        setAdditionalPhone(additionalRest);
+        setIsAdditionalPhoneVerified(data.phoneSVerified);
+      }
+    } else {
+      // Naya user - Check userData (fallback)
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        try {
+          const parsed = JSON.parse(userData);
+          if (parsed.email) setEmail(parsed.email);
+        } catch (err) {
+          console.error('[❌ ERROR PARSING userData]:', err);
+        }
+      }
     }
-  }
+  };
+
+  fetchKyc();
 }, []);
 
   const handleVerifyClick = (target: 'email' | 'primary' | 'additional') => {
@@ -96,15 +95,49 @@ const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
       setOtpModalOpen(true);
     }
   };
+  
+  React.useEffect(() => {
+  const kycLocal = localStorage.getItem('KycData');
+  if (kycLocal) {
+    try {
+      const parsed = JSON.parse(kycLocal);
+      if (parsed.email) setEmail(parsed.email);
+      if (parsed.phone) {
+        setPrimaryCountryCode(parsed.phone.slice(0, 3));
+        setPrimaryPhone(parsed.phone.slice(3));
+      }
+      if (parsed.additionalPhone) {
+        setAdditionalCountryCode(parsed.additionalPhone.slice(0, 3));
+        setAdditionalPhone(parsed.additionalPhone.slice(3));
+      }
+      if (parsed.emailVerified) setIsEmailVerified(true);
+      if (parsed.phonePVerified) setIsPrimaryPhoneVerified(true);
+      if (parsed.phoneSVerified) setIsAdditionalPhoneVerified(true);
+    } catch (err) {
+      console.error('[❌ ERROR PARSING KycData for restoration]:', err);
+    }
+  }
+}, []);
 
-  const handleOtpVerifySuccess = () => {
-  const updatedData = {
+  React.useEffect(() => {
+  const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
+  const updated = {
+    ...existing,
     email,
-    phone: `${primaryCountryCode} ${primaryPhone}`,
-    additionalPhone: `${additionalCountryCode} ${additionalPhone}`,
+    phone: `${primaryCountryCode}${primaryPhone}`,
+    additionalPhone: `${additionalCountryCode}${additionalPhone}`,
   };
+  localStorage.setItem('KycData', JSON.stringify(updated));
+}, [email, primaryPhone, additionalPhone, primaryCountryCode, additionalCountryCode]);
 
-  localStorage.setItem('KycData', JSON.stringify(updatedData));
+const handleOtpVerifySuccess = () => {
+  const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
+  const updated = {
+    ...existing,
+    phone: `${primaryCountryCode}${primaryPhone}`,
+    additionalPhone: `${additionalCountryCode}${additionalPhone}`,
+  };
+  localStorage.setItem('KycData', JSON.stringify(updated));
 
   if (verificationTarget === 'primary') {
     setIsPrimaryPhoneVerified(true);
@@ -115,7 +148,7 @@ const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
   setOtpModalOpen(false);
 };
 
- const handleEmailVerifySuccess = () => {
+const handleEmailVerifySuccess = () => {
   setIsEmailVerified(true);
   setEmailModalOpen(false);
 
@@ -128,6 +161,8 @@ const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
       ? `${primaryCountryCode} ${primaryPhone}`
       : `${additionalCountryCode} ${additionalPhone}`;
   };
+
+
 
   return (
     <Box className="contact-details-container">

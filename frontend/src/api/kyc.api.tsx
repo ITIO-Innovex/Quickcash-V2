@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { jwtDecode } from "jwt-decode";
+const url = import.meta.env.VITE_NODE_ENV === 'production' ? 'api' : 'api';
 
 export const loadAndStoreKycData = async () => {
   try {
@@ -9,7 +10,7 @@ export const loadAndStoreKycData = async () => {
     const decoded = jwtDecode<{ data: { id: string } }>(token);
     const userId = decoded?.data?.id;
 
-    const response = await axios.get(`/your-backend-url/v1/kyc/getData/${userId}`, {
+    const response = await axios.get(`/${url}/v1/kyc/getData/${userId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
