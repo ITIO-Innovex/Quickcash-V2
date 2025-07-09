@@ -53,6 +53,7 @@ import InvoiceDashboard from '@/pages/User/InvoiceDashboard/Dashboard';
 import SendMoney from '@/pages/User/dashboardInsideForms/sendMoney/main';
 import InvoiceSection from '@/pages/User/InvoiceDashboard/Invoices/main';
 import TotalTransactions from '@/pages/Admin/Fiat/TotalTransactions/main';
+import NewInvoice from '@/pages/User/InvoiceDashboard/Invoices/NewInvoice';
 import AddQuote from '@/pages/User/InvoiceDashboard/InvoiceQuote/AddQuote';
 import UserProfileDetails from '@/pages/Admin/UserList/ProfileDetails/main';
 import InvoiceQuotes from '@/pages/User/InvoiceDashboard/InvoiceQuote/main';
@@ -177,6 +178,7 @@ const authRoutes = [
   { path: '/manual-payment', element: <ManualPayment /> },
   { path: '/beneficiary', element: <SelectBeneficiary /> },
   { path: '/invoice-section', element: <InvoiceSection /> },
+  { path: '/new-invoice', element: <NewInvoice /> },
   { path: '/buysellswap/proceed', element: <ProceedPage /> },
   { path: '/invoice-products', element: <InvoiceProduct /> },
   { path: '/invoice-category', element: <InvoiceCategory /> },

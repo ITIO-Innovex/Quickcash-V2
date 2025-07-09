@@ -12,16 +12,17 @@ interface InvoiceActionsProps {
 const InvoiceActions: React.FC<InvoiceActionsProps> = ({ activeTab }) => {
   const navigate = useNavigate();
 
-  const handleNewClick = () => {
+ const handleNewClick = () => {
   if (activeTab === 'invoice') {
-    navigate('/invoice-section');
+    navigate('/new-invoice');
   } else {
-    console.log('Quote selected – no navigation');
+    navigate('/add-quote'); 
   }
 };
+
   return (
     <Box className="invoice-actions">
-      <CustomButton>
+      <CustomButton onClick={handleNewClick}>
         <Add style={{ marginRight: '8px' }} />
         New {activeTab === 'invoice' ? 'Invoice' : 'Quote'}
       </CustomButton>

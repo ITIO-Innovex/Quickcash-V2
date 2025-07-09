@@ -140,7 +140,7 @@ const OTPVerificationModal: React.FC<OTPVerificationModalProps> = ({
 
         {/* 🔽 Test OTP visible in scrolling box */}
         <Box className="scroll-container" style={{ marginTop: '16px', marginBottom: '8px' }}>
-          <Typography className="scroll-text" style={{ color: 'red', fontWeight: 600 }}>
+          <Typography className="scroll-text" >
             [TEST OTP: {generatedOtp}]
           </Typography>
         </Box>

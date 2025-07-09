@@ -8456,4 +8456,8 @@ color: var(--bs-primary);
   color: #fff;
   border-color: #ef5350;
 }
+.file-name-text {
+  font-size: 14px;
+  color: #555;
+}
 

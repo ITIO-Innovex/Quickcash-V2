@@ -28,6 +28,7 @@ const ResidentialAddress: React.FC<ResidentialAddressProps> = ({ onBack, frontDo
   const [document, setDocument] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState('Bank Statement');
   const [errors, setErrors] = useState<{ documentType?: string; document?: string }>({});
+  const [documentFileName, setDocumentFileName] = useState('');
 
   const validate = () => {
     const newErrors: typeof errors = {};
@@ -46,6 +47,30 @@ const ResidentialAddress: React.FC<ResidentialAddressProps> = ({ onBack, frontDo
   const handleBack = () => {
     onBack();
   };
+
+  React.useEffect(() => {
+  const kycData = localStorage.getItem('KycData');
+  if (kycData) {
+    try {
+      const parsed = JSON.parse(kycData);
+
+      // ✅ Restore address document type
+      if (parsed.addressDocumentType) {
+        setDocumentType(parsed.addressDocumentType);
+      }
+
+      // ✅ Restore uploaded file name (just the name, file can't be restored fully)
+      if (parsed.addressDocumentName) {
+        setDocumentFileName(parsed.addressDocumentName);
+        setDocument(null); // We can't restore File object itself
+      }
+
+      console.log('[✅ Restored Address Proof from KycData]');
+    } catch (err) {
+      console.error('[❌ Error parsing KycData]', err);
+    }
+  }
+}, []);
 
 const handleUpdate = async () => {
    if (!validate()) return;
@@ -124,9 +149,17 @@ const handleUpdate = async () => {
               options={documentTypes}
               value={documentType}
                onChange={(e) => {
-                setDocumentType(e.target.value as string);
-                setErrors({ ...errors, documentType: '' });
-              }}
+              const value = e.target.value as string;
+              setDocumentType(value);
+              setErrors({ ...errors, documentType: '' });
+
+              const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
+              const updated = {
+                ...existing,
+                addressDocumentType: value,
+              };
+              localStorage.setItem('KycData', JSON.stringify(updated));
+            }}
             />
             {errors.documentType && (
               <Typography className="error-text" style={{ color: 'red', fontSize: '0.8rem' }}>
@@ -139,14 +172,42 @@ const handleUpdate = async () => {
         <Grid item xs={12}>
           <Box className="input-section">
             <Typography className="input-label">UPLOAD DOCUMENT</Typography>
-             <FileUpload
-              onFileSelect={(file) => {
+            <FileUpload
+           onFileSelect={(file) => {
+                if (!file) return;
+
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+                const isAllowed = allowedTypes.includes(file.type);
+
+                if (!isAllowed) {
+                  toast.error('Please upload supported file type (.jpg, .jpeg, .png, .pdf)');
+                  return;
+                }
+
+                const fileName = `residential-document-${Date.now()}-${file.name}`;
                 setDocument(file);
+                setDocumentFileName(fileName);
                 setErrors({ ...errors, document: '' });
+
+                // Save to localStorage
+                const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
+                const updated = {
+                  ...existing,
+                  addressDocumentName: fileName,
+                  addressDocumentType: documentType,
+                };
+                localStorage.setItem('KycData', JSON.stringify(updated));
+
+                console.log('[📤 Residential Address File Selected]:', fileName);
               }}
-              selectedFile={document}
-              acceptedFormats=".jpg,.jpeg,.png,.pdf"
-            />
+            selectedFile={document}
+            acceptedFormats=".jpg,.jpeg,.png,.pdf"
+          />
+            {documentFileName && (
+              <Typography className="file-name-text" sx={{ mt: 1, fontSize: '14px', color: '#555' }}>
+                Selected file: <strong>{documentFileName}</strong>
+              </Typography>
+            )}
             {errors.document && (
               <Typography className="error-text" style={{ color: 'red', fontSize: '0.8rem' }}>
                 {errors.document}
@@ -158,7 +219,7 @@ const handleUpdate = async () => {
         <Grid item xs={12}>
           <Box className="upload-note">
             <Typography className="upload-note-text">
-              <strong>Notes:</strong> Upload the selected document in .jpg, .jpeg or .pdf format. Max size: 5MB.
+              <strong>Notes:</strong> Upload the selected document in .jpg, .jpeg, .png or .pdf format. Max size: 5MB.
             </Typography>
           </Box>
         </Grid>
