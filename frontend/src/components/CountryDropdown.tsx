@@ -20,6 +20,7 @@ interface CountryOption {
   countryName: string;
   status: boolean;
   defaultc: boolean;
+  base_code: any;
 }
 
 interface CountryDropdownProps extends Omit<MuiSelectProps, 'variant'> {
@@ -44,7 +45,7 @@ const CountryDropdown: React.FC<CountryDropdownProps> = ({
 }) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
-
+console.log(`Currency: ${JSON.stringify(countries)}` )
   // Function to get balance for a specific currency
   const getBalanceForCurrency = (currency: string) => {
     const account = userAccounts.find((acc: any) => acc.currency === currency);
@@ -88,7 +89,7 @@ const CountryDropdown: React.FC<CountryDropdownProps> = ({
         }}
       >
         {countries.map((country) => (
-          <MenuItem key={country._id} value={country.currency}>
+          <MenuItem key={country._id} value={country.base_code}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%', justifyContent: 'space-between' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 {showFlag && (
@@ -97,13 +98,13 @@ const CountryDropdown: React.FC<CountryDropdownProps> = ({
                   </Box>
                 )}
                 <Typography>
-                  {getSymbolFromCurrency(country.currency)}
-                  {showCurrency && ` ${country.currency}`}
+                  {getSymbolFromCurrency(country.base_code)}
+                  {showCurrency && ` ${country.base_code}`}
                 </Typography>
               </Box>
               {showBalance && (
                 <Typography variant="body2" sx={{ color: theme.palette.success.main, fontWeight: 'bold' }}>
-                  {getSymbolFromCurrency(country.currency)}{getBalanceForCurrency(country.currency)}
+                  {getSymbolFromCurrency(country.base_code)}{getBalanceForCurrency(country.currency)}
                 </Typography>
               )}
             </Box>
