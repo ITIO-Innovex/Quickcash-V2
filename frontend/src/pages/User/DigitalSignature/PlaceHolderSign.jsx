@@ -69,6 +69,24 @@ import AsyncSelect from "react-select/async";
 import AddContact from "../primitives/AddContact";
 import { API_ROUTES } from "@/pages/User/constant/apiRoutes";
 
+// Add this wrapper component at the top of the file, after the imports
+const TourWrapper = ({ children, ...props }) => {
+  // Filter out the helperPosition prop to prevent React warnings
+  const { helperPosition: _helperPosition, ...filteredProps } = props;
+  return React.cloneElement(children, filteredProps);
+};
+
+// Add this helper function at the top (after imports)
+function arrayBufferToBase64(buffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary);
+}
+
 function PlaceHolderSign() {
   const copyUrlRef = useRef(null);
   const appName =
@@ -282,14 +300,49 @@ function PlaceHolderSign() {
       }
 
       const url = documentData[0] && documentData[0]?.URL;
+      console.log('PlaceHolderSign: Document URL:', url);
+      
       //convert document url in array buffer format to use embed widgets in pdf using pdf-lib
       const arrayBuffer = await convertPdfArrayBuffer(url);
-      const base64Pdf = await getBase64FromUrl(url);
-      if (arrayBuffer === "Error") {
-        setHandleError(("Something went wrong"));
-      } else {
+      
+      if (arrayBuffer === "Error" || !arrayBuffer || arrayBuffer.byteLength < 1000) {
+        console.error('PlaceHolderSign: Failed to convert PDF to array buffer');
+        setHandleError("Unable to load PDF document. Please check if the document URL is accessible and try again.");
+        setIsLoading({ isLoad: false });
+        return; // Exit early to prevent further processing
+      }
+      
+      // Try to get base64, but fallback to arrayBuffer if it fails
+      let base64Pdf;
+      try {
+        base64Pdf = await getBase64FromUrl(url);
+        if (base64Pdf && typeof base64Pdf === 'string' && base64Pdf.length > 100) {
+          setPdfArrayBuffer(arrayBuffer);
+          setPdfBase64Url(base64Pdf);
+          console.log('PlaceHolderSign: Successfully loaded PDF (base64 and buffer)');
+        } else {
+          // Fallback: show editor with arrayBuffer only
+          setPdfArrayBuffer(arrayBuffer);
+          // Try to convert arrayBuffer to base64 and set it
+          if (arrayBuffer) {
+            const base64FromBuffer = arrayBufferToBase64(arrayBuffer);
+            setPdfBase64Url(base64FromBuffer);
+            console.warn('PlaceHolderSign: Invalid base64 PDF data received, using arrayBuffer converted to base64');
+          } else {
+            setPdfBase64Url(null);
+          }
+        }
+      } catch (base64Error) {
+        // Fallback: show editor with arrayBuffer only
         setPdfArrayBuffer(arrayBuffer);
-        setPdfBase64Url(base64Pdf);
+        // Try to convert arrayBuffer to base64 and set it
+        if (arrayBuffer) {
+          const base64FromBuffer = arrayBufferToBase64(arrayBuffer);
+          setPdfBase64Url(base64FromBuffer);
+          console.warn('PlaceHolderSign: Failed to get base64 PDF, using arrayBuffer converted to base64:', base64Error);
+        } else {
+          setPdfBase64Url(null);
+        }
       }
       setOwner(documentData?.[0]?.ExtUserPtr);
       const alreadyPlaceholder = documentData[0]?.SignedUrl;
@@ -2029,35 +2082,43 @@ function PlaceHolderSign() {
                 //onRequestClose function to close tour
                 //steps is defined what will be your messages and style also
                 //isOpen is takes boolean value to open
+                <TourWrapper>
+                  <Tour
+                    onRequestClose={closeTour}
+                    steps={tourConfig}
+                    isOpen={placeholderTour}
+                    rounded={5}
+                    closeWithMask={false}
+                  />
+                </TourWrapper>
+              )}
+              <TourWrapper>
                 <Tour
-                  onRequestClose={closeTour}
-                  steps={tourConfig}
-                  isOpen={placeholderTour}
+                  onRequestClose={() => setSignerExistModal(false)}
+                  steps={signerAssignTour}
+                  isOpen={signerExistModal}
                   rounded={5}
                   closeWithMask={false}
                 />
-              )}
-              <Tour
-                onRequestClose={() => setSignerExistModal(false)}
-                steps={signerAssignTour}
-                isOpen={signerExistModal}
-                rounded={5}
-                closeWithMask={false}
-              />
-              <Tour
-                onRequestClose={() => setIsSendAlert({})}
-                steps={textFieldTour}
-                isOpen={isSendAlert.mssg === textWidget}
-                rounded={5}
-                closeWithMask={false}
-              />
-              <Tour
-                onRequestClose={() => handleCloseSendmailModal()}
-                steps={signatureWidgetTour}
-                isOpen={isSendAlert.mssg === "sure" && true}
-                rounded={5}
-                closeWithMask={false}
-              />
+              </TourWrapper>
+              <TourWrapper>
+                <Tour
+                  onRequestClose={() => setIsSendAlert({})}
+                  steps={textFieldTour}
+                  isOpen={isSendAlert.mssg === textWidget}
+                  rounded={5}
+                  closeWithMask={false}
+                />
+              </TourWrapper>
+              <TourWrapper>
+                <Tour
+                  onRequestClose={() => handleCloseSendmailModal()}
+                  steps={signatureWidgetTour}
+                  isOpen={isSendAlert.mssg === "sure" && true}
+                  rounded={5}
+                  closeWithMask={false}
+                />
+              </TourWrapper>
               {/* this component used to render all pdf pages in left side */}
               <RenderAllPdfPage
                 allPages={allPages}

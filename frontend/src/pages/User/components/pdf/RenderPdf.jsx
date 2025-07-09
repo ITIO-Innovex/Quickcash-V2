@@ -177,7 +177,34 @@ function RenderPdf(props) {
       return `${width / 10}px`;
     }
   };
-  const pdfDataBase64 = `data:application/pdf;base64,${props.pdfBase64Url}`;
+  // Validate PDF data before creating the data URL
+  const pdfDataBase64 = React.useMemo(() => {
+    if (!props.pdfBase64Url || typeof props.pdfBase64Url !== 'string') {
+      console.error('Invalid PDF base64 URL:', props.pdfBase64Url);
+      return null;
+    }
+    
+    // Check if the base64 string is valid
+    try {
+      // Basic validation - check if it contains valid base64 characters
+      const cleanBase64 = props.pdfBase64Url.replace(/\s/g, '');
+      if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleanBase64)) {
+        console.error('Invalid base64 characters in PDF data');
+        return null;
+      }
+      
+      // Check if it's a reasonable length (PDFs are typically at least a few KB)
+      if (cleanBase64.length < 100) {
+        console.error('PDF data too short, likely invalid');
+        return null;
+      }
+      
+      return `data:application/pdf;base64,${props.pdfBase64Url}`;
+    } catch (error) {
+      console.error('Error validating PDF data:', error);
+      return null;
+    }
+  }, [props.pdfBase64Url]);
   //calculate render height of pdf in mobile view
   const handlePageLoadSuccess = (page) => {
     const containerWidth = props.divRef.current.offsetWidth; // Get container width
@@ -382,30 +409,43 @@ function RenderPdf(props) {
                       );
                     }))}
             {/* Mobile */}
-            <Document
-              error={<p className="mx-2">{("failed-to-load-refresh-page")}</p>}
-              onLoadError={() => props.setPdfLoad(false)}
-              loading={("loading-doc")}
-              onLoadSuccess={props.pageDetails}
-              onClick={() =>
-                props.setSelectWidgetId && props.setSelectWidgetId("")
-              }
-              file={pdfDataBase64}
-            >
-              <Page
-                onLoadSuccess={handlePageLoadSuccess}
-                scale={props.scale || 1}
-                key={props.index}
-                pageNumber={props.pageNumber}
-                width={props.containerWH.width}
-                renderAnnotationLayer={false}
-                renderTextLayer={false}
-                onGetAnnotationsError={(error) => {
-                  console.log("annotation error", error);
+            {pdfDataBase64 ? (
+              <Document
+                error={<p className="mx-2">{("failed-to-load-refresh-page")}</p>}
+                onLoadError={(error) => {
+                  console.error('PDF load error:', error);
+                  props.setPdfLoad(false);
                 }}
-                className="select-none touch-callout-none"
-              />
-            </Document>
+                loading={("loading-doc")}
+                onLoadSuccess={props.pageDetails}
+                onClick={() =>
+                  props.setSelectWidgetId && props.setSelectWidgetId("")
+                }
+                file={pdfDataBase64}
+                onSourceError={(error) => {
+                  console.error('PDF source error:', error);
+                  props.setPdfLoad(false);
+                }}
+              >
+                <Page
+                  onLoadSuccess={handlePageLoadSuccess}
+                  scale={props.scale || 1}
+                  key={props.index}
+                  pageNumber={props.pageNumber}
+                  width={props.containerWH.width}
+                  renderAnnotationLayer={false}
+                  renderTextLayer={false}
+                  onGetAnnotationsError={(error) => {
+                    console.log("annotation error", error);
+                  }}
+                  className="select-none touch-callout-none"
+                />
+              </Document>
+            ) : (
+              <div className="flex items-center justify-center h-32 text-gray-500">
+                <p>{("failed-to-load-refresh-page")}</p>
+              </div>
+            )}
           </div>
         </RSC>
       ) : (
@@ -602,31 +642,42 @@ function RenderPdf(props) {
                     }))}
             {/* large device */}
             {/* this component for render pdf document is in middle of the component */}
-            <Document
-              error={<p className="mx-2">{("failed-to-load-refresh-page")}</p>}
-              onLoadError={(error) => {
-                props.setPdfLoad(false);
-              }}
-              loading={("loading-doc")}
-              onLoadSuccess={props.pageDetails}
-              onClick={() =>
-                props.setSelectWidgetId && props.setSelectWidgetId("")
-              }
-              file={pdfDataBase64}
-            >
-              <Page
-                key={props.index}
-                width={props.containerWH.width}
-                scale={props.scale || 1}
-                className={"-z-[1]"} // when user zoom-in in tablet widgets move backward that's why pass -z-[1]
-                pageNumber={props.pageNumber}
-                renderAnnotationLayer={false}
-                renderTextLayer={false}
-                onGetAnnotationsError={(error) => {
-                  console.log("annotation error", error);
+            {pdfDataBase64 ? (
+              <Document
+                error={<p className="mx-2">{("failed-to-load-refresh-page")}</p>}
+                onLoadError={(error) => {
+                  console.error('PDF load error:', error);
+                  props.setPdfLoad(false);
                 }}
-              />
-            </Document>
+                loading={("loading-doc")}
+                onLoadSuccess={props.pageDetails}
+                onClick={() =>
+                  props.setSelectWidgetId && props.setSelectWidgetId("")
+                }
+                file={pdfDataBase64}
+                onSourceError={(error) => {
+                  console.error('PDF source error:', error);
+                  props.setPdfLoad(false);
+                }}
+              >
+                <Page
+                  key={props.index}
+                  width={props.containerWH.width}
+                  scale={props.scale || 1}
+                  className={"-z-[1]"} // when user zoom-in in tablet widgets move backward that's why pass -z-[1]
+                  pageNumber={props.pageNumber}
+                  renderAnnotationLayer={false}
+                  renderTextLayer={false}
+                  onGetAnnotationsError={(error) => {
+                    console.log("annotation error", error);
+                  }}
+                />
+              </Document>
+            ) : (
+              <div className="flex items-center justify-center h-32 text-gray-500">
+                <p>{("failed-to-load-refresh-page")}</p>
+              </div>
+            )}
           </div>
         </RSC>
       )}

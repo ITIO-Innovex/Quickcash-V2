@@ -26,7 +26,7 @@ function getSecureUrl(url) {
   // Add your URL security logic here
   // This is a placeholder implementation
   // const secureUrl = 'http://localhost:5000' + url;
-  const secureUrl = 'https://quickcash.oyefin.com/api/v1' + url;
+  const secureUrl = 'https://quickcash.oyefin.com/' + url;
   return { url: secureUrl };
 }
 

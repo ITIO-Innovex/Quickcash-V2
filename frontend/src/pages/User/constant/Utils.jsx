@@ -34,7 +34,7 @@ export const openInNewTab = (url, target) => {
 };
 
 // `getSecureUrl` is used to return local secure url if local files
-export const getSecureUrl = async (url) => {
+export const getSecureUrl = async () => {
   return { url: "" };
 };
 
@@ -2033,55 +2033,193 @@ export const copytoData = (url) => {
 };
 
 export async function getBase64FromUrl(url, autosign) {
-  const data = await fetch(`${API_ROUTES.PDF_BUFFER}?url=${encodeURIComponent(url)}`);
-  const blob = await data.blob();
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(blob);
-    reader.onloadend = function () {
-      const pdfBase = this.result;
-      if (autosign) {
-        resolve(pdfBase);
-      } else {
-        const suffixbase64 = pdfBase.split(',').pop();
-        resolve(suffixbase64);
-      }
-    };
-  });
+  try {
+    console.log('getBase64FromUrl: Fetching from URL:', url);
+    const data = await fetch(`${API_ROUTES.PDF_BUFFER}?url=${encodeURIComponent(url)}`);
+    if (!data.ok) {
+      throw new Error(`HTTP ${data.status}: ${data.statusText}`);
+    }
+    const blob = await data.blob();
+    console.log('getBase64FromUrl: Blob size:', blob.size, 'bytes, type:', blob.type);
+    // Validate blob type and size
+    if (blob.type !== 'application/pdf' || blob.size < 1000) {
+      throw new Error('Invalid PDF file received');
+    }
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = function () {
+        try {
+          const pdfBase = this.result;
+          console.log('getBase64FromUrl: Data URL length:', pdfBase.length);
+          if (autosign) {
+            resolve(pdfBase);
+          } else {
+            const suffixbase64 = pdfBase.split(',').pop();
+            console.log('getBase64FromUrl: Base64 length:', suffixbase64.length);
+            resolve(suffixbase64);
+          }
+        } catch (error) {
+          console.error('getBase64FromUrl: Error processing result:', error);
+          reject(error);
+        }
+      };
+      reader.onerror = function() {
+        console.error('getBase64FromUrl: FileReader error:', reader.error);
+        reject(reader.error);
+      };
+    });
+  } catch (error) {
+    console.error('getBase64FromUrl: Error:', error);
+    throw error;
+  }
 }
 
 export const convertPdfArrayBuffer = async (url) => {
-  try {
-    const response = await fetch(`${API_ROUTES.PDF_BASE64}?url=${encodeURIComponent(url)}`);
-    if (!response.ok) {
-      return 'Error';
-    }
-    let arrayBuffer = await response.arrayBuffer();
-    // Check for PDF header in the first 1024 bytes
-    let headerString = new TextDecoder().decode(arrayBuffer.slice(0, 1024));
-    if (!headerString.includes('%PDF-')) {
-      // Try to decode as base64 if not a valid PDF header
-      const text = new TextDecoder().decode(arrayBuffer);
-      // Remove whitespace and check if it looks like base64
-      const base64 = text.replace(/\s/g, '');
+  const maxRetries = 2;
+  let lastError = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`convertPdfArrayBuffer: Attempt ${attempt}/${maxRetries} - Fetching PDF from URL:`, url);
+      
+      // First, try to fetch the PDF directly from the URL
+      console.log('convertPdfArrayBuffer: Attempting direct PDF fetch first...');
       try {
-        const decodedBuffer = base64ToArrayBuffer(base64);
-        headerString = new TextDecoder().decode(decodedBuffer.slice(0, 1024));
-        if (!headerString.includes('%PDF-')) {
-          console.error('convertPdfArrayBuffer: Not a valid PDF after base64 decode. Header:', headerString);
-          return 'Error';
+        const directResponse = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/pdf,*/*'
+          }
+        });
+        
+        if (directResponse.ok) {
+          const directArrayBuffer = await directResponse.arrayBuffer();
+          const directHeaderString = new TextDecoder().decode(directArrayBuffer.slice(0, 1024));
+          
+          if (directHeaderString.includes('%PDF-')) {
+            console.log('convertPdfArrayBuffer: Successfully fetched PDF directly');
+            return directArrayBuffer;
+          } else {
+            console.log('convertPdfArrayBuffer: Direct fetch response is not a PDF, trying API endpoint...');
+          }
+        } else {
+          console.log('convertPdfArrayBuffer: Direct fetch failed:', directResponse.status, directResponse.statusText);
         }
-        return decodedBuffer;
-      } catch (e) {
-        console.error('convertPdfArrayBuffer: Failed to decode base64 PDF.', e);
-        return 'Error';
+      } catch (directError) {
+        console.log('convertPdfArrayBuffer: Direct fetch error:', directError.message);
+      }
+      
+      // If direct fetch fails, try the API endpoint
+      console.log('convertPdfArrayBuffer: Trying API endpoint...');
+      const response = await fetch(`${API_ROUTES.PDF_BASE64}?url=${encodeURIComponent(url)}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/pdf,text/plain,*/*'
+        }
+      });
+      
+      if (!response.ok) {
+        console.error('convertPdfArrayBuffer: API Response not ok:', response.status, response.statusText);
+        
+        // Try to get the response text to see what error we're getting
+        try {
+          const errorText = await response.text();
+          console.error('convertPdfArrayBuffer: API Error response:', errorText.substring(0, 200));
+        } catch {
+          console.error('convertPdfArrayBuffer: Could not read error response');
+        }
+        
+        lastError = new Error(`API returned ${response.status}: ${response.statusText}`);
+        continue; // Try next attempt
+      }
+      
+      // Check content type to understand what we're getting
+      const contentType = response.headers.get('content-type');
+      console.log('convertPdfArrayBuffer: API Content-Type:', contentType);
+      
+      let arrayBuffer = await response.arrayBuffer();
+      console.log('convertPdfArrayBuffer: API Response size:', arrayBuffer.byteLength, 'bytes');
+      
+      // If content type indicates it's already a PDF, return it directly
+      if (contentType && contentType.includes('application/pdf')) {
+        console.log('convertPdfArrayBuffer: Direct PDF response detected from API');
+        return arrayBuffer;
+      }
+      
+      // Check for PDF header in the first 1024 bytes
+      let headerString = new TextDecoder().decode(arrayBuffer.slice(0, 1024));
+      console.log('convertPdfArrayBuffer: API Header preview:', headerString.substring(0, 100));
+      
+      if (headerString.includes('%PDF-')) {
+        console.log('convertPdfArrayBuffer: Valid PDF header found in API response');
+        return arrayBuffer;
+      }
+      
+      // If not a PDF header, try to decode as base64
+      const text = new TextDecoder().decode(arrayBuffer);
+      const cleanText = text.replace(/\s/g, '');
+      
+      console.log('convertPdfArrayBuffer: API Cleaned text preview:', cleanText.substring(0, 100));
+      
+      // Check if the response looks like an error message (HTML, JSON error, etc.)
+      if (text.includes('<html') || text.includes('<!DOCTYPE') || text.includes('error') || text.includes('Error')) {
+        console.error('convertPdfArrayBuffer: API returned an error page or message');
+        lastError = new Error('API returned an error page or message');
+        continue; // Try next attempt
+      }
+      
+      // More lenient base64 validation - check if it contains mostly base64 characters
+      const base64CharCount = (cleanText.match(/[A-Za-z0-9+/=]/g) || []).length;
+      const totalCharCount = cleanText.length;
+      const base64Percentage = totalCharCount > 0 ? (base64CharCount / totalCharCount) * 100 : 0;
+      
+      console.log('convertPdfArrayBuffer: Base64 character percentage:', base64Percentage.toFixed(2) + '%');
+      
+      // If it's mostly base64 characters and has reasonable length, try to decode
+      if (base64Percentage > 80 && cleanText.length > 50) {
+        try {
+          console.log('convertPdfArrayBuffer: Attempting base64 decode...');
+          const decodedBuffer = base64ToArrayBuffer(cleanText);
+          headerString = new TextDecoder().decode(decodedBuffer.slice(0, 1024));
+          
+          if (headerString.includes('%PDF-')) {
+            console.log('convertPdfArrayBuffer: Successfully decoded base64 to PDF');
+            return decodedBuffer;
+          } else {
+            console.error('convertPdfArrayBuffer: Decoded base64 does not contain PDF header. Header:', headerString.substring(0, 50));
+            lastError = new Error('Decoded base64 does not contain PDF header');
+            return 'Error'; // Immediately return 'Error' if not a valid PDF
+          }
+        } catch (e) {
+          console.error('convertPdfArrayBuffer: Failed to decode base64 PDF:', e.message);
+          lastError = e;
+        }
+      } else {
+        lastError = new Error('Response does not appear to be valid base64 or PDF');
+      }
+      
+      // If we get here, this attempt failed
+      if (attempt < maxRetries) {
+        console.log(`convertPdfArrayBuffer: Attempt ${attempt} failed, retrying...`);
+        // Wait a bit before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
+    } catch (error) {
+      console.error(`convertPdfArrayBuffer: Error in attempt ${attempt}:`, error);
+      lastError = error;
+      
+      if (attempt < maxRetries) {
+        console.log(`convertPdfArrayBuffer: Attempt ${attempt} failed, retrying...`);
+        // Wait a bit before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
-    return arrayBuffer;
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    return 'Error';
   }
+  
+  console.error('convertPdfArrayBuffer: All attempts failed:', lastError?.message);
+  return 'Error';
 };
 //`handleSendOTP` function is used to send otp on user's email using `SendOTPMailV1` cloud function
 export const handleSendOTP = async (email) => {
@@ -2136,26 +2274,49 @@ export const getSignedUrl = async (pdfUrl, docId, templateId) => {
 };
 //download base64 type pdf
 export const fetchBase64 = async (pdfBase64, pdfName) => {
-  // Create a Blob from the Base64 string
-  const byteCharacters = atob(pdfBase64);
-  const byteNumbers = new Array(byteCharacters.length)
-    .fill(0)
-    .map((_, i) => byteCharacters.charCodeAt(i));
-  const byteArray = new Uint8Array(byteNumbers);
-  const blob = new Blob([byteArray], { type: "application/pdf" });
+  try {
+    // Validate base64 string
+    if (!pdfBase64 || typeof pdfBase64 !== 'string') {
+      throw new Error('Invalid base64 input: must be a non-empty string');
+    }
+    
+    // Remove any whitespace and validate base64 format
+    const cleanBase64 = pdfBase64.replace(/\s/g, '');
+    
+    // Check if the string contains only valid base64 characters
+    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleanBase64)) {
+      throw new Error('Invalid base64 string: contains invalid characters');
+    }
+    
+    // Check if the string length is valid for base64
+    if (cleanBase64.length % 4 !== 0) {
+      throw new Error('Invalid base64 string: length is not valid');
+    }
+    
+    // Create a Blob from the Base64 string
+    const byteCharacters = atob(cleanBase64);
+    const byteNumbers = new Array(byteCharacters.length)
+      .fill(0)
+      .map((_, i) => byteCharacters.charCodeAt(i));
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: "application/pdf" });
 
-  // Create a link element
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = pdfName;
+    // Create a link element
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = pdfName;
 
-  // Programmatically click the link to trigger the download
-  document.body.appendChild(link);
-  link.click();
+    // Programmatically click the link to trigger the download
+    document.body.appendChild(link);
+    link.click();
 
-  // Clean up
-  document.body.removeChild(link);
-  URL.revokeObjectURL(link.href);
+    // Clean up
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  } catch (error) {
+    console.error('fetchBase64 error:', error);
+    alert('Error downloading PDF: ' + error.message);
+  }
 };
 //handle download signed pdf
 export const handleDownloadPdf = async (
@@ -2517,17 +2678,43 @@ export async function rotatePdfPage(rotateDegree, pageNumber, pdfArrayBuffer) {
   return { arrayBuffer: arrayBuffer, base64: pdfbase64 };
 }
 export function base64ToArrayBuffer(base64) {
-  // Decode the base64 string to a binary string
-  const binaryString = atob(base64);
-  // Create a new ArrayBuffer with the same length as the binary string
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  // Convert the binary string to a byte array
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
+  try {
+    // Validate base64 string format
+    if (!base64 || typeof base64 !== 'string') {
+      throw new Error('Invalid base64 input: must be a non-empty string');
+    }
+    
+    // Remove any whitespace and check if it's a valid base64 string
+    const cleanBase64 = base64.replace(/\s/g, '');
+    
+    // Check if the string contains only valid base64 characters
+    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleanBase64)) {
+      throw new Error('Invalid base64 string: contains invalid characters');
+    }
+    
+    // Check if the string length is valid for base64
+    if (cleanBase64.length % 4 !== 0) {
+      throw new Error('Invalid base64 string: length is not valid');
+    }
+    
+    // Decode the base64 string to a binary string
+    const binaryString = atob(cleanBase64);
+    
+    // Create a new ArrayBuffer with the same length as the binary string
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    
+    // Convert the binary string to a byte array
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    // Return the ArrayBuffer
+    return bytes.buffer;
+  } catch (error) {
+    console.error('base64ToArrayBuffer error:', error);
+    throw error;
   }
-  // Return the ArrayBuffer
-  return bytes.buffer;
 }
 
 export const convertBase64ToFile = async (pdfName, pdfBase64) => {
@@ -2885,7 +3072,7 @@ export function formatDateTime(date, dateFormat, timeZone, is12Hour) {
     : formatTimeInTimezone(date, timeZone);
 }
 
-export const updateDateWidgetsRes = (documentData, signerId, journey) => {
+export const updateDateWidgetsRes = (documentData, signerId) => {
   const extUser = localStorage.getItem("Extand_Class");
   const contactUser = documentData?.Signers.find(
     (data) => data.objectId === signerId

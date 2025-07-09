@@ -68,6 +68,17 @@ import TextFontSetting from "../components/pdf/TextFontSetting";
 import { API_ROUTES } from "@/pages/User/constant/apiRoutes";
 import { CONTACT_ROLES } from "../constant/const";
 
+// Add this helper function at the top (after imports)
+function arrayBufferToBase64(buffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary);
+}
+
 function PdfRequestFiles(
 ) {
   const appName =
@@ -281,9 +292,37 @@ function PdfRequestFiles(
           documentData[0] &&
           (documentData[0]?.SignedUrl || documentData[0]?.URL);
         if (url) {
-          const base64Pdf = await getBase64FromUrl(url);
-          if (base64Pdf) {
-            setPdfBase64Url(base64Pdf);
+          let base64Pdf;
+          let arrayBuffer;
+          try {
+            base64Pdf = await getBase64FromUrl(url);
+            if (base64Pdf && typeof base64Pdf === 'string' && base64Pdf.length > 100) {
+              setPdfBase64Url(base64Pdf);
+            } else {
+              // fallback: try to fetch as arrayBuffer and convert to base64
+              arrayBuffer = await fetch(url).then(res => res.arrayBuffer());
+              if (arrayBuffer && arrayBuffer.byteLength > 1000) {
+                const base64FromBuffer = arrayBufferToBase64(arrayBuffer);
+                setPdfBase64Url(base64FromBuffer);
+                console.warn('PdfRequestFiles: Invalid base64 PDF, using arrayBuffer converted to base64');
+              } else {
+                setPdfBase64Url(null);
+              }
+            }
+          } catch (err) {
+            // fallback: try to fetch as arrayBuffer and convert to base64
+            try {
+              arrayBuffer = await fetch(url).then(res => res.arrayBuffer());
+              if (arrayBuffer && arrayBuffer.byteLength > 1000) {
+                const base64FromBuffer = arrayBufferToBase64(arrayBuffer);
+                setPdfBase64Url(base64FromBuffer);
+                console.warn('PdfRequestFiles: Failed to get base64 PDF, using arrayBuffer converted to base64:', err);
+              } else {
+                setPdfBase64Url(null);
+              }
+            } catch (err2) {
+              setPdfBase64Url(null);
+            }
           }
         } else {
           setHandleError(("Something went wrong"));
