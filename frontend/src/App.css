@@ -4314,6 +4314,44 @@ color: var(--bs-primary);
   color: #666;
 }
 
+.resend-button {
+  font-size: 0.875rem;
+  color: #483594;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.scroll-container {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 10px 0;
+  display: grid;
+  margin-bottom: 1rem;
+  place-items: center; 
+  position: relative;
+  height: 40%;
+}
+
+.scroll-text {
+  display: inline-block;
+  padding-left: 100%;
+  animation: scroll-left 10s linear infinite;
+  font-size: 16px;
+  color: #bf4444;
+  font-weight: 600;
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
 
 .kyc-proceed-button {
   background-color: #483594 !important;
@@ -4574,7 +4612,18 @@ color: var(--bs-primary);
   border: none;
   outline: none;
   flex: 1;
-  /* height: 60px; */
+  overflow:auto;
+  padding: 10px;
+  font-size: 1rem;
+  border: none;
+  background-color: transparent;
+}
+.email-input-merged{
+  width: 180%;
+   border: none;
+  outline: none;
+  flex: 1;
+  overflow:auto;
   padding: 10px;
   font-size: 1rem;
   border: none;
@@ -8406,5 +8455,9 @@ color: var(--bs-primary);
   background-color: #ef9a9a;
   color: #fff;
   border-color: #ef5350;
+}
+.file-name-text {
+  font-size: 14px;
+  color: #555;
 }
 

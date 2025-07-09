@@ -7,15 +7,16 @@ import { JwtPayload } from '@/types/jwt';
 import { useSell } from '@/hooks/useSell';
 import { useAppToast } from '@/utils/toast';
 import { useAccount } from "@/hooks/useAccount";
-import React, { useState, useEffect, useRef } from 'react';
 import CommonTooltip from '@/components/common/toolTip';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import CustomButton from '../../../components/CustomButton';
 import { fetchCoins, fetchCalculation } from '@/api/buy.api';
 import CustomDropdown from '../../../components/CustomDropdown';
 import CustomInputField from '../../../components/CustomInputField';
 const url = import.meta.env.VITE_NODE_ENV === 'production' ? 'api' : 'api';
-import {Box ,Card, CardContent, Typography, useTheme, LinearProgress, useMediaQuery, Checkbox, FormControlLabel} from '@mui/material';
+import {Box ,Card, CardContent, Typography, useTheme, LinearProgress, useMediaQuery,
+   Checkbox, FormControlLabel, CircularProgress} from '@mui/material';
 
 const FormPage = () => {
   const theme = useTheme();
@@ -39,14 +40,16 @@ const FormPage = () => {
   const [estimatedRate, setEstimatedRate] = useState('');
   const [exchangeFees, setExchangeFees] = useState(0); 
   // Sell States
-const [sellAmountToGet, setSellAmountToGet] = useState('');
-const [sellCryptoFees, setSellCryptoFees] = useState('');
-const [sellExchangeFees, setSellExchangeFees] = useState('');
+  const [sellCryptoFees, setSellCryptoFees] = useState('');
+  const [sellPlatformFees, setSellPlatformFees] = useState('');
+  const [sellAmountToGet, setSellAmountToGet] = useState('');
+  const [sellExchangeFees, setSellExchangeFees] = useState('');
 
 // Swap States
 const [youSendCoin, setYouSendCoin] = useState('');
 const [fromCoin ,setFromCoin] = useState('');
 const [swapCoin, setSwapCoin] = useState('');
+const [sellCoinLoading, setSellCoinLoading] = useState(false);
 const [swapCoinOptions, setSwapCoinOptions] = useState<any[]>([]);
 const [swapRawCoins, setSwapRawCoins] = useState<any[]>([]);
 const [conversionData, setConversionData] = useState<any>(null);
@@ -128,12 +131,14 @@ useEffect(() => {
         setSellAmountToGet(res.amount);
         setSellCryptoFees(res.cryptoFees?.toString() || '');
         setSellExchangeFees(res.exchangeFees?.toString() || '');
+        setSellPlatformFees(res.fees?.toString() || '');
 
         // ✅ Save to localStorage
         localStorage.setItem('sellCalculationData', JSON.stringify({
           amount: res.amount,
           cryptoFees: res.cryptoFees,
           exchangeFees: res.exchangeFees,
+          platformFees: res.fees,
           coin,
           currency,
           youSell: amount,
@@ -160,6 +165,7 @@ useEffect(() => {
     setAmount(parsed.youSell || '');
     setSellAmountToGet(parsed.amount || '');
     setSellCryptoFees(parsed.cryptoFees?.toString() || '');
+    setSellPlatformFees(parsed.fees?.toString() || '');
     setSellExchangeFees(parsed.exchangeFees?.toString() || '');
   }
 }, []);
@@ -322,6 +328,7 @@ const handleReset = () => {
   localStorage.removeItem("SwapDetails");
   localStorage.removeItem("swapAvailableData");
 
+
   // ✅ Reset swap-related states
   setFromCoin("");           // 🔁 resets "You Send" dropdown
   setSwapCoin("");           // 🔁 resets "You Receive" dropdown
@@ -341,8 +348,10 @@ const handleReset = () => {
   setEstimatedRate('');
   setSellAmountToGet('');
   setSellCryptoFees('');
+  setSellPlatformFees('');
   setSellExchangeFees('');
   setAvailableCoins(0);
+  setSellCoinLoading(false);
 };
 
 // Sell Backend Implementation
@@ -420,7 +429,33 @@ const handleSellCoinChange = async (
   );
 };
 
-const handleSellAmountChange = async (value: string) => {
+const debouncedSellCalc = useRef(
+  debounce(async (coin: string, currency: string, value: string) => {
+    setSellCoinLoading(true);
+    try {
+      const res = await calculateSellValues(coin, currency, value);
+
+      // ✅ Handle successful data (optional: set state here)
+      console.log("✅ Valid response:", res);
+    } catch (err: any) {
+      console.error("❌ API error:", err);
+      error(
+        err?.response?.data?.message ||
+        "This currency is not supported, choose another."
+      );
+    } finally {
+      setSellCoinLoading(false);
+    }
+  }, 600)
+).current;
+
+useEffect(() => {
+  return () => {
+    debouncedSellCalc.cancel();
+  };
+}, []);
+
+const handleSellAmountChange = (value: string) => {
   setAmount(value);
 
   if (parseFloat(value) > availableCoins) {
@@ -429,8 +464,7 @@ const handleSellAmountChange = async (value: string) => {
   }
 
   if (coin && currency && value) {
-    const res = await calculateSellValues(coin, currency, value);
-    // console.log('🔥 Response from sellCalculation API:', res);
+    debouncedSellCalc(coin, currency, value);
   }
 };
 
@@ -820,9 +854,8 @@ const filteredSwapCoins = swapRawCoins.filter((coin) => coin.coin !== fromCoin);
             {activeTab === 'sell' && (
                  <>
                 {/* Amount Section */}
-                <Box 
-                  className="crypto-form-section"
-                >
+                
+                <Box className="crypto-form-section">
                   <Box className="crypto-form-row">
                    <Box className="crypto-form-field">
                       <Typography variant="subtitle2" className="crypto-form-label" sx={{ color: theme.palette.text.primary }}>
@@ -869,7 +902,9 @@ const filteredSwapCoins = swapRawCoins.filter((coin) => coin.coin !== fromCoin);
                           disabled={!coin}
                           onChange={(e) => setCurrency(e.target.value as string)}
                           options={
-                            list?.map((item: any, index: number) => ({
+                            list
+                             ?.filter((item: any) => item.currency !== 'GBP' && item.currency !== 'EUR') // 👈 Exclude here
+                            .map((item: any) => ({
                               label: (
                                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                   <img
@@ -886,13 +921,21 @@ const filteredSwapCoins = swapRawCoins.filter((coin) => coin.coin !== fromCoin);
                             })) || []
                           }
                         />
-
-                      <Typography variant="caption" className="crypto-rate-text">
-                      Exchange Rate: {sellExchangeFees ? `${sellExchangeFees} ${currency}` : '--'}
-                    </Typography>
-                    <Typography variant="caption" className="crypto-fees-text">
-                      Crypto Fees: {sellCryptoFees ? `${sellCryptoFees} ${currency} ` : '--'}
-                    </Typography>
+                      {sellLoading ? (
+                        <CircularProgress size={16} />
+                      ) : (
+                        <>
+                          <Typography variant="caption" className="crypto-rate-text">
+                            Exchange Rate: {sellExchangeFees ? `${sellExchangeFees} ${currency}` : '--'}
+                          </Typography>
+                          <Typography variant="caption" className="crypto-fees-text">
+                            Crypto Fees: {sellCryptoFees ? `${sellCryptoFees} ${currency}` : '--'}
+                          </Typography>
+                          {/* <Typography variant="caption" className="crypto-fees-text">
+                            Platform Exchange Fees: {sellPlatformFees ? `${sellPlatformFees} ${currency}` : '--'}
+                          </Typography> */}
+                        </>
+                      )}
                     </Box>
                   </Box>
 
@@ -912,25 +955,11 @@ const filteredSwapCoins = swapRawCoins.filter((coin) => coin.coin !== fromCoin);
                        <Typography variant="subtitle2" className="crypto-form-label" sx={{ color: theme.palette.text.primary }}>
                         YOU SELL
                       </Typography>
-                     <CustomInputField
+                    <CustomInputField
                         type="number"
                         value={amount}
                         disabled={!currency}
-                        onChange={async (e) => {
-                          const newAmount = e.target.value;
-
-                          if (parseFloat(newAmount) > availableCoins) {
-                            error('You cannot sell more than what you have!');
-                            return;
-                          }
-
-                          setAmount(newAmount);
-
-                          //  API call here
-                          if (coin && currency && newAmount) {
-                            await calculateSellValues(coin, currency, newAmount);
-                          }
-                        }}
+                        onChange={(e) => handleSellAmountChange(e.target.value)}
                         placeholder="0"
                         className="crypto-amount-input"
                       />
@@ -1083,6 +1112,7 @@ const filteredSwapCoins = swapRawCoins.filter((coin) => coin.coin !== fromCoin);
                           console.log('Checkbox changed to:', e.target.checked);
                           setIsConfirmed(e.target.checked);
                         }}
+                           disabled={Boolean(errorMessage)}
                         sx={{
                           color: theme.palette.text.secondary,
                           '&.Mui-checked': {

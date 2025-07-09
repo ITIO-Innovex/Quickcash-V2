@@ -1,7 +1,6 @@
 import ReactQuill from 'react-quill-new';
 import 'quill/dist/quill.snow.css';
 import api from '@/helpers/apiHelper';
-import 'quill/dist/quill.snow.css';
 import { Box, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -18,28 +17,21 @@ import 'react-toastify/dist/ReactToastify.css';
 import CustomSelect from '@/components/CustomDropdown';
 import { useAppToast } from '@/utils/toast'; 
 
-const AddInvoice = () => {
+const NewInvoice = () => {
   const theme = useTheme();
   const toast = useAppToast(); 
-  const { id } = useParams();
   const [note, setNote] = useState('');
   const [terms, setTerms] = useState('');
-  const [invoiceData, setInvoiceData] = useState<any>(null);
+  const [invoiceData, setInvoiceData] = useState<any>({});
   const [showNotesTerms, setShowNotesTerms] = useState(true);
-  const [discountType, setDiscountType] = useState<'Fixed' | 'Percentage'>( 'Fixed');
+  const [discountType, setDiscountType] = useState<'Fixed' | 'Percentage'>('Fixed');
   const [discountValue, setDiscountValue] = useState(0);
-  const url = import.meta.env.VITE_NODE_ENV === 'production' ? 'api' : 'api';
   const navigate = useNavigate();
 
   const [receiverType, setReceiverType] = useState<'member' | 'other'>('member');
   const [isRecurring, setIsRecurring] = useState<'yes' | 'no'>('no');
   const [recurringCycle, setRecurringCycle] = useState('');
-    const [receiverDetails, setReceiverDetails] = useState({
-      name: '',
-      email: '',
-      address: '',
-    });
-  //  After all useState declarations
+  const [receiverDetails, setReceiverDetails] = useState({ name: '', email: '', address: '' });
   const [selectedTax, setSelectedTax] = useState({ name: 'Ganesh', rate: 35 });
 
   const taxOptions = [
@@ -47,56 +39,32 @@ const AddInvoice = () => {
     { name: 'GST', rate: 18 },
     { name: 'No Tax', rate: 0 },
   ];
-  const [items, setItems] = useState([
-    { id: 1, product: '', qty: '', unitPrice: '',amount: '', isAdded: false,},]);
 
-  // ✅ Derived values (auto-updates on change)
-  const subtotal = items
-    .filter((item) => item.isAdded)
-    .reduce((sum, item) => sum + parseFloat(item.amount || '0'), 0);
+  const [items, setItems] = useState([{ id: 1, product: '', qty: '', unitPrice: '', amount: '', isAdded: false }]);
 
-  const discountAmount =
-    discountType === 'Fixed' ? discountValue : (subtotal * discountValue) / 100;
-
+  const subtotal = items.filter((item) => item.isAdded).reduce((sum, item) => sum + parseFloat(item.amount || '0'), 0);
+  const discountAmount = discountType === 'Fixed' ? discountValue : (subtotal * discountValue) / 100;
   const taxAmount = ((subtotal - discountAmount) * selectedTax.rate) / 100;
-
   const total = subtotal - discountAmount + taxAmount;
-const handleAddRow = () => {
-  const updated = [...items];
-  const lastItem = updated[updated.length - 1];
 
-  // Basic field validation
- if (
-  lastItem.product.trim() === '' ||
-  lastItem.qty === '' ||
-  lastItem.unitPrice === ''
-) {
-  toast.error('Please fill in all fields before adding.');
-  return;
-}
+  const handleAddRow = () => {
+    const updated = [...items];
+    const lastItem = updated[updated.length - 1];
 
-  // Mark last item as added (read-only display)
-  lastItem.isAdded = true;
+    if (lastItem.product.trim() === '' || lastItem.qty === '' || lastItem.unitPrice === '') {
+      toast.error('Please fill in all fields before adding.');
+      return;
+    }
 
-  // Push new editable row
-  updated.push({
-    id: Date.now(), // better unique id than index-based
-    product: '',
-    qty: '',
-    unitPrice: '',
-    amount: '',
-    isAdded: false,
-  });
-
-  setItems(updated);
-};
-
+    lastItem.isAdded = true;
+    updated.push({ id: Date.now(), product: '', qty: '', unitPrice: '', amount: '', isAdded: false });
+    setItems(updated);
+  };
 
   const handleItemChange = (index, field, value) => {
     const updated = [...items];
     updated[index][field] = value;
 
-    // Calculate amount = qty * unitPrice
     if (field === 'qty' || field === 'unitPrice') {
       const qty = parseFloat(updated[index].qty) || 0;
       const price = parseFloat(updated[index].unitPrice) || 0;
@@ -106,106 +74,22 @@ const handleAddRow = () => {
     setItems(updated);
   };
 
-  useEffect(() => {
-    const fetchInvoice = async () => {
-      try {
-        const result = await api.get(`/${url}/v1/invoice/getinv/info/${id}`);
-        const data = result.data.data;
-        setInvoiceData(data);
-        setNote(data?.note || '');
-        setTerms(data?.terms || '');
-      } catch (err) {
-        console.error('Error fetching invoice:', err);
-      }
-    };
-
-    if (id) fetchInvoice();
-  }, [id]);
-
-  const columns = [
-    { field: 'id', headerName: '#' },
-    { field: 'product', headerName: 'Product' },
-    { field: 'qty', headerName: 'Qty' },
-    { field: 'unitPrice', headerName: 'Unit Price' },
-    { field: 'amount', headerName: 'Amount' },
-    {
-      field: 'action',
-      headerName: 'Actions',
-      render: (row: any) => (
-        <Box display="flex" gap={1}>
-          <DeleteIcon
-            sx={{ cursor: 'pointer', color: 'red' }}
-            onClick={() => handleDeleteRow(row.id)}
-          />
-        </Box>
-      ),
-    },
-  ];
-
-const handleDeleteRow = (id: number) => {
-  if (items.length <= 1) return;
-
-  const updatedItems = items.filter((item) => item.id !== id);
-  setItems(updatedItems);
-};
-
-
-  const HandleUpdateInvoice = async () => {
-    try {
-      const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
-      // Fallbacks for missing fields
-      const invoice_number = invoiceData?.invoice_number || '';
-      const invoice_country = invoiceData?.invoice_country || '';
-      const invoice_date = invoiceData?.invoice_date || '';
-      const due_date = invoiceData?.due_date || '';
-      const payment_qr_code = invoiceData?.payment_qr_code || '';
-      const currency = invoiceData?.currency || '';
-      const currency_text = invoiceData?.currency_text || getSymbolFromCurrency(invoiceData?.currency || '');
-      const status = invoiceData?.status || '';
-      // Use items as productsInfo
-      const productsInfo = items.filter(i => i.isAdded);
-      // Use discountValue, discountType, selectedTax, subtotal, taxAmount, total, note, terms from state
-      await axios.patch(`/${url}/v1/invoice/update/${id}`, {
-        user: accountId?.data?.id,
-        invoice_number,
-        invoice_country,
-        invoice_date,
-        due_date,
-        payment_qr_code,
-        currency,
-        currency_text,
-        productsInfo,
-        discount: discountValue,
-        discount_type: discountType,
-        tax: selectedTax.rate,
-        subTotal: subtotal,
-        total: total,
-        status,
-        note,
-        terms,
-      }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      toast.success('Invoice updated successfully!');
-      navigate('/invoice-section');
-    } catch (error: any) {
-      console.error('Error updating invoice:', error);
-      toast.error(error?.response?.data?.message || 'Error updating invoice');
-    }
+  const handleDeleteRow = (id: number) => {
+    if (items.length <= 1) return;
+    const updatedItems = items.filter((item) => item.id !== id);
+    setItems(updatedItems);
   };
+
 
   return (
     <Box className="dashboard-container" sx={{ p: 3 }}>
 
-      <PageHeader title={`Add Invoice / ${invoiceData?.invoice_number || id}`} />
+      <PageHeader title="Add Invoice" />
 
-      {invoiceData && (
         <>
           <Grid container spacing={2} mt={2}>
             <Grid item xs={12} md={6}>
-              <CustomInput label="Invoice #" value={invoiceData.invoice_number || ''}  />
+              <CustomInput label="Invoice #" value={''}  />
             </Grid>
             
             <Grid item xs={12} md={6}>
@@ -528,12 +412,11 @@ const handleDeleteRow = (id: number) => {
             )}
           </Box>
 
-          <CustomButton onClick={HandleUpdateInvoice}>Save</CustomButton>
+          <CustomButton>Save</CustomButton>
         </>
-      )}
       
     </Box>
   );
 };
 
-export default AddInvoice;
+export default NewInvoice;

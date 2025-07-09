@@ -1,9 +1,12 @@
+
 import React, { useState } from 'react';
-import { Box, Typography, Grid, useTheme } from '@mui/material';
-import CustomInput from '@/components/CustomInputField';
+import 'react-phone-input-2/lib/style.css'; 
+import PhoneInput from 'react-phone-input-2';
+import { loadAndStoreKycData } from '@/api/kyc.api';
 import CustomButton from '@/components/CustomButton';
-import OTPVerificationModal from '@/modal/otpVerificationModal';
 import EmailVerifyModal from '@/modal/emailVerifyModal';
+import OTPVerificationModal from '@/modal/otpVerificationModal';
+import { Box, Typography, Grid, useTheme } from '@mui/material';
 
 interface ContactDetailsProps {
   onNext: () => void;
@@ -11,7 +14,7 @@ interface ContactDetailsProps {
 
 const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
   const theme = useTheme();
-
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [primaryPhone, setPrimaryPhone] = useState('');
   const [additionalPhone, setAdditionalPhone] = useState('');
@@ -25,13 +28,61 @@ const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [verificationTarget, setVerificationTarget] = useState<'primary' | 'additional'>('primary');
+  
+  React.useEffect(() => {
+  const userData = localStorage.getItem('userData');
+  if (userData) {
+    try {
+      const parsed = JSON.parse(userData);
+      if (parsed.email) {
+        setEmail(parsed.email);
+      }
+    } catch (err) {
+      console.error('[❌ ERROR PARSING userData]:', err);
+    }
+  }
+}, []);
 
-  const countryCodes = [
-    { label: '+49', value: '+49' },
-    { label: '+1', value: '+1' },
-    { label: '+44', value: '+44' },
-    { label: '+91', value: '+91' },
-  ];
+React.useEffect(() => {
+  const fetchKyc = async () => {
+    const data = await loadAndStoreKycData(); // API + localStorage update
+    if (data) {
+      if (data.email) {
+        setEmail(data.email);
+        setIsEmailVerified(data.emailVerified);
+      }
+
+      if (data.phone) {
+        const primaryCode = data.phone.slice(0, 3); // "+91"
+        const primaryRest = data.phone.slice(3); // "7894561230"
+        setPrimaryCountryCode(primaryCode);
+        setPrimaryPhone(primaryRest);
+        setIsPrimaryPhoneVerified(data.phonePVerified);
+      }
+
+      if (data.additionalPhone) {
+        const additionalCode = data.additionalPhone.slice(0, 3);
+        const additionalRest = data.additionalPhone.slice(3);
+        setAdditionalCountryCode(additionalCode);
+        setAdditionalPhone(additionalRest);
+        setIsAdditionalPhoneVerified(data.phoneSVerified);
+      }
+    } else {
+      // Naya user - Check userData (fallback)
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        try {
+          const parsed = JSON.parse(userData);
+          if (parsed.email) setEmail(parsed.email);
+        } catch (err) {
+          console.error('[❌ ERROR PARSING userData]:', err);
+        }
+      }
+    }
+  };
+
+  fetchKyc();
+}, []);
 
   const handleVerifyClick = (target: 'email' | 'primary' | 'additional') => {
     if (target === 'email' && email.trim()) {
@@ -44,26 +95,74 @@ const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
       setOtpModalOpen(true);
     }
   };
-
-  const handleOtpVerifySuccess = () => {
-    if (verificationTarget === 'primary') {
-      setIsPrimaryPhoneVerified(true);
-    } else {
-      setIsAdditionalPhoneVerified(true);
+  
+  React.useEffect(() => {
+  const kycLocal = localStorage.getItem('KycData');
+  if (kycLocal) {
+    try {
+      const parsed = JSON.parse(kycLocal);
+      if (parsed.email) setEmail(parsed.email);
+      if (parsed.phone) {
+        setPrimaryCountryCode(parsed.phone.slice(0, 3));
+        setPrimaryPhone(parsed.phone.slice(3));
+      }
+      if (parsed.additionalPhone) {
+        setAdditionalCountryCode(parsed.additionalPhone.slice(0, 3));
+        setAdditionalPhone(parsed.additionalPhone.slice(3));
+      }
+      if (parsed.emailVerified) setIsEmailVerified(true);
+      if (parsed.phonePVerified) setIsPrimaryPhoneVerified(true);
+      if (parsed.phoneSVerified) setIsAdditionalPhoneVerified(true);
+    } catch (err) {
+      console.error('[❌ ERROR PARSING KycData for restoration]:', err);
     }
-    setOtpModalOpen(false);
-  };
+  }
+}, []);
 
-  const handleEmailVerifySuccess = () => {
-    setIsEmailVerified(true);
-    setEmailModalOpen(false);
+  React.useEffect(() => {
+  const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
+  const updated = {
+    ...existing,
+    email,
+    phone: `${primaryCountryCode}${primaryPhone}`,
+    additionalPhone: `${additionalCountryCode}${additionalPhone}`,
   };
+  localStorage.setItem('KycData', JSON.stringify(updated));
+}, [email, primaryPhone, additionalPhone, primaryCountryCode, additionalCountryCode]);
+
+const handleOtpVerifySuccess = () => {
+  const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
+  const updated = {
+    ...existing,
+    phone: `${primaryCountryCode}${primaryPhone}`,
+    additionalPhone: `${additionalCountryCode}${additionalPhone}`,
+  };
+  localStorage.setItem('KycData', JSON.stringify(updated));
+
+  if (verificationTarget === 'primary') {
+    setIsPrimaryPhoneVerified(true);
+  } else {
+    setIsAdditionalPhoneVerified(true);
+  }
+
+  setOtpModalOpen(false);
+};
+
+const handleEmailVerifySuccess = () => {
+  setIsEmailVerified(true);
+  setEmailModalOpen(false);
+
+  const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
+  localStorage.setItem('KycData', JSON.stringify({ ...existing, email }));
+};
 
   const getPhoneNumber = () => {
     return verificationTarget === 'primary'
       ? `${primaryCountryCode} ${primaryPhone}`
       : `${additionalCountryCode} ${additionalPhone}`;
   };
+
+
 
   return (
     <Box className="contact-details-container">
@@ -90,7 +189,7 @@ const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
                 <Box className="unified-phone-input"> 
                   <Box > 
                     <input
-                    className="phone-number-input-merged"
+                    className="email-input-merged"
                       value={email}
                       disabled={isEmailVerified}
                       onChange={(e) => setEmail(e.target.value)}
@@ -117,29 +216,34 @@ const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
               </Box>
             </Grid>
 
-
         {/* Primary Phone */}
         <Grid item xs={12}>
           <Typography className="input-label">Primary Phone Number</Typography>
           <Box className="unified-phone-input">
-            <select
-              className="country-code-select-merged"
-              disabled={isPrimaryPhoneVerified}
-              style={{ color: theme.palette.text.primary }}
-              value={primaryCountryCode}
-              onChange={(e) => setPrimaryCountryCode(e.target.value)}
-            >
-              {countryCodes.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-            <input
-              className="phone-number-input-merged"
-              value={primaryPhone}
-              disabled={isPrimaryPhoneVerified}
-              onChange={(e) => setPrimaryPhone(e.target.value)}
-              placeholder="Enter Here"
-            />
+            
+           <PhoneInput
+            country={'us'}
+            value={primaryPhone}
+            disabled={isPrimaryPhoneVerified}
+            onChange={(value, country) => {
+              setPrimaryPhone(value);
+              setPrimaryCountryCode(`+${(country as import('react-phone-input-2').CountryData)?.dialCode || ''}`);
+            }}
+            inputStyle={{
+              width: '100%',
+              height: '55px',
+              borderRadius: '6px',
+              border: 'none'
+            }}
+            containerStyle={{ width: '100%' }}
+            inputProps={{
+              name: 'primaryPhone',
+              required: true,
+              autoFocus: true,
+              readOnly: isPrimaryPhoneVerified,
+            }}
+          />
+
             <span
               className="verified-badge-inside"
               style={{
@@ -163,24 +267,27 @@ const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
         <Grid item xs={12}>
           <Typography className="input-label">Additional Phone Number</Typography>
           <Box className="unified-phone-input">
-            <select
-              className="country-code-select-merged"
-              disabled={isAdditionalPhoneVerified}
-              style={{ color: theme.palette.text.primary }}
-              value={additionalCountryCode}
-              onChange={(e) => setAdditionalCountryCode(e.target.value)}
-            >
-              {countryCodes.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-            <input
-              className="phone-number-input-merged"
-              value={additionalPhone}
-              disabled={isAdditionalPhoneVerified}
-              onChange={(e) => setAdditionalPhone(e.target.value)}
-              placeholder="Enter Here"
-            />
+           <PhoneInput
+                country={'us'}
+                value={additionalPhone}
+                disabled={isAdditionalPhoneVerified}
+                onChange={(value, country) => {
+                  setAdditionalPhone(value);
+                  setAdditionalCountryCode(`+${(country as import('react-phone-input-2').CountryData)?.dialCode || ''}`);
+                }}
+                inputStyle={{
+                  width: '100%',
+                  height: '55px',
+                  borderRadius: '6px',
+                  border: 'none',
+                }}
+                containerStyle={{ width: '100%' }}
+                inputProps={{
+                  name: 'additionalPhone',
+                  required: true,
+                  readOnly: isAdditionalPhoneVerified,
+                }}
+              />
             <span
               className="verified-badge-inside"
               style={{
@@ -219,10 +326,12 @@ const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
         onClose={() => setOtpModalOpen(false)}
         onVerifySuccess={handleOtpVerifySuccess}
         phoneNumber={getPhoneNumber()}
+        target={verificationTarget}
       />
 
       {/* Email Verify Modal */}
       <EmailVerifyModal
+        email={email}
         open={emailModalOpen}
         onClose={() => setEmailModalOpen(false)}
         onProceed={handleEmailVerifySuccess}

@@ -1,32 +1,78 @@
-
 import React, { useState } from 'react';
-import { Box, Typography, Grid, useTheme } from '@mui/material';
-import CustomInput from '@/components/CustomInputField';
-import CustomSelect from '@/components/CustomDropdown';
-import CustomButton from '@/components/CustomButton';
+import { useAppToast } from '@/utils/toast';
 import FileUpload from '@/components/FileUpload';
+import CustomButton from '@/components/CustomButton';
+import CustomSelect from '@/components/CustomDropdown';
+import CustomInput from '@/components/CustomInputField';
+import { Box, Typography, Grid, useTheme } from '@mui/material';
 
+export interface FileUploadProps {
+  onFileSelect: (file: File | null) => void;
+  selectedFile: File | null;
+  acceptedFormats: string;
+  previewUrl?: string; 
+  sx?: object;
+}
 
 interface DocumentDetailsProps {
   onNext: () => void;
   onBack: () => void;
+  setFrontDocument: (doc: { raw: File; preview: string }) => void;
+  setBackDocument: (doc: { raw: File; preview: string }) => void;
 }
 
-const DocumentDetails: React.FC<DocumentDetailsProps> = ({ onNext, onBack , }) => {
+const DocumentDetails: React.FC<DocumentDetailsProps> = ({
+  onNext,
+  onBack,
+  setFrontDocument,
+  setBackDocument,
+}) => {
   const theme = useTheme();
-  const [documentType, setDocumentType] = useState('Passport');
+  const toast = useAppToast();
+
   const [documentNumber, setDocumentNumber] = useState('');
-  const [frontDocument, setFrontDocument] = useState<File | null>(null);
-  const [backDocument, setBackDocument] = useState<File | null>(null);
+  const [documentType, setDocumentType] = useState('Passport');
+  const [frontFile, setFrontFile] = useState<File | null>(null);
+  const [backFile, setBackFile] = useState<File | null>(null);
+  const [frontPreview, setFrontPreview] = useState('');
+  const [backPreview, setBackPreview] = useState('');
 
   const documentTypes = [
     { label: 'Passport', value: 'Passport' },
     { label: 'Driver\'s License', value: 'Driver\'s License' },
-    { label: 'National ID', value: 'National ID' },
-    { label: 'Utility Bill', value: 'Utility Bill' },
   ];
 
+   React.useEffect(() => {
+    const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
+    if (existing.documentType) setDocumentType(existing.documentType);
+    if (existing.documentNumber) setDocumentNumber(existing.documentNumber);
+    if (existing.documentPhotoFront) {
+      const frontUrl = `/kyc/${existing.documentPhotoFront}`;
+      setFrontPreview(frontUrl);
+      setFrontDocument({ raw: new File([], existing.documentPhotoFront), preview: frontUrl });
+    }
+    if (existing.documentPhotoBack) {
+      const backUrl = `/kyc/${existing.documentPhotoBack}`;
+      setBackPreview(backUrl);
+      setBackDocument({ raw: new File([], existing.documentPhotoBack), preview: backUrl });
+    }
+  }, []);
+
   const handleNext = () => {
+    const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
+    const updated = {
+      ...existing,
+      documentType,
+      documentNumber,
+    };
+    localStorage.setItem('KycData', JSON.stringify(updated));
+
+    console.log('[📤 NEXT CLICKED]');
+    console.log('Document Type:', documentType);
+    console.log('Document Number:', documentNumber);
+    console.log('Front File:', frontFile);
+    console.log('Back File:', backFile);
+
     onNext();
   };
 
@@ -34,13 +80,49 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ onNext, onBack , }) =
     onBack();
   };
 
+  const handleFileSelect = (file: File | null, type: 'front' | 'back') => {
+    if (!file) return;
+
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Only PDF, JPG, JPEG, and PNG formats are allowed');
+      return;
+    }
+
+    const preview = URL.createObjectURL(file);
+    const imageName = `${type}-document-${Date.now()}-${file.name}`;
+
+    const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
+    const updated = {
+      ...existing,
+      ...(type === 'front' ? { frontDocumentName: imageName } : { backDocumentName: imageName }),
+    };
+    localStorage.setItem('KycData', JSON.stringify(updated));
+
+    if (type === 'front') {
+      setFrontFile(file);
+       setFrontPreview(preview);
+      setFrontDocument({ raw: file, preview });
+
+      console.log('[✅ FRONT DOCUMENT SELECTED]');
+      console.log('Name:', file.name);
+      console.log('Preview:', preview);
+    } else {
+      setBackFile(file);
+      setBackPreview(preview);
+      setBackDocument({ raw: file, preview });
+
+      console.log('[✅ BACK DOCUMENT SELECTED]');
+      console.log('Name:', file.name);
+      console.log('Preview:', preview);
+    }
+  };
+
   return (
     <Box className="contact-details-container">
       <Box className="step-indicator">
         <Typography className="step-text">STEP 2 OF 3</Typography>
-        <Typography variant="h5" className="step-title">
-          Document Details
-        </Typography>
+        <Typography variant="h5" className="step-title">Document Details</Typography>
         <Box className="step-progress">
           <Box className="progress-bar active"></Box>
           <Box className="progress-bar active"></Box>
@@ -67,7 +149,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ onNext, onBack , }) =
 
         <Grid item xs={12}>
           <Box className="input-section">
-            <Typography className="input-label">SELECTED DOCUMENT NUMBER</Typography>
+            <Typography className="input-label">DOCUMENT NUMBER</Typography>
             <CustomInput
               fullWidth
               value={documentNumber}
@@ -78,13 +160,21 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ onNext, onBack , }) =
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <Box className="input-section" >
+          <Box className="input-section">
             <Typography className="input-label">UPLOAD DOCUMENT (FRONT)</Typography>
-            <FileUpload 
-              onFileSelect={setFrontDocument}
-              selectedFile={frontDocument}
+            <FileUpload sx={{color:'text.gray'}}
+              onFileSelect={(file) => handleFileSelect(file, 'front')}
+              selectedFile={frontFile}
               acceptedFormats=".jpg,.jpeg,.png,.pdf"
             />
+            {frontPreview && (
+            <Typography
+              className="file-name-text"
+              sx={{ mt: 1, fontSize: '14px', color: '#555' }}
+            >
+              Uploaded front: <strong>{frontPreview}</strong>
+            </Typography>
+          )}
           </Box>
         </Grid>
 
@@ -92,35 +182,34 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ onNext, onBack , }) =
           <Box className="input-section">
             <Typography className="input-label">UPLOAD DOCUMENT (BACK)</Typography>
             <FileUpload
-              onFileSelect={setBackDocument}
-              selectedFile={backDocument}
+            sx={{color:'text.gray'}}
+              onFileSelect={(file) => handleFileSelect(file, 'back')}
+              selectedFile={backFile}
               acceptedFormats=".jpg,.jpeg,.png,.pdf"
             />
+            {backPreview && (
+              <Typography
+                className="file-name-text"
+                sx={{ mt: 1, fontSize: '14px', color: '#555' }}
+              >
+                Uploaded back: <strong>{backPreview}</strong>
+              </Typography>
+            )}
           </Box>
         </Grid>
 
         <Grid item xs={12}>
-          <Box className="upload-note" >
+          <Box className="upload-note">
             <Typography className="upload-note-text">
-              <strong>Notes:</strong> Upload the selected document in .jpg, .jpeg or .pdf format, as described above. The maximum file size should be less than of 5mb. Before submitting, double-check that the document includes the correct information.
+              <strong>Note:</strong> Upload the selected document in JPG, PNG, or PDF format, max size 5MB. Make sure the document is clear and readable.
             </Typography>
           </Box>
         </Grid>
 
         <Grid item xs={12}>
           <Box className="button-container">
-            <CustomButton
-              className="back-button"
-              onClick={handleBack}
-            >
-              Back
-            </CustomButton>
-            <CustomButton
-              className="update-button"
-              onClick={handleNext}
-            >
-              Next
-            </CustomButton>
+            <CustomButton className="back-button" onClick={handleBack}>Back</CustomButton>
+            <CustomButton className="update-button" onClick={handleNext}>Next</CustomButton>
           </Box>
         </Grid>
       </Grid>

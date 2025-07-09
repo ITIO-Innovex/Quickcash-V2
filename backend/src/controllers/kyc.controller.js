@@ -52,7 +52,7 @@ module.exports = {
           documentPhotoFront:Image1,
           documentPhotoBack:Image2,
           addressProofPhoto:Image3,
-          status: "processing"
+          status: "pending"
         });
         
         const ObjectId = mongoose.Types.ObjectId;
@@ -698,30 +698,34 @@ module.exports = {
       });
     }
   },
-  getKycStatus: async(req,res) => {
-    try {
+  getKycStatus: async (req, res) => {
+  try {
     const userId = req.user?.id;
-    // console.log("🔍 Checking KYC status for User ID:", userId);
 
+    // 🔐 User ID required for fetching KYC
     if (!userId) {
-      console.log(" User ID missing in request.");
+      console.log("User ID missing in request.");
       return res.status(400).json({ message: "User ID is required" });
     }
 
+    // 🔍 Check KYC record for the given user
     const kycRecord = await Kyc.findOne({ user: userId });
 
+    // ❌ Not found
     if (!kycRecord) {
       console.log("ℹ️ No KYC record found for user:", userId);
       return res.status(404).json({ message: "KYC record not found" });
     }
 
+    // ✅ Found → Return the KYC status
+    console.log("✅ KYC STATUS:", kycRecord.status);
     return res.status(200).json({ status: kycRecord.status });
 
   } catch (error) {
     console.error("🚨 Error while fetching KYC status:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
-  },
+},
 }
 
 async function getWalletAddress(user, vaultAccountId, assetId) {
