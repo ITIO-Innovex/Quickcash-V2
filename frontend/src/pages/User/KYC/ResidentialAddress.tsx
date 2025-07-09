@@ -25,7 +25,9 @@ const ResidentialAddress: React.FC<ResidentialAddressProps> = ({ onBack, frontDo
 
   const toast = useAppToast();
   const navigate = useNavigate();
+  const [previewUrl, setPreviewUrl] = useState('');
   const [document, setDocument] = useState<File | null>(null);
+  const [isExistingKycData, setIsExistingKycData] = useState(false);
   const [documentType, setDocumentType] = useState('Bank Statement');
   const [errors, setErrors] = useState<{ documentType?: string; document?: string }>({});
   const [documentFileName, setDocumentFileName] = useState('');
@@ -60,11 +62,16 @@ const ResidentialAddress: React.FC<ResidentialAddressProps> = ({ onBack, frontDo
       }
 
       // ✅ Restore uploaded file name (just the name, file can't be restored fully)
-      if (parsed.addressDocumentName) {
-        setDocumentFileName(parsed.addressDocumentName);
-        setDocument(null); // We can't restore File object itself
+      if (parsed.addressProofPhoto) {
+        const path = `/kyc/${parsed.addressProofPhoto}`;
+        setDocumentFileName(parsed.addressProofPhoto);
+        setPreviewUrl(path);
+        setDocument(null); // no file restoration
       }
-
+       // ✅ Set flag if data was already present
+      if (parsed.addressProofPhoto || parsed.addressDocumentType) {
+        setIsExistingKycData(true);
+      }
       console.log('[✅ Restored Address Proof from KycData]');
     } catch (err) {
       console.error('[❌ Error parsing KycData]', err);
@@ -124,6 +131,56 @@ const handleUpdate = async () => {
       }
     };
 
+
+    const HandleUpdateKycData = async () => {
+  try {
+    const kycData = JSON.parse(localStorage.getItem('KycData') || '{}');
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('User not authenticated');
+      return;
+    }
+
+    const decoded = jwtDecode<JwtPayload>(token);
+
+    const formData = new FormData();
+    formData.append('user', decoded?.data?.id);
+    formData.append('email', kycData.email || '');
+    formData.append('documentType', kycData.documentType || '');
+    formData.append('primaryPhoneNumber', kycData.phone?.replace(/\D/g, '') || '');
+    formData.append('secondaryPhoneNumber', kycData.additionalPhone?.replace(/\D/g, '') || '');
+    formData.append('addressDocumentType', kycData.addressDocumentType || '');
+    formData.append('documentNumber', kycData.documentNumber || '');
+    formData.append('status', 'Processed');
+
+    // 👇 File fields
+    formData.append('addressProofPhoto', kycData.imageResi?.raw || '');
+    formData.append('documentPhotoFront', kycData.imageFront?.raw || '');
+    formData.append('documentPhotoBack', kycData.imageBack?.raw || '');
+
+    // ✅ Make PATCH call
+    const response = await axios.patch(`/${url}/v1/kyc/update/${kycData._id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (response.data.status === '201' || response.data.status === 201 || response.data.status === 'success') {
+      toast.success(response.data.message || 'KYC updated successfully');
+      localStorage.removeItem('KycData');
+      navigate('/dashboard');
+    } else {
+      toast.error(response.data.message || 'Failed to update KYC');
+    }
+
+  } catch (error: any) {
+    console.log("error", error);
+    toast.error(error?.response?.data?.message || 'Something went wrong');
+  }
+};
+
+
   return (
     <Box className="contact-details-container">
       <Box className="step-indicator">
@@ -172,8 +229,8 @@ const handleUpdate = async () => {
         <Grid item xs={12}>
           <Box className="input-section">
             <Typography className="input-label">UPLOAD DOCUMENT</Typography>
-            <FileUpload
-           onFileSelect={(file) => {
+           <FileUpload
+              onFileSelect={(file) => {
                 if (!file) return;
 
                 const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
@@ -184,30 +241,39 @@ const handleUpdate = async () => {
                   return;
                 }
 
-                const fileName = `residential-document-${Date.now()}-${file.name}`;
+                const fileName = `addressProofPhoto-${Date.now()})-${file.name}`;
+                const preview = URL.createObjectURL(file);
                 setDocument(file);
                 setDocumentFileName(fileName);
+                setPreviewUrl(preview);
                 setErrors({ ...errors, document: '' });
 
-                // Save to localStorage
                 const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
                 const updated = {
                   ...existing,
-                  addressDocumentName: fileName,
+                  addressProofPhoto: fileName,
                   addressDocumentType: documentType,
                 };
                 localStorage.setItem('KycData', JSON.stringify(updated));
 
                 console.log('[📤 Residential Address File Selected]:', fileName);
               }}
-            selectedFile={document}
-            acceptedFormats=".jpg,.jpeg,.png,.pdf"
-          />
-            {documentFileName && (
+              selectedFile={document}
+              acceptedFormats=".jpg,.jpeg,.png,.pdf"
+            />
+
+            {documentFileName && document && (
               <Typography className="file-name-text" sx={{ mt: 1, fontSize: '14px', color: '#555' }}>
                 Selected file: <strong>{documentFileName}</strong>
               </Typography>
             )}
+
+            {!document && documentFileName && (
+              <Typography sx={{ mt: 0.5, fontSize: '14px', color: '#555' }}>
+                Uploaded address proof: <strong>/kyc/{documentFileName}</strong>
+              </Typography>
+            )}
+
             {errors.document && (
               <Typography className="error-text" style={{ color: 'red', fontSize: '0.8rem' }}>
                 {errors.document}
@@ -231,10 +297,10 @@ const handleUpdate = async () => {
             </CustomButton>
             <CustomButton
               className="update-button"
-              onClick={handleUpdate}
+              onClick={isExistingKycData ? HandleUpdateKycData : handleUpdate}
               disabled={!document || !documentType}
             >
-              Update
+              {isExistingKycData ? 'Update KYC' : 'Submit'}
             </CustomButton>
           </Box>
         </Grid>

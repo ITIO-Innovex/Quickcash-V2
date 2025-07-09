@@ -6,6 +6,14 @@ import CustomSelect from '@/components/CustomDropdown';
 import CustomInput from '@/components/CustomInputField';
 import { Box, Typography, Grid, useTheme } from '@mui/material';
 
+export interface FileUploadProps {
+  onFileSelect: (file: File | null) => void;
+  selectedFile: File | null;
+  acceptedFormats: string;
+  previewUrl?: string; 
+  sx?: object;
+}
+
 interface DocumentDetailsProps {
   onNext: () => void;
   onBack: () => void;
@@ -26,11 +34,29 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({
   const [documentType, setDocumentType] = useState('Passport');
   const [frontFile, setFrontFile] = useState<File | null>(null);
   const [backFile, setBackFile] = useState<File | null>(null);
+  const [frontPreview, setFrontPreview] = useState('');
+  const [backPreview, setBackPreview] = useState('');
 
   const documentTypes = [
     { label: 'Passport', value: 'Passport' },
     { label: 'Driver\'s License', value: 'Driver\'s License' },
   ];
+
+   React.useEffect(() => {
+    const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
+    if (existing.documentType) setDocumentType(existing.documentType);
+    if (existing.documentNumber) setDocumentNumber(existing.documentNumber);
+    if (existing.documentPhotoFront) {
+      const frontUrl = `/kyc/${existing.documentPhotoFront}`;
+      setFrontPreview(frontUrl);
+      setFrontDocument({ raw: new File([], existing.documentPhotoFront), preview: frontUrl });
+    }
+    if (existing.documentPhotoBack) {
+      const backUrl = `/kyc/${existing.documentPhotoBack}`;
+      setBackPreview(backUrl);
+      setBackDocument({ raw: new File([], existing.documentPhotoBack), preview: backUrl });
+    }
+  }, []);
 
   const handleNext = () => {
     const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
@@ -75,6 +101,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({
 
     if (type === 'front') {
       setFrontFile(file);
+       setFrontPreview(preview);
       setFrontDocument({ raw: file, preview });
 
       console.log('[✅ FRONT DOCUMENT SELECTED]');
@@ -82,6 +109,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({
       console.log('Preview:', preview);
     } else {
       setBackFile(file);
+      setBackPreview(preview);
       setBackDocument({ raw: file, preview });
 
       console.log('[✅ BACK DOCUMENT SELECTED]');
@@ -139,6 +167,14 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({
               selectedFile={frontFile}
               acceptedFormats=".jpg,.jpeg,.png,.pdf"
             />
+            {frontPreview && (
+            <Typography
+              className="file-name-text"
+              sx={{ mt: 1, fontSize: '14px', color: '#555' }}
+            >
+              Uploaded front: <strong>{frontPreview}</strong>
+            </Typography>
+          )}
           </Box>
         </Grid>
 
@@ -151,6 +187,14 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({
               selectedFile={backFile}
               acceptedFormats=".jpg,.jpeg,.png,.pdf"
             />
+            {backPreview && (
+              <Typography
+                className="file-name-text"
+                sx={{ mt: 1, fontSize: '14px', color: '#555' }}
+              >
+                Uploaded back: <strong>{backPreview}</strong>
+              </Typography>
+            )}
           </Box>
         </Grid>
 

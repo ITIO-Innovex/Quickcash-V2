@@ -435,12 +435,6 @@ const debouncedSellCalc = useRef(
     try {
       const res = await calculateSellValues(coin, currency, value);
 
-      // 👇 Check if response is invalid or empty
-      if (!res || !res.data || !res.data.rate || res.data.rate === 0) {
-        error("This currency is not supported, choose another.");
-        return;
-      }
-
       // ✅ Handle successful data (optional: set state here)
       console.log("✅ Valid response:", res);
     } catch (err: any) {

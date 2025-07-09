@@ -31,12 +31,17 @@ const UserDashboard = () => {
           const kycStatus = res.data.status?.toLowerCase(); // Normalize casing
           console.log('🟣 KYC status of USER:', kycStatus);
 
-          if (kycStatus === 'declined' || !kycStatus) {
+         if (
+            kycStatus === 'declined' ||
+            kycStatus === 'created' || 
+            !kycStatus
+          ) {
             setPendingModalOpen(true);
           } else if (
             kycStatus === 'pending' ||
             kycStatus === 'submitted' ||
-            kycStatus === 'processing'
+            kycStatus === 'processing' ||
+            kycStatus === 'processed'
           ) {
             setSubmittedModalOpen(true);
           }
