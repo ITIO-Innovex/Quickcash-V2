@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   FormControl,
@@ -14,12 +13,13 @@ import Flag from 'react-world-flags';
 import getSymbolFromCurrency from 'currency-symbol-map';
 
 interface CountryOption {
-  base_code: string;
-  code: string;
-  name: string;
+  _id: string;
   currency: string;
-  flagCode: string;
-  ba
+  currencyName: string;
+  country: string;
+  countryName: string;
+  status: boolean;
+  defaultc: boolean;
 }
 
 interface CountryDropdownProps extends Omit<MuiSelectProps, 'variant'> {
@@ -28,6 +28,8 @@ interface CountryDropdownProps extends Omit<MuiSelectProps, 'variant'> {
   variant?: 'outlined' | 'filled' | 'standard';
   showFlag?: boolean;
   showCurrency?: boolean;
+  showBalance?: boolean;
+  userAccounts?: any[];
 }
 
 const CountryDropdown: React.FC<CountryDropdownProps> = ({ 
@@ -36,10 +38,18 @@ const CountryDropdown: React.FC<CountryDropdownProps> = ({
   variant = 'outlined',
   showFlag = true,
   showCurrency = true,
+  showBalance = false,
+  userAccounts = [],
   ...props 
 }) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
+
+  // Function to get balance for a specific currency
+  const getBalanceForCurrency = (currency: string) => {
+    const account = userAccounts.find((acc: any) => acc.currency === currency);
+    return account ? parseFloat(account.amount).toFixed(2) : '0.00';
+  };
 
   return (
     <FormControl fullWidth variant={variant}>
@@ -78,13 +88,24 @@ const CountryDropdown: React.FC<CountryDropdownProps> = ({
         }}
       >
         {countries.map((country) => (
-          <MenuItem key={country.base_code} value={country.base_code}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {showFlag && <Flag code={country.base_code} height="20" />}
-              <Typography>
-                {getSymbolFromCurrency(country.base_code)}
-                {showCurrency && ` ${country.base_code}`}
-              </Typography>
+          <MenuItem key={country._id} value={country.currency}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%', justifyContent: 'space-between' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {showFlag && (
+                  <Box className="country-flag" sx={{ width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                    <Flag code={country.country} height="20" />
+                  </Box>
+                )}
+                <Typography>
+                  {getSymbolFromCurrency(country.currency)}
+                  {showCurrency && ` ${country.currency}`}
+                </Typography>
+              </Box>
+              {showBalance && (
+                <Typography variant="body2" sx={{ color: theme.palette.success.main, fontWeight: 'bold' }}>
+                  {getSymbolFromCurrency(country.currency)}{getBalanceForCurrency(country.currency)}
+                </Typography>
+              )}
             </Box>
           </MenuItem>
         ))}
