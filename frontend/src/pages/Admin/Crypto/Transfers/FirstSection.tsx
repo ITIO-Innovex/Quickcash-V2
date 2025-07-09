@@ -220,9 +220,42 @@ const FirstSection = () => {
               <Typography><strong>Status:</strong></Typography>
               <Typography>{selectedRow.status}</Typography>
             </Box>
+            <Box mt={4} mb={1}>
+              <Typography variant="h6"><strong>User Details</strong></Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2}>
+              <Typography><strong>Name:</strong></Typography>
+              <Typography>{selectedRow.userDetails?.[0]?.name || 'N/A'}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2}>
+              <Typography><strong>Email:</strong></Typography>
+              <Typography>{selectedRow.userDetails?.[0]?.email || 'N/A'}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2}>
+              <Typography><strong>Mobile:</strong></Typography>
+              <Typography>{selectedRow.userDetails?.[0]?.mobile || 'N/A'}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2}>
+              <Typography><strong>Country:</strong></Typography>
+              <Typography>{selectedRow.userDetails?.[0]?.country || 'N/A'}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2}>
+              <Typography><strong>Default Currency:</strong></Typography>
+              <Typography>{selectedRow.userDetails?.[0]?.defaultCurrency || 'N/A'}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2}>
+              <Typography><strong>User Status:</strong></Typography>
+              <Typography>{selectedRow.userDetails?.[0]?.status ? 'Active' : 'Inactive'}</Typography>
+            </Box>
             {/* Account Cards section */}
             <Box className="accounts-list-section">
-              <Box className="accounts-list-header">Accounts List</Box>
+              {/* <Box className="accounts-list-header">Accounts List</Box>
               <Box className="accounts-list-grid">
                 {accountsToShow.length === 0 ? (
                   <Typography>No accounts found.</Typography>
@@ -239,7 +272,7 @@ const FirstSection = () => {
                     </Box>
                   ))
                 )}
-              </Box>
+              </Box> */}
               {selectedRow?.status === "pending" && (
                 <Box className="accounts-status-row w-100">
                   <span>Status</span>
@@ -256,9 +289,10 @@ const FirstSection = () => {
               )}
             </Box>
             <Box display="flex" justifyContent="flex-end" gap={2} >
-              <CustomButton onClick={() => HandleUpdateCrypto(selectedRow)}
-                loading={loaderr}>Submit</CustomButton>
-              <Button className="Custom-button" onClick={handleClose}>Close</Button>
+              {selectedRow?.status === "pending" && (
+                <CustomButton onClick={() => HandleUpdateCrypto(selectedRow)}
+                  loading={loaderr}>Submit</CustomButton>)}
+              {/* <Button className="Custom-button" onClick={handleClose}>Close</Button> */}
             </Box>
           </>
         )}

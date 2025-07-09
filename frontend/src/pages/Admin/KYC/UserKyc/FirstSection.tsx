@@ -103,12 +103,12 @@ const FirstSection = () => {
 
             <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
               <Typography><strong>Contact NO:</strong></Typography>
-              <Typography>1234</Typography>
+              <Typography>{selectedRow.primaryPhoneNumber}</Typography>
             </Box>
 
             <Box display="flex" justifyContent="space-between" mb={2}>
               <Typography><strong>Secondary Phone:</strong></Typography>
-              <Typography>1234</Typography>
+              <Typography>{selectedRow.secondaryPhoneNumber}</Typography>
             </Box>
 
              <Box display="flex" justifyContent="space-between" mb={2}>

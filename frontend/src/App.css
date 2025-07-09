@@ -3227,7 +3227,7 @@ margin: 0;
 .chip {
   width: 48px;
   height: 32px;
-  background-color: yellow;
+  background-color: yellow !important;
   border-radius: 4px;
   opacity: 0.8;
 }

@@ -34,14 +34,16 @@ interface JwtPayload {
     type: string;
   };
 }
-const CardList = () => {
+const CardList = ({ cardList = [], onRefresh, loading }) => {
   const theme = useTheme();
   const toast = useAppToast(); 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
-  const [cardData, setCardData] = useState([]);
+
+  // Remove cardData state and fetching logic
+  // Use cardList prop directly
 
   const url = import.meta.env.VITE_NODE_ENV == "production" ? "api" : "api";
 
@@ -56,26 +58,14 @@ const CardList = () => {
     }
   };
 
-  const getCardsList = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return toast.error("No token found");
-
-      const decoded = jwtDecode<JwtPayload>(token);
-      const accountId = decoded.data.id;
-
-      const res = await api.get(`/${url}/v1/card/list/${accountId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      console.log("Fetched cards:", res.data.data); // <-- DEBUG
-      if (res.data.status === 201) {
-        setCardData(res.data.data);
-      }
-    } catch (error) {
-      console.log(error);
-      toast.error("Failed to fetch card list");
-    }
-  };
+  // Add normalization function
+  const normalizeCard = (card) => ({
+    ...card,
+    cardNumber: card.cardNumber || card.cardnumber || '',
+    cardType: card.cardType || card.type || '',
+    expiry: card.expiry,
+    id: card._id || card.card_id || '',
+  });
 
   const getCardDetails = async (id) => {
     try {
@@ -84,7 +74,6 @@ const CardList = () => {
       });
       if (res.data.status === 201) {
         const card = res.data.data;
-        console.log(card, 'card')
         setSelectedCard({
           id: card._id,
           createdDate: card.createdAt,
@@ -114,7 +103,7 @@ const CardList = () => {
       });
       if (res.data.status === 201) {
         toast.success("Card deleted successfully");
-        getCardsList();
+        onRefresh(); // Call onRefresh to refresh the parent's list
       } else {
         toast.error("Failed to delete");
       }
@@ -159,7 +148,7 @@ const CardList = () => {
       if (res.data.status === 201) {
         toast.success(res.data.message);
         setModalOpen(false);
-        getCardsList();
+        onRefresh(); // Call onRefresh to refresh the parent's list
       } else {
         toast.error("Failed to update card");
       }
@@ -170,9 +159,7 @@ const CardList = () => {
   };
 
 
-  useEffect(() => {
-    getCardsList();
-  }, []);
+  // Remove getCardsList and useEffect for fetching
 
   const getCurrencyColor = (currency) => {
     const map = {
@@ -238,13 +225,13 @@ const CardList = () => {
   });
 
 
-  const rows = cardData.map(card => ({
-    id: card._id, // important for keys & actions
+  const rows = cardList.map(card => ({
+    id: card._id || card.card_id || card.id, // support all possible ids
     createdDate: new Date(card.createdAt).toLocaleDateString(),
     name: card.name,
     cardNumber: (
       <Typography fontFamily="monospace">
-        {formatCardNumber(card.cardNumber)}
+        {formatCardNumber(card.cardNumber || card.cardnumber)}
       </Typography>
     ),
     currency: (
@@ -252,52 +239,16 @@ const CardList = () => {
     ),
     cvv: card.cvv,
     expiryDate: card.expiry,
-    // status: (
-    //   <Chip label={card.status ? 'Active' : 'Inactive'} color={card.status ? 'success' : 'default'} />
-    // ),
-    // action: (
-    //   <Box display="flex" gap={1}>
-    //     <IconButton size="small" onClick={() => getCardDetails(card._id)}>
-    //       <Edit fontSize="small" />
-    //     </IconButton>
-    //     <IconButton size="small" onClick={() => deleteCard(card._id)}>
-    //       <Delete fontSize="small" />
-    //     </IconButton>
-    //   </Box>
-    // )
     status: card.status,
-    action: card._id
+    action: card._id || card.card_id || card.id
   }));
-  useEffect(() => {
-    console.log("Updated cardData:", cardData);
-  }, [cardData]);
+ 
 
   return (
     <Box sx={{ padding: 3 }} style={{ backgroundColor: theme.palette.background.default }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h6">Card List</Typography>
-        <Box display="flex" alignItems="center" gap={2}>
-          <Typography variant="body2">Rows per page:</Typography>
-          <FormControl size="small">
-            <Select
-              value={rowsPerPage.toString()} // ✅ convert to string
-              onChange={(e) => {
-                setRowsPerPage(parseInt(e.target.value, 10)); // still parse as number
-                setPage(0);
-              }}
-            >
-
-              {[5, 10, 20].map((count) => (
-                <MenuItem key={count} value={count}>
-                  {count}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Typography variant="body2">
-            {`${page * rowsPerPage + 1}–${Math.min((page + 1) * rowsPerPage, rows.length)} of ${rows.length}`}
-          </Typography>
-        </Box>
+       
       </Box>
 
       {/* <CustomTable

@@ -63,6 +63,13 @@ async function seedFeeStructure() {
       commissionType: "percentage",
       value: 12,
       minimumValue: 10
+    },
+    {
+      user: adminId?._id,
+      type: feetype?.[6]?._id,
+      commissionType: "percentage",
+      value: 12,
+      minimumValue: 10
     }
     ]
 

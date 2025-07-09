@@ -75,9 +75,9 @@ const EditCardForm: React.FC<EditCardFormProps> = ({
         label="Card Status"
         value={formData.status}
         onChange={(e) => handleChange('status', e.target.value)}
-        InputProps={{
-          readOnly:true
-        }}
+        // InputProps={{
+        //   readOnly:true
+        // }}
       >
         {statuses.map((status) => (
           <MenuItem key={status} value={status}>

@@ -68,7 +68,7 @@ const cardSchema = new Schema({
     type: Boolean,
     default: false,
   }
-});
+}, { timestamps: true });
 
 const Card = mongoose.model('Card', cardSchema);
 

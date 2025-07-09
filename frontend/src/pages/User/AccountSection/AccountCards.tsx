@@ -23,17 +23,17 @@ interface AccountCardProps {
 const AccountCard: React.FC<AccountCardProps> = ({ account, onViewAccount }) => {
   const theme = useTheme();
   return (
-    <Box className="account-card" sx={{backgroundColor:theme.palette.background.default}}>
+    <Box className="account-card" sx={{ backgroundColor: theme.palette.background.default }}>
       <Box className="account-card-header">
         <Box className="account-card-info">
           <ReactCountryFlag
             countryCode={account.country}
             svg
-            style={{ width: 24, height: 16, borderRadius: 1, objectFit: 'cover' }}
+            style={{ width: 24, height: 24, borderRadius: 50, objectFit: 'cover' }}
             title={account.country}
           />
           <Box>
-            <h3 className="account-title" style={{color:theme.palette.text.primary}}>
+            <h3 className="account-title" style={{ color: theme.palette.text.primary }}>
               {account.currency} account
               {account.isDefault && (
                 <span className="account-default-badge">DEFAULT</span>
@@ -43,7 +43,7 @@ const AccountCard: React.FC<AccountCardProps> = ({ account, onViewAccount }) => 
         </Box>
       </Box>
       <Box className="account-balance" >
-        <p style={{color:theme.palette.text.gray}}>{account.balance}</p>
+        <p style={{ color: theme.palette.text.gray }}>{account.balance}</p>
       </Box>
       <CustomButton
         onClick={() => onViewAccount(account)}

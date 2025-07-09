@@ -25,18 +25,18 @@ const TransactionHistory = () => {
     };
     waitForActiveCurr();
   }, [location]);
-  const getTransactionsList = async() => {
+  const getTransactionsList = async () => {
     try {
       const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
-      var valSearch = location?.search?.replace("?currency=","").replace("?","");
+      var valSearch = location?.search?.replace("?currency=", "").replace("?", "");
       let apiUrl = `/${url}/v1/transaction/list/${accountId?.data?.id}`;
       let method = "get";
       let data: any = {};
-      if(valSearch === "all") {
+      if (valSearch === "all") {
         //No need to change the URL, it will fetch all transactions
-      }else if(valSearch.substring(0, 6) === "crypto") {
-        apiUrl = `/${url}/v1/crypto/listbyId/${valSearch?.replace("crypto=","")}`;
-      } else{
+      } else if (valSearch.substring(0, 6) === "crypto") {
+        apiUrl = `/${url}/v1/crypto/listbyId/${valSearch?.replace("crypto=", "")}`;
+      } else {
         apiUrl = `/${url}/v1/transaction/account`;
         method = "post";
         const activeCurr = localStorage.getItem("activeCurr");
@@ -49,7 +49,7 @@ const TransactionHistory = () => {
 
       }
       let result;
-      if(method === "get") {
+      if (method === "get") {
         result = await api.get(apiUrl);
       } else {
         result = await api.post(apiUrl, data);
@@ -76,23 +76,18 @@ const TransactionHistory = () => {
                 : getSymbolFromCurrency(transaction?.from_currency)
             }${parseFloat(transaction?.postBalance ?? 0).toFixed(2)}`
             ,
-            status: (
-              <Chip
-                label={transaction.status.toUpperCase()}
-                sx={{
-                  backgroundColor: transaction.status === 'pending' ? '#fffbe0' : '#e0f2fe',
-                  color: transaction.status === 'pending' ? '#b45309' : '#0284c7',
-                  fontWeight: 'semibold',
-                  borderRadius: '9999px',
-                  fontSize: '0.75rem',
-                }}
-              />
-            ),
+        status: (() => {
+              const rawStatus = transaction.status?.toLowerCase?.() || '';
+              return ['success', 'succeeded', 'completed'].includes(rawStatus)
+                ? 'SUCCESS'
+                : rawStatus.toUpperCase();
+            })(),
           });
         });
         setTransactionHistory(transactions);
+        console.log("Transaction History:", transactions);
       }
-    }catch (error) {
+    } catch (error) {
       console.error("Error fetching transaction history:", error);
     }
   }
@@ -102,14 +97,32 @@ const TransactionHistory = () => {
     { field: 'type', headerName: 'TYPE', minWidth: 200 },
     { field: 'amount', headerName: 'AMOUNT', minWidth: 100 },
     { field: 'balance', headerName: 'BALANCE', minWidth: 100 },
-    { field: 'status', headerName: 'STATUS', minWidth: 100 },
+     {
+      field: 'status',
+      headerName: 'Status',
+      render: (row: any) => {
+        const rawStatus = row.status?.toLowerCase();
+
+        const isSuccess = ['succeeded', 'success', 'complete', 'successful'].includes(rawStatus);
+        const displayText = isSuccess ? 'Success' : row.status;
+        const statusClass = isSuccess ? 'success' : rawStatus; // force same class for all success types
+
+        return (
+          <span className={`status-chip ${statusClass}`}>
+            {displayText}
+          </span>
+        );
+      }
+    },
+
+
   ];
 
 
   return (
     <Box>
       <Card>
-        <CardContent sx={{ p: 0, '&:last-child': { pb: 0 }, backgroundColor:theme.palette.background.default }}>
+        <CardContent sx={{ p: 0, '&:last-child': { pb: 0 }, backgroundColor: theme.palette.background.default }}>
           <Typography
             sx={{
               mb: 2,
