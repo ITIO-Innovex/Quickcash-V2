@@ -145,6 +145,13 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
     }
   }, [sendAmount, receiveAmount, isEditingSend, exchangeRate]);
 
+  // Sync local state with formData on mount and when formData changes
+  useEffect(() => {
+    setFromAmount(formData.sendAmount || 0);
+    setSendCurrency(formData.fromCurrency || '');
+    setToCurrency(formData.toCurrency || '');
+  }, [formData]);
+
   const HandleFromAmount = (value:any) => {
     setFromAmount(value);
     var checkVal = parseFloat(value) + parseFloat(feeCharge);
@@ -175,15 +182,26 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
 
   const handleContinue = () => {
     if (sendCurrencyCountry && sendCurrency && toCurrency && fromAmount && toCurrencyCountry && convertedValue) {
-        updateFormData({
-          fromCurrency,
-          toCurrency,
-          sendAmount: fromAmount,
-          receiveAmount: convertedValue,
-          feeCharge,
-          // ...other fields as needed
-        });
-        onNext();
+      updateFormData({
+        fromCurrency,
+        toCurrency,
+        sendAmount: fromAmount,
+        receiveAmount: convertedValue,
+        feeCharge,
+        // ...other fields as needed
+      });
+      onNext();
+    } else {
+      toast.error('Please fill all required fields and ensure conversion is complete.');
+      // For debugging, still advance to next step:
+      updateFormData({
+        fromCurrency,
+        toCurrency,
+        sendAmount: fromAmount,
+        receiveAmount: convertedValue,
+        feeCharge,
+      });
+      onNext();
     }
   };
   const HandleToCurrency = (val:any) => {
@@ -249,9 +267,11 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
           setRate(parseFloat(response.data.result.convertedAmount).toFixed(2));
         } else {
           setExchangeError(response.data.validationMessage[0]);
+          toast.error(response.data.validationMessage[0] || 'Currency conversion failed.');
         }
       } catch (error) {
-        console.error(error);
+        setExchangeError('Currency conversion failed.');
+        toast.error('Currency conversion failed.');
       }
     }
   }
@@ -361,34 +381,17 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
             Recipient gets
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                mr: 2,
-                minWidth: '120px',
-              }}
-            >
-              {(toCurrencyCountry) && (
+            <Box sx={{ display: 'flex', alignItems: 'center', mr: 2, minWidth: '120px' }}>
+              {formData.selectedCurrency && formData.selectedCurrencyCountry && (
                 <Flag
-                  code={toCurrencyCountry}
+                  code={formData.selectedCurrencyCountry}
                   height="20"
                   style={{ marginRight: 8 }}
                 />
               )}
-              <FormControl size="small" sx={{ minWidth: 80 }}>
-                <Select
-                  value={toCurrency}
-                  onChange={(e) => HandleToCurrency(e.target.value)}
-                  disabled
-                >
-                  {currencyList.map((currency) => (
-                    <MenuItem key={currency.currency}  value={`${currency?.currency}-${currency?._id}-${currency?.country}`}>
-                      {currency.currency}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Box sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
+                {getSymbolFromCurrency(formData.selectedCurrency)} {formData.selectedCurrency}
+              </Box>
             </Box>
             <TextField
               type="number"
@@ -404,10 +407,10 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
                   textAlign: 'right',
                 },
               }}
+              InputProps={{
+                readOnly: true,
+              }}
             />
-            <span style={{ fontWeight: 600, marginLeft: 8 }}>
-              {getSymbolFromCurrency(formData.selectedCurrency)} {formData.selectedCurrency}
-            </span>
           </Box>
         </Box>
 
@@ -504,9 +507,6 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
           <Grid item xs={6}>
             <CustomButton
               onClick={handleContinue}
-              disabled={
-                !fromCurrency || !toCurrency || !sendAmount || !receiveAmount
-              }
               fullWidth
               className="continue-button"
             >
