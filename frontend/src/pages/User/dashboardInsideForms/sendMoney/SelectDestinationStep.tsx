@@ -28,6 +28,8 @@ interface SelectDestinationStepProps {
   onBeneficiaryTab: () => void;
   onSelectBeneficiary?: (beneficiary: Beneficiary) => void;
   currencyList?:any[];
+  userId: string;
+  accountList: any[];
 }
 
 // Step 1: Destination Selection Component - Choose destination country or select existing beneficiary
@@ -38,6 +40,8 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
   onBeneficiaryTab,
   onSelectBeneficiary,
   currencyList = [],
+  userId,
+  accountList,
 }) => {
   const theme  = useTheme();
   const navigate = useNavigate();
@@ -77,13 +81,16 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
     const val = `${currency}-${id}-${country}`;
     setSelectedCurrencyVal(val);
     setSelectedCurrency(currency);
-    // Also update selectedCurrencyObj in formData
     const selectedObj = mappedCurrencyList.find(c => c.currency === currency);
     updateFormData({
       selectedCurrency: currency,
       toCurrency: currency,
       sendCurrencyData: val,
       selectedCurrencyObj: selectedObj,
+      user: userId,
+      source_account: accountList?.[0]?._id,
+      addedBy: userId,
+      country: selectedObj?.country,
     });
   };
 
@@ -101,7 +108,11 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
       updateFormData({ 
         selectedCurrency,
         toCurrency: selectedCurrency,
-        sendCurrencyData:selectedCurrencyVal
+        sendCurrencyData:selectedCurrencyVal,
+        user: userId,
+        source_account: accountList?.[0]?._id,
+        addedBy: userId,
+        country: mappedCurrencyList.find(c => c.currency === selectedCurrency)?.country,
       });
       onNext();
     }

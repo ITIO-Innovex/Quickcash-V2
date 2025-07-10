@@ -25,7 +25,7 @@ const { verifySecondaryToken } = require('../middlewares/admin.middleware');
 const { verifyAccountWithUser } = require('../middlewares/aacount.middleware');
 
 router.route('/add').post(verifyToken,verifyAccountWithUser,addTransaction);
-router.route('/addsend').post(verifyToken,verifyAccountWithUser,sendTransaction);
+router.route('/addsend').post(verifyToken,sendTransaction);
 router.route('/list/:id').get(verifyToken,transactionList);
 router.route('/admin/listall').get(verifySecondaryToken,admintransaction_all);
 router.route('/:id').get(verifyToken,transactionById);

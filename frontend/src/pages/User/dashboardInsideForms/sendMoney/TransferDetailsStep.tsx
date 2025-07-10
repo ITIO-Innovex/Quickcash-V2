@@ -7,6 +7,9 @@ import {
 } from "@mui/material";
 import { CheckCircle } from 'lucide-react';
 import CustomButton from '@/components/CustomButton';
+import { useAppToast } from '@/utils/toast';
+import { jwtDecode } from 'jwt-decode';
+import { JwtPayload } from '@/types/jwt';
 
 interface TransferDetailsStepProps {
   formData: any;
@@ -16,25 +19,81 @@ interface TransferDetailsStepProps {
 
 const TransferDetailsStep: React.FC<TransferDetailsStepProps> = ({
   formData,
+  updateFormData,
   onPrevious,
 }) => {
   const [isPending, setIsPending] = React.useState(false);
   const [pendingMessage, setPendingMessage] = React.useState('');
+  const url = import.meta.env.VITE_NODE_ENV === 'production' ? 'api' : 'api';
+  const toast = useAppToast();
+  const token = localStorage.getItem('token');
+  const decoded = token ? jwtDecode<JwtPayload>(token) : null;
+  const userId = decoded?.data?.id;
+  // You may need to pass 'list' and 'selectedBeneficiary' as props if not available here
+  // For now, fallback to formData.beneficiaryData and formData.accountList
+  const accountList = formData.accountList || [];
+  const selectedBeneficiary = formData.beneficiaryData || {};
 
   const handleSubmit = async () => {
+    setIsPending(true);
+    setPendingMessage('Submitting your transfer...');
     try {
-      setIsPending(true);
-      setPendingMessage('Submitting your transfer...');
-
-      // Mock API call to simulate backend transaction creation
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate network delay
-
-      // Simulate successful submission
-      setPendingMessage('Your transaction is pending admin approval.');
-      // Optionally, start polling for status here
+      const payload = {
+        user: formData.user || userId,
+        source_account: formData.source_account || (accountList[0]?._id),
+        info: formData.info,
+        country: formData.country,
+        from_currency: formData.fromCurrency,
+        to_currency: formData.toCurrency,
+        amount: formData.sendAmount,
+        amountText: formData.receiveAmount,
+      };
+      // Debug log for critical fields
+      console.log('DEBUG: user:', payload.user, 'source_account:', payload.source_account);
+      if (!payload.user || !payload.source_account) {
+        toast.error('User or source account is missing!');
+        setIsPending(false);
+        setPendingMessage(`Missing fields: ${!payload.user ? 'user ' : ''}${!payload.source_account ? 'source_account ' : ''}`);
+        return;
+      }
+      console.log('PAYLOAD TO API:', payload);
+      const apiUrl = `${url}/v1/transaction/addsend`;
+      let authHeader = {};
+      if (token) {
+        try {
+          if (decoded) {
+            authHeader = { 'Authorization': `Bearer ${token}` };
+          }
+        } catch (e) {
+          // Invalid token, do not set header
+        }
+      }
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeader,
+        },
+        body: JSON.stringify(payload),
+      });
+      if (response.ok) {
+        setPendingMessage('Your transaction is pending admin approval.');
+        toast.success('Transaction submitted successfully!');
+        // Optionally, reset form or redirect here
+      } else if (response.status === 403) {
+        setIsPending(false);
+        setPendingMessage('You are not authorized to perform this action (403).');
+        toast.error('You are not authorized to perform this action (403).');
+      } else {
+        setIsPending(false);
+        setPendingMessage('Failed to submit transaction. Please try again.');
+        const errorData = await response.json().catch(() => ({}));
+        toast.error(errorData.message || 'Failed to submit transaction.');
+      }
     } catch (error) {
       setIsPending(false);
       setPendingMessage('An error occurred. Please try again.');
+      toast.error('An error occurred. Please try again.');
     }
   };
 
@@ -47,6 +106,18 @@ const TransferDetailsStep: React.FC<TransferDetailsStepProps> = ({
         Review your transfer details before confirming
       </Typography>
           
+      {/* Transfer Method Display */}
+      {formData.transferMethod && (
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, p: 1.5, bgcolor: '#e3f2fd', borderRadius: 2 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600, mr: 1 }}>
+            Transfer Method:
+          </Typography>
+          <Typography variant="body1" sx={{ textTransform: 'capitalize' }}>
+            {formData.transferMethod}
+          </Typography>
+        </Box>
+      )}
+
       {/* Fee, Amount, Net Pay Section */}
       <Box className="fee-netpay-section" sx={{ mt: 2, mb: 2, p: 2, bgcolor: '#f9f9fb', borderRadius: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}>

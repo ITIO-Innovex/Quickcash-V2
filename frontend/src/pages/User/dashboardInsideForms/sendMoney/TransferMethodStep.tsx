@@ -139,12 +139,16 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
       ...prev,
       [field]: value
     }));
+    if (field === 'purpose' || field === 'paymentDescription') {
+      updateFormData({ info: value });
+    }
   };
 
   const handleContinue = () => {
     updateFormData({ 
       transferMethod: selectedMethod,
-      transferFormData: formFields
+      transferFormData: formFields,
+      info: formFields.purpose || formFields.paymentDescription || '',
     });
     onNext();
   };

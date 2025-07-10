@@ -1272,57 +1272,65 @@ module.exports = {
   },
   // This function is used for send transaction details to the user
   sendTransaction: async(req,res) => {
-    const {user,source_account,iban,bic,tr_type,receipient,info,trans_type,country,to_currency,from_currency,amount,amountText,status,addedBy} = req.body;
+    // Only use the required fields for a simple send-money transaction
     try {
-      if(trans_type == "" || amount == "" || source_account == "" || user == "") {
-        return res.status(401).json({
-          status: 401,
-          message: "Transaction Type, User, Source Account and Country Code are mandatory",
+      const { user, source_account, info, country, from_currency, to_currency, amount, amountText } = req.body;
+      
+      // Basic validation (optional, can be removed if not needed)
+      if (!user || !source_account || !from_currency || !to_currency || !amount) {
+        return res.status(400).json({
+          status: 400,
+          message: "Missing required fields",
           data: null
-        })
+        });
       }
 
-      const remainingBalance = await Account.findOne({_id: source_account});
-  
-      if(trans_type == "Add Money") {
-        const remainingBalanceto = await Receipient.findOne({_id: receipient});
-        const transaction = await Transaction.create({
-          user,source_account,receipient,info,iban,bic,trans_type: tr_type == "rbank-transfer" ? "External Transfer" : "Beneficiary Transfer Money",tr_type: tr_type == "rbank-transfer" ? "bank-transfer" : tr_type,country,from_currency,status,
-          transfer_account:receipient,to_currency,addedBy,trx:Math.floor(Math.random() * 999999999999)
-        });
+      // Fetch the source account to get the current balance
+      const sourceAccount = await Account.findById(source_account);
+      const postBalance = sourceAccount ? sourceAccount.amount : 0;
 
-        await Transaction.findByIdAndUpdate(
-        {
-          _id:transaction?._id
-        },
-        {
-          amount: parseFloat(req?.body?.amount),
-          amountText:amountText,
-          postBalance: parseFloat(remainingBalance?.amount),
-          extraType: 'debit',
-          fee: req?.body?.fee,
-          conversionAmount: req?.body?.conversionAmount,
-          conversionAmountText: req?.body?.conversionAmountText,
-          dashboardAmount: from_currency == "USD" ? Math.abs(parseFloat(req?.body?.amount)) : await convertCurrencyAmount(from_currency,"USD",req?.body?.amount)
-        },
-        {
-          new: true,
-        });
-      } 
-    
+      console.log({
+        user,
+        source_account,
+        info,
+        country,
+        from_currency,
+        to_currency,
+        amount,
+        amountText,
+        trans_type: "Send Money",
+        trx: Math.floor(Math.random() * 999999999999),
+        status: "pending",
+        postBalance,
+      });
+
+      const transaction = await Transaction.create({
+        user,
+        source_account,
+        info,
+        country,
+        from_currency,
+        to_currency,
+        amount,
+        amountText,
+        trans_type: "Send Money",
+        trx: Math.floor(Math.random() * 999999999999),
+        status: "pending",
+        postBalance,
+      });
+
       return res.status(200).json({
         status: 201,
         message: "Transaction is added Successfully!!!",
-        data:receipient
-      })
-
+        data: transaction
+      });
     } catch (error) {
-      console.log(error);
+      console.log("Transaction creation error:", error);
       return res.status(500).json({
         status: 500,
         message: "Something went wrong with api",
         data: error
-      })
+      });
     }
   },
   // This function is used for export excel details

@@ -34,6 +34,7 @@ interface Beneficiary {
 // Main Send Money Component - Handles the multi-step money transfer process
 const SendMoney = () => {
   const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
+  const userId = accountId?.data?.id;
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,7 +57,7 @@ const SendMoney = () => {
   const steps = ['Select Destination', 'Select Currencies', 'Transfer Method', 'Transfer Details'];
 
   // API integeration for sending money by Pawnesh Kumar
-  const {list} = useAccount(accountId?.data?.id);
+  const {list} = useAccount(userId);
   const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
   const handleBack = () => {
     navigate("/dashboard");
@@ -89,7 +90,12 @@ const SendMoney = () => {
     updateFormData({
       toCurrency: beneficiary.currency,
       selectedCountry: beneficiary.country,
-      beneficiaryData: beneficiary
+      beneficiaryData: beneficiary,
+      user: userId,
+      source_account: list?.[0]?._id,
+      recipient: beneficiary.id,
+      addedBy: userId,
+      country: beneficiary.country,
     });
     setActiveStep(1); // Move to currency selection step
   };
@@ -104,8 +110,22 @@ const SendMoney = () => {
     }
   }, [location.state]);
 
+  // Set source_account as soon as accounts are loaded and not set
+  useEffect(() => {
+    if (list && list.length > 0 && !formData.source_account) {
+      setFormData(prev => ({ ...prev, source_account: list[0]._id }));
+    }
+  }, [list]);
+
   // Step 1: Destination Selection Component - Choose country or go to beneficiary selection
   const renderStepContent = () => {
+    if (list && list.length === 0) {
+      return (
+        <Box sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" color="error">No accounts found. Please add an account before sending money.</Typography>
+        </Box>
+      );
+    }
     switch (activeStep) {
       case 0:
         return (
@@ -116,6 +136,8 @@ const SendMoney = () => {
             onBeneficiaryTab={handleBeneficiaryTab}
             onSelectBeneficiary={handleBeneficiarySelect}
             currencyList={list}
+            userId={userId}
+            accountList={list}
           />
         );
       case 1:
@@ -128,6 +150,7 @@ const SendMoney = () => {
             onPrevious={handlePrevious}
             selectedBeneficiary={selectedBeneficiary}
             currencyList={list}
+            accountList={list}
           />
         );
       case 2:
@@ -138,6 +161,7 @@ const SendMoney = () => {
             updateFormData={updateFormData}
             onNext={handleNext}
             onPrevious={handlePrevious}
+            accountList={list}
           />
         );
       case 3:
@@ -147,6 +171,7 @@ const SendMoney = () => {
             formData={formData}
             updateFormData={updateFormData}
             onPrevious={handlePrevious}
+            accountList={list}
           />
         );
       default:
