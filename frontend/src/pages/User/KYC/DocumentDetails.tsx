@@ -1,3 +1,4 @@
+import PDFImage from '@/assets/PDF.png';
 import React, { useState } from 'react';
 import { useAppToast } from '@/utils/toast';
 import FileUpload from '@/components/FileUpload';
@@ -168,13 +169,21 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({
               acceptedFormats=".jpg,.jpeg,.png,.pdf"
             />
 
-            {frontPreview && (
-              <img 
-                src={frontPreview} 
-                alt="Front Preview" 
-                style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }} 
+            {frontFile && frontFile.type === 'application/pdf' ? (
+            <img
+              src={PDFImage}
+              alt="PDF Preview"
+              style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }}
+            />
+          ) : (
+            frontPreview && (
+              <img
+                src={frontPreview}
+                alt="Front Preview"
+                style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }}
               />
-            )}
+            )
+          )}
           </Box>
         </Grid>
 
@@ -187,13 +196,20 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({
               selectedFile={backFile}
               acceptedFormats=".jpg,.jpeg,.png,.pdf"
             />
-            {backPreview && (
-              <Typography
-                className="file-name-text"
-                sx={{ mt: 1, fontSize: '14px', color: '#555' }}
-              >
-                Uploaded back: <strong>{backPreview}</strong>
-              </Typography>
+            {backFile && backFile.type === 'application/pdf' ? (
+              <img
+                src={PDFImage}
+                alt="PDF Preview"
+                style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }}
+              />
+            ) : (
+              backPreview && (
+                <img
+                  src={backPreview}
+                  alt="Back Preview"
+                  style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }}
+                />
+              )
             )}
           </Box>
         </Grid>

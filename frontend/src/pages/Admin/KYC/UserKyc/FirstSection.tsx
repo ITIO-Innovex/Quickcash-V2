@@ -16,6 +16,7 @@ const FirstSection = () => {
   const toast = useAppToast();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [currentRequestStatus, setCurrentRequestStatus] = useState(selectedRow?.status || '');
   const [comment, setComment] = useState('');
@@ -83,10 +84,18 @@ const FirstSection = () => {
 
 const handleCloseWithUpdate = async () => {
   if (selectedRow?._id) {
+    setIsLoading(true);
     await HandleUpdateStatus(selectedRow._id, currentRequestStatus);
+
+    // ✅ Refresh list again to show new status in table
+    await getListData("all");
+
+    setIsLoading(false);
   }
+
   setOpen(false);
   setSelectedRow(null);
+  setComment('');
 };
 
   const columns = [
@@ -244,27 +253,20 @@ const handleCloseWithUpdate = async () => {
 
             <Box mt={3}>
             <Typography className="input-label">KYC Status</Typography>
-            <select
+           <select
               className="kyc-status-dropdown"
               value={currentRequestStatus}
-              onChange={async (e) => {
+              onChange={(e) => {
                 const newStatus = e.target.value;
-                setCurrentRequestStatus(newStatus);
-
-                // ✅ Use selectedRow._id instead of selectedRow.id
-                if (selectedRow?._id) {
-                  await HandleUpdateStatus(selectedRow._id, newStatus);
-                }
+                setCurrentRequestStatus(newStatus); // ✅ Update only local state
               }}
             >
-              {/* 👇 Show current status at top but hidden from the rest */}
               {selectedRow?.status && (
                 <option value={selectedRow.status} hidden>
                   {selectedRow.status}
                 </option>
               )}
 
-              {/* 👇 Only show other statuses to switch to */}
               {['Pending', 'Completed', 'Decline']
                 .filter((status) => status !== selectedRow?.status)
                 .map((status) => (
@@ -273,6 +275,7 @@ const handleCloseWithUpdate = async () => {
                   </option>
                 ))}
             </select>
+
           </Box>
 
           <Box mt={3}>
@@ -287,9 +290,10 @@ const handleCloseWithUpdate = async () => {
         </Box>
 
              <Box display="flex" justifyContent="flex-end" gap={2} >
-              <CustomButton sx={{}}>Download</CustomButton>
-           <CustomButton onClick={handleCloseWithUpdate}>Close</CustomButton>
-
+              <CustomButton>Download</CustomButton>
+              <CustomButton onClick={handleCloseWithUpdate} disabled={isLoading}>
+                {isLoading ? 'Saving...' : 'Save'}
+              </CustomButton>
             </Box>
           </>
         )}
