@@ -12,7 +12,8 @@ const {
     addMoney,
     toggleFreezeCard,
     updateCardLimit,
-    updateAmountById
+    updateAmountById,
+    loadCardBalance
 } = require('../controllers/card.controller');
 const { verifyToken } = require('../middlewares/auth.middleware');
 
@@ -39,5 +40,8 @@ router.route('/limit/:id').put(verifyToken, updateCardLimit);
 
 // Define the route to update the amount on a card by its ID
 router.route('/update-amount/:id').patch(verifyToken, updateAmountById); 
+
+// New route for loading card balance with conversion and transaction
+router.route('/load-balance').post(verifyToken, loadCardBalance);
 
 module.exports = router;

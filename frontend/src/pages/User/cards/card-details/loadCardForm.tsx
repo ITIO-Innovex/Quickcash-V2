@@ -148,48 +148,48 @@ const LoadCardForm = ({
 
   const handleGetLoadCard = async () => {
     try {
-      if (amount > 0 && loadCardDetails?._id) {
-        const response = await api.patch(
-          `/${url}/v1/card/update-amount/${loadCardDetails._id}`,
-          { amount, currency: selectedCurrency },
-          
+      if (amount > 0 && loadCardDetails?._id && selectedAccount) {
+        const payload = {
+          sourceAccountId: selectedAccount,
+          cardId: loadCardDetails._id,
+          amount: amount, // in selected account currency
+          fee: depositFee, // in selected account currency
+          conversionAmount: acctDetails?.currency !== loadCardDetails?.currency ? convValue : amount, // in card currency
+          fromCurrency: acctDetails?.currency,
+          toCurrency: loadCardDetails?.currency,
+          info: 'Wallet to Card Balance Load',
+        };
+        const response = await api.post(
+          `/${url}/v1/card/load-balance`,
+          payload
         );
-        if (response.data.status) {
-          toast.success('Amount updated successfully');
+        if (response.data.status === 200) {
+          toast.success('Amount loaded to card successfully');
 
-          const newBalance = response.data.data?.cardBalance;
+          const newBalance = response.data.cardBalance;
 
           if (newBalance !== undefined) {
-            const parsedBalance =
-              typeof newBalance === 'object' && '$numberDecimal' in newBalance
-                ? parseFloat(newBalance.$numberDecimal)
-                : parseFloat(newBalance);
-
-            setCardBalance(parsedBalance);
-
+            setCardBalance(newBalance);
             setLoadCardDetails((prev) =>
-              prev ? { ...prev, cardBalance: parsedBalance } : null
+              prev ? { ...prev, cardBalance: newBalance } : null
             );
-
             if (onRefreshCards) {
-              // Add a small delay to ensure the API has processed the update
               setTimeout(() => {
                 onRefreshCards();
               }, 500);
             }
           }
-          
-          // Close the modal after successful submission
           if (onClose) {
             onClose();
           }
+        } else {
+          toast.error(response.data.message || 'Failed to load card');
         }
-
       } else {
-        toast.error('Please enter a valid amount');
+        toast.error('Please enter a valid amount and select an account');
       }
     } catch (error) {
-      console.error('Error updating card amount:', error);
+      console.error('Error loading card balance:', error);
       if (axios.isAxiosError(error) && error.response) {
         if (error.response.data.status === 403) {
           localStorage.clear();

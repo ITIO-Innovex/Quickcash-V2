@@ -19,20 +19,20 @@ import { jwtDecode } from 'jwt-decode';
 import { JwtPayload } from '@/types/jwt';
 import api from '@/helpers/apiHelper';
 import ReactCountryFlag from "react-country-flag";
-import { Box, Button,Tooltip, Card, CardContent, Tab, Tabs, Typography, useTheme } from '@mui/material';
+import { Box, Button, Tooltip, Card, CardContent, Tab, Tabs, Typography, useTheme } from '@mui/material';
 import getSymbolFromCurrency from "currency-symbol-map";
 import { Grid } from 'lucide-react';
-import { useAppToast } from '@/utils/toast'; 
+import { useAppToast } from '@/utils/toast';
 interface ActiveAccDetails {
-  _id: string;
-  amount: any;
-  bic_code: string;
-  country: string;
-  currency: any;
-  defaultAccount: string;
-  iban: string;
-  name: string;
-  status: Boolean;
+    _id: string;
+    amount: any;
+    bic_code: string;
+    country: string;
+    currency: any;
+    defaultAccount: string;
+    iban: string;
+    name: string;
+    status: Boolean;
 }
 
 //Set the API URL based on the environment
@@ -40,31 +40,31 @@ const url = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
 const FiatCrypto = () => {
     const [fiatAccounts, setfiatAccounts] = useState([]);
     const [DefaultAccountItem, setDefaultAccountItem] = React.useState<any>();
-    const [ActiveAccountDetails, setActiveAccountDetails] =React.useState<ActiveAccDetails>();
+    const [ActiveAccountDetails, setActiveAccountDetails] = React.useState<ActiveAccDetails>();
     const [activeAccountBal, setActiveAccountBal] = React.useState<any>();
     const [accountChange, setAccountChange] = React.useState("all_account");
     const [cryptoCoins, setCryptoCoins] = React.useState<any>([]);
     const [toExchangeAccount, setToExchangeAccount] = useState("");
 
-    const theme = useTheme  ();
-    const toast = useAppToast(); 
+    const theme = useTheme();
+    const toast = useAppToast();
     const [activeTab, setActiveTab] = useState('Fiat');
     // Fetch the Fiat Crypto data when the component mounts
-        useEffect(() => {
+    useEffect(() => {
         if (localStorage.getItem("token")) {
             const accountId = jwtDecode<JwtPayload>(
-            localStorage.getItem("token") as string
+                localStorage.getItem("token") as string
             );
             getAllAccountsList(accountId.data.id);
             fetchCyrptoCoins(accountId.data.id);
             var valSearch = location?.search
-            ?.replace("?currency=", "")
-            .replace("?", "");
+                ?.replace("?currency=", "")
+                .replace("?", "");
             if (valSearch.substring(0, 6) == "crypto") {
                 setDisplayCryptoItem(valSearch?.replace("crypto=", ""));
             }
         }
-        }, []);
+    }, []);
     // Function to fetch all accounts list
     const getAllAccountsList = async (id: string, text = "") => {
         try {
@@ -89,37 +89,37 @@ const FiatCrypto = () => {
             if (response.data.status === 201) {
                 setCryptoCoins(response.data.data);
             }
-            } catch (error) {
-                console.error("Error fetching crypto coins:", error);
-            }
+        } catch (error) {
+            console.error("Error fetching crypto coins:", error);
+        }
     };
     const getDefaultAccountList = async (id: any) => {
-    if (!localStorage.getItem("activeCurr")) {
-        try {
-          const result = await api.get(`/${url}/v1/account/default/${id}`);
-          if (result.data.status === 201) {
-            setDefaultAccountItem(result.data.data[0]);
-            setActiveAccountDetails(result.data.data[0].accountDetails);
-            localStorage.setItem(
-              "currency",
-              result.data.data[0].accountDetails.currency
-            );
-            localStorage.setItem(
-              "amount",
-              result.data.data[0].accountDetails.amount
-            );
-            localStorage.setItem(
-              "activeCurr",
-              result.data.data[0].accountDetails._id
-            );
-          }
-        } catch (error) {
-          console.log("error", error);
-        }
-      } else {
+        if (!localStorage.getItem("activeCurr")) {
+            try {
+                const result = await api.get(`/${url}/v1/account/default/${id}`);
+                if (result.data.status === 201) {
+                    setDefaultAccountItem(result.data.data[0]);
+                    setActiveAccountDetails(result.data.data[0].accountDetails);
+                    localStorage.setItem(
+                        "currency",
+                        result.data.data[0].accountDetails.currency
+                    );
+                    localStorage.setItem(
+                        "amount",
+                        result.data.data[0].accountDetails.amount
+                    );
+                    localStorage.setItem(
+                        "activeCurr",
+                        result.data.data[0].accountDetails._id
+                    );
+                }
+            } catch (error) {
+                console.log("error", error);
+            }
+        } else {
             activeAccountDetails(localStorage.getItem("activeCurr"));
         }
-     
+
     };
     const activeAccountDetails = async (id: any) => {
         try {
@@ -138,25 +138,25 @@ const FiatCrypto = () => {
     };
     const HandleAccountChange = (itm: any, type: any, bal: any, trans: any) => {
         if (type == "all_account") {
-        const accountId = jwtDecode<JwtPayload>(
-            localStorage.getItem("token") as string
-        );
-        getAllAccountsList(accountId?.data?.id);
-        setActiveAccountBal(DefaultAccountItem?.accountDetails?.amount);
-        setAccountChange(type);
-        getDefaultAccountList(accountId?.data?.id);
-        setTimeout(() => {
-        }, 500);
-        navigate(`/dashboard?currency=all`);
+            const accountId = jwtDecode<JwtPayload>(
+                localStorage.getItem("token") as string
+            );
+            getAllAccountsList(accountId?.data?.id);
+            setActiveAccountBal(DefaultAccountItem?.accountDetails?.amount);
+            setAccountChange(type);
+            getDefaultAccountList(accountId?.data?.id);
+            setTimeout(() => {
+            }, 500);
+            navigate(`/dashboard?currency=all`);
         } else {
-        setActiveAccountDetails(itm);
-        setAccountChange(type);
-        setActiveAccountBal(bal);
-        localStorage.setItem("currency", itm?.currency);
-        localStorage.setItem("activeCurr", itm?._id); 
-        setTimeout(() => {
-        }, 500);
-        navigate(`/dashboard?currency=${itm?.currency}`);
+            setActiveAccountDetails(itm);
+            setAccountChange(type);
+            setActiveAccountBal(bal);
+            localStorage.setItem("currency", itm?.currency);
+            localStorage.setItem("activeCurr", itm?._id);
+            setTimeout(() => {
+            }, 500);
+            navigate(`/dashboard?currency=${itm?.currency}`);
         }
     };
     const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
@@ -183,22 +183,22 @@ const FiatCrypto = () => {
         navigate(`/dashboard?crypto=${id}`);
     };
     const handleClickExchangeOpen = () => {
-    if (ActiveAccountDetails?.amount > 0) {
-      localStorage.removeItem("currentCurrency");
-      setToExchangeAccount("");
-      setTimeout(() => {
-        setIsCurrencyExchnageOpen(true);
-      }, 100);
-    } else {
-        console.log("Error");
-        toast.error("Default account has 0 amount, please add amount in default account otherwise switch account");
-    }
+        if (ActiveAccountDetails?.amount > 0) {
+            localStorage.removeItem("currentCurrency");
+            setToExchangeAccount("");
+            setTimeout(() => {
+                setIsCurrencyExchnageOpen(true);
+            }, 100);
+        } else {
+            console.log("Error");
+            toast.error("Default account has 0 amount, please add amount in default account otherwise switch account");
+        }
     };
 
     return (
         <>
             <Box >
-                <Card sx={{color:theme.palette.text.primary, backgroundColor:theme.palette.background.default}}>
+                <Card sx={{ color: theme.palette.text.primary, backgroundColor: theme.palette.background.default }}>
                     <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
                         <Box className='crypto-section-header'>
                             <Tabs
@@ -209,20 +209,20 @@ const FiatCrypto = () => {
                                     '& .MuiTab-root': { minHeight: '48px' },
                                 }}
                             >
-                                <Tab label="Fiat" value="Fiat" className='label-fiat-crypto' sx={{color:theme.palette.text.primary}} />
-                                <Tab label="Crypto" value="Crypto" className='label-fiat-crypto' sx={{color:theme.palette.text.primary}}/>
+                                <Tab label="Fiat" value="Fiat" className='label-fiat-crypto' sx={{ color: theme.palette.text.primary }} />
+                                <Tab label="Crypto" value="Crypto" className='label-fiat-crypto' sx={{ color: theme.palette.text.primary }} />
                             </Tabs>
 
                             <Box className="icon-account" onClick={handleClick} sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                                <AppsIcon fontSize="small"sx={{color:theme.palette.text.primary}} />
+                                <AppsIcon fontSize="small" sx={{ color: theme.palette.text.primary }} />
                                 <Typography variant="body2" sx={{ fontWeight: 500, ml: 1 }}>
-                                    <span className="button-text" style={{color:theme.palette.text.primary}}>Account Section</span>
+                                    <span className="button-text" style={{ color: theme.palette.text.primary }}>Account Section</span>
                                 </Typography>
                             </Box>
                         </Box>
 
                         {activeTab === 'Fiat' && (
-                            <Box sx={{color:theme.palette.text.primary}}>
+                            <Box sx={{ color: theme.palette.text.primary }}>
                                 {/* Header Section */}
                                 <Box
                                     className='header-section'
@@ -232,11 +232,11 @@ const FiatCrypto = () => {
                                         display: 'flex',
                                         justifyContent: 'space-between',
                                         mb: 2,
-                                        color:theme.palette.text.primary,
+                                        color: theme.palette.text.primary,
                                     }}
                                 >
                                     <Box className='img-section' onClick={() => setIsCryptoModalOpen(true)} sx={{ mb: { xs: 1, sm: 0 }, display: 'flex', alignItems: 'center' }}>
-                                        
+
                                         <Typography variant="subtitle1" sx={{ fontWeight: 'semibold', ml: 1 }}>
                                             {ActiveAccountDetails ? (
                                                 <>
@@ -254,7 +254,7 @@ const FiatCrypto = () => {
                                                     />
                                                     {" "}{ActiveAccountDetails?.currency} Account : {getSymbolFromCurrency(ActiveAccountDetails?.currency)}
                                                 </>
-                                                ) : (
+                                            ) : (
                                                 <>
                                                     <ReactCountryFlag
                                                         countryCode={DefaultAccountItem?.country}
@@ -267,45 +267,45 @@ const FiatCrypto = () => {
                                                         cdnUrl="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.4.3/flags/1x1/"
                                                         cdnSuffix="svg"
                                                         title={DefaultAccountItem?.country}
-                                                        />
-                                                        {" "}{DefaultAccountItem?.currency} Account : {getSymbolFromCurrency(DefaultAccountItem?.currency)}
+                                                    />
+                                                    {" "}{DefaultAccountItem?.currency} Account : {getSymbolFromCurrency(DefaultAccountItem?.currency)}
                                                 </>
-                                                )}
-                                                {" "}
-                                                {activeAccountBal !== undefined
+                                            )}
+                                            {" "}
+                                            {activeAccountBal !== undefined
                                                 ? parseFloat(activeAccountBal).toFixed(2)
                                                 : "0.00"}
 
                                             {/* {selectedCrypto.currency} Account : {selectedCrypto.balance} */}
-                                        </Typography>       
+                                        </Typography>
                                         <ExpandMoreIcon sx={{ width: 16, height: 16, ml: 0.5, cursor: 'pointer' }} />
                                     </Box>
                                     <Box className='button-section' sx={{ display: 'flex', gap: 1 }}>
                                         <CommonTooltip title="Easily add funds to your wallet using your debit card or linked bank account for instant access.">
-                                        <Button className="custom-button" onClick={handleAddMoneyOpen}>
-                                            <AddIcon className='icon-size' />
-                                            <span className="button-text">Add money</span>
-                                        </Button>
+                                            <Button className="custom-button" onClick={handleAddMoneyOpen}>
+                                                <AddIcon className='icon-size' />
+                                                <span className="button-text">Add money</span>
+                                            </Button>
                                         </CommonTooltip>
 
                                         <CommonTooltip title="Seamlessly convert between multiple currencies with real-time exchange rates and low fees.">
-                                        <Button className="custom-button" onClick={handleClickExchangeOpen}>
-                                            <CompareArrowsIcon className='icon-size' />
-                                            <span className="button-text">Exchange</span>
-                                        </Button>
+                                            <Button className="custom-button" onClick={handleClickExchangeOpen}>
+                                                <CompareArrowsIcon className='icon-size' />
+                                                <span className="button-text">Exchange</span>
+                                            </Button>
                                         </CommonTooltip>
 
                                         <CommonTooltip title="Send money instantly to friends, family, or other users—locally or internationally.">
-                                        <Button
-                                            component={Link}
-                                            to="/send-money"
-                                            className="custom-button"
-                                        >
-                                            <SendIcon className="icon-size" />
-                                            <span className="button-text">Send</span>
-                                        </Button>
+                                            <Button
+                                                component={Link}
+                                                to="/send-money"
+                                                className="custom-button"
+                                            >
+                                                <SendIcon className="icon-size" />
+                                                <span className="button-text">Send</span>
+                                            </Button>
                                         </CommonTooltip>
-                                        
+
                                     </Box>
                                 </Box>
 
@@ -329,7 +329,7 @@ const FiatCrypto = () => {
                                                 <Card
                                                     className={`crypto-card ${isActive ? 'active' : 'inactive'}`}
                                                     onClick={() => {
-                                                          HandleAccountChange(account, account.name, account.amount, account.transDetails);                   
+                                                        HandleAccountChange(account, account.name, account.amount, account.transDetails);
                                                     }}
                                                     sx={{ cursor: 'pointer' }}
                                                 >
@@ -353,7 +353,7 @@ const FiatCrypto = () => {
                                                                 className={`currency-subtitle ${isActive ? 'active' : ''}`}
                                                                 variant="subtitle1"
                                                             >
-                                                                 {account.currency}
+                                                                {account.currency}
                                                             </Typography>
                                                         </Box>
 
@@ -365,7 +365,7 @@ const FiatCrypto = () => {
                                                                 className={`account-balance ${isActive ? 'active' : ''}`}
                                                                 variant="body1"
                                                             >
-                                                               {getSymbolFromCurrency(account?.currency)} {parseFloat(account.amount).toFixed(3)}
+                                                                {getSymbolFromCurrency(account?.currency)} {parseFloat(account.amount).toFixed(3)}
                                                             </Typography>
                                                         </Box>
                                                     </CardContent>
@@ -393,7 +393,7 @@ const FiatCrypto = () => {
                         )}
 
                         {activeTab === 'Crypto' && (
-                            <Box>           
+                            <Box>
                                 <Box
                                     className='header-section'
                                     sx={{
@@ -402,19 +402,24 @@ const FiatCrypto = () => {
                                         display: 'flex',
                                         justifyContent: 'space-between',
                                         mb: 2,
-                                      
+
                                     }}
                                 >
 
                                     <Box className='button-section' sx={{ display: 'flex', gap: 1 }}>
-                                        <Button className='custom-button'>
-                                            <Sell className='icon-size' />
-                                            <span className='button-text'>Buy/Sell</span>
-                                        </Button>
-                                        <Button className='custom-button'>
-                                            <Wallet className='icon-size' />
-                                            <span className='button-text'> Wallet Address</span>
-                                        </Button>
+                                        <Link to="/buysellswap">
+                                            <Button className='custom-button'>
+                                                <Sell className='icon-size' />
+                                                <span className='button-text'>Buy/Sell</span>
+                                            </Button>
+                                        </Link>
+
+                                        <Link to="/wallet">
+                                            <Button className='custom-button'>
+                                                <Wallet className='icon-size' />
+                                                <span className='button-text'>Wallet Address</span>
+                                            </Button>
+                                        </Link>
                                     </Box>
                                 </Box>
 
@@ -430,31 +435,31 @@ const FiatCrypto = () => {
                                     style={{ paddingBottom: '1.5rem' }}
                                 >
                                     {cryptoCoins.map((item: any, index: number) => {
-                                        const isActive = displayCryptoItem ==item?.coin;
+                                        const isActive = displayCryptoItem == item?.coin;
 
                                         return (
                                             <SwiperSlide key={index}>
-                                               <Card
+                                                <Card
                                                     className={`crypto-card ${isActive ? 'active' : 'inactive'}`}
                                                     onClick={() => {
                                                         HandleDisplayCryptoItemData(item?.coin)
                                                     }}
                                                     sx={{ cursor: 'pointer' }}
                                                 >
-                                                  
+
                                                     <CardContent className='card-content-custom'>
                                                         <Box className='main-content-section' sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                             <img
                                                                 loading="lazy"
                                                                 style={{
-                                                                height: "30px",
-                                                                width: "30px",
-                                                                borderRadius: "50px",
+                                                                    height: "30px",
+                                                                    width: "30px",
+                                                                    borderRadius: "50px",
                                                                 }}
                                                                 src={`https://assets.coincap.io/assets/icons/${item?.coin
-                                                                .split("_")[0]
-                                                                .replace("_TEST", "")
-                                                                .toLowerCase()}@2x.png`}
+                                                                    .split("_")[0]
+                                                                    .replace("_TEST", "")
+                                                                    .toLowerCase()}@2x.png`}
                                                                 alt={`${item?.coin}`}
                                                             />
                                                             <Typography
@@ -468,16 +473,16 @@ const FiatCrypto = () => {
                                                         <Box className='currency-detail' sx={{ mt: 1 }}>
                                                             <Typography variant="body2" sx={{ color: isActive ? '#e5e7eb' : '#4b5563' }}>
                                                                 {item?.walletAddress?.length > 7
-                                                                ? item?.walletAddress?.substring(0, 7) + "..."
-                                                                : item?.walletAddress}
+                                                                    ? item?.walletAddress?.substring(0, 7) + "..."
+                                                                    : item?.walletAddress}
                                                             </Typography>
                                                             <Typography
                                                                 className={`account-balance ${isActive ? 'active' : ''}`}
                                                                 variant="body1"
                                                             >
                                                                 {item?.noOfCoins?.length > 7
-                                                                ? item?.noOfCoins?.substring(0, 7) + "..."
-                                                                : item?.noOfCoins}
+                                                                    ? item?.noOfCoins?.substring(0, 7) + "..."
+                                                                    : item?.noOfCoins}
                                                             </Typography>
                                                         </Box>
                                                     </CardContent>
@@ -507,10 +512,10 @@ const FiatCrypto = () => {
                 </Card>
             </Box>
 
-            <CustomModal open={isAddMoneyOpen} onClose={handleAddMoneyClose} title="Add Money" sx={{backgroundColor:theme.palette.background.default, color:theme.palette.text.primary}}>
+            <CustomModal open={isAddMoneyOpen} onClose={handleAddMoneyClose} title="Add Money" sx={{ backgroundColor: theme.palette.background.default, color: theme.palette.text.primary }}>
                 <AddMoneyForm
                     accountChange={setAccountChange}
-                    onClose={handleAddMoneyClose} 
+                    onClose={handleAddMoneyClose}
                     activeAccount={ActiveAccountDetails?._id}
                     accountBalance={ActiveAccountDetails?.amount}
                     acctDetails={ActiveAccountDetails}
@@ -518,28 +523,28 @@ const FiatCrypto = () => {
                 />
             </CustomModal>
 
-            <CustomModal open={isCurrencyExchnageOpen} onClose={handleCurrencyExchangeClose} title="Exchange Currency" sx={{backgroundColor:theme.palette.background.default, color:theme.palette.text.primary}}>
+            <CustomModal open={isCurrencyExchnageOpen} onClose={handleCurrencyExchangeClose} title="Exchange Currency" sx={{ backgroundColor: theme.palette.background.default, color: theme.palette.text.primary }}>
                 <CurrencyExchangeForm onClose={handleCurrencyExchangeClose}
                     activeAccount={ActiveAccountDetails?._id}
                     accountBalance={ActiveAccountDetails?.amount}
                     acctDetails={ActiveAccountDetails}
                     accountList={fiatAccounts}
                     IsCurrencyExchnageOpen={setIsCurrencyExchnageOpen}
-                    />
+                />
             </CustomModal>
 
-                <SelectCryptoModal
-                    open={isCryptoModalOpen}
-                    onClose={() => setIsCryptoModalOpen(false)}
-                    accounts={fiatAccounts}
-                    onSelect={(account) => {
-                        // setSelectedCrypto(account);
-                        const index = fiatAccounts.findIndex((a) => a.currency === account.currency);
-                    
-                    }}
-                    handleAccountChange={HandleAccountChange}
-                
-                />
+            <SelectCryptoModal
+                open={isCryptoModalOpen}
+                onClose={() => setIsCryptoModalOpen(false)}
+                accounts={fiatAccounts}
+                onSelect={(account) => {
+                    // setSelectedCrypto(account);
+                    const index = fiatAccounts.findIndex((a) => a.currency === account.currency);
+
+                }}
+                handleAccountChange={HandleAccountChange}
+
+            />
 
         </>
     );

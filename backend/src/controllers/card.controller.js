@@ -730,4 +730,85 @@ module.exports = {
       });
     }
   },
+
+  // Load card balance with currency conversion, deduction, and transaction
+  loadCardBalance: async (req, res) => {
+    try {
+      const {
+        sourceAccountId, // Account to deduct from
+        cardId,          // Card to credit
+        amount,          // Amount in source currency
+        fee,             // Fee in source currency
+        conversionAmount, // Amount to add to card (in card currency)
+        fromCurrency,
+        toCurrency,
+        info
+      } = req.body;
+
+      if (!sourceAccountId || !cardId || !amount || !conversionAmount || !fromCurrency || !toCurrency) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+
+      // Find source account
+      const account = await Account.findById(sourceAccountId);
+      if (!account) {
+        return res.status(404).json({ message: 'Source account not found' });
+      }
+      if (account.amount < (parseFloat(amount) + parseFloat(fee))) {
+        return res.status(400).json({ message: 'Insufficient account balance' });
+      }
+
+      // Find card
+      const card = await Card.findById(cardId);
+      if (!card) {
+        return res.status(404).json({ message: 'Card not found' });
+      }
+
+      // Deduct from account
+      account.amount = parseFloat(account.amount) - (parseFloat(amount) + parseFloat(fee));
+      await account.save();
+
+      // Add to card
+      card.amount = parseFloat(card.amount || 0) + parseFloat(conversionAmount);
+      await card.save();
+
+      // Create transaction (wallet to card)
+      const trx = await Transaction.create({
+        user: account.user,
+        source_account: sourceAccountId,
+        transfer_account: null, // Not another account, but card
+        trx: Math.floor(Math.random() * 999999999999).toString(),
+        info: info || 'Wallet to Card Balance Load',
+        trans_type: 'Wallet To Card',
+        tr_type: 'wallet-to-card',
+        from_currency: fromCurrency,
+        to_currency: toCurrency,
+        amount: amount,
+        postBalance: account.amount,
+        status: 'Complete',
+        fee: fee,
+        conversionAmount: conversionAmount,
+        conversionAmountText: `${conversionAmount} ${toCurrency}`,
+        amountText: `${amount} ${fromCurrency}`,
+        dashboardAmount: amount,
+        extraType: 'debit',
+        addedBy: account.user,
+      });
+
+      return res.status(200).json({
+        status: 200,
+        message: 'Card loaded successfully',
+        cardBalance: card.amount,
+        accountBalance: account.amount,
+        transaction: trx
+      });
+    } catch (error) {
+      console.error('Error loading card balance:', error);
+      return res.status(500).json({
+        status: 500,
+        message: 'Error loading card balance',
+        error: error.message,
+      });
+    }
+  },
 };
