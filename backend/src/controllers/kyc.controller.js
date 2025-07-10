@@ -699,34 +699,39 @@ module.exports = {
     }
   },
   getKycStatus: async (req, res) => {
-  try {
-    const userId = req.user?.id;
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
 
-    // 🔐 User ID required for fetching KYC
-    if (!userId) {
-      console.log("User ID missing in request.");
-      return res.status(400).json({ message: "User ID is required" });
+      const kycRecord = await Kyc.findOne({ user: userId });
+      if (!kycRecord) {
+        return res.status(404).json({ message: "KYC record not found" });
+      }
+
+      // 🔍 Check if KYC is truly filled
+      const isKycFilled = [
+        kycRecord.documentType,
+        kycRecord.documentNumber,
+        kycRecord.addressDocumentType,
+        kycRecord.documentPhotoFront,
+        kycRecord.documentPhotoBack,
+        kycRecord.addressProofPhoto,
+      ].every(field => field && field !== '');
+
+      return res.status(200).json({
+        status: kycRecord.status,
+        isKycFilled,
+      });
+      
+    } catch (error) {
+      console.error("Error while fetching KYC status:", error);
+      return res.status(500).json({ message: "Internal Server Error" });
     }
-
-    // 🔍 Check KYC record for the given user
-    const kycRecord = await Kyc.findOne({ user: userId });
-
-    // ❌ Not found
-    if (!kycRecord) {
-      console.log("ℹ️ No KYC record found for user:", userId);
-      return res.status(404).json({ message: "KYC record not found" });
-    }
-
-    // ✅ Found → Return the KYC status
-    console.log("✅ KYC STATUS:", kycRecord.status);
-    return res.status(200).json({ status: kycRecord.status });
-
-  } catch (error) {
-    console.error("🚨 Error while fetching KYC status:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
   }
-},
-}
+
+  }
 
 async function getWalletAddress(user, vaultAccountId, assetId) {
   try {
