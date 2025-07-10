@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { jwtDecode } from "jwt-decode";
+import PDFImage from '@/assets/PDF.png';
 import React, { useState } from 'react';
 import { useAppToast } from '@/utils/toast';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +20,7 @@ interface ResidentialAddressProps {
   onBack: () => void;
   frontDocument: { raw: File; preview: string } | null;
   backDocument: { raw: File; preview: string } | null;
+  previewUrl?: string; 
 }
 
 const ResidentialAddress: React.FC<ResidentialAddressProps> = ({ onBack, frontDocument, backDocument }) => {
@@ -62,11 +64,12 @@ const ResidentialAddress: React.FC<ResidentialAddressProps> = ({ onBack, frontDo
 
       // ✅ Restore uploaded file name (just the name, file can't be restored fully)
       if (parsed.addressProofPhoto) {
-        const path = `/kyc/${parsed.addressProofPhoto}`;
-        setDocumentFileName(parsed.addressProofPhoto);
-        setPreviewUrl(path);
-        setDocument(null); // no file restoration
-      }
+          const path = `/kyc/${parsed.addressProofPhoto}`;
+          const dummyFile = new File([], parsed.addressProofPhoto);
+          setPreviewUrl(path);
+          setDocumentFileName(parsed.addressProofPhoto);
+          setDocument(dummyFile); // set dummy file to preserve selectedFile
+        }
        // ✅ Set flag if data was already present
       if (parsed.addressProofPhoto || parsed.addressDocumentType) {
         setIsExistingKycData(true);
@@ -220,18 +223,26 @@ const handleUpdate = async (skipFileUpload = false) => {
               acceptedFormats=".jpg,.jpeg,.png,.pdf"
             />
 
-            {documentFileName && document && (
-              <Typography className="file-name-text" sx={{ mt: 1, fontSize: '14px', color: '#555' }}>
-                Selected file: <strong>{documentFileName}</strong>
+           {previewUrl && (
+            <Box sx={{ mt: 2 }}>
+              <Typography sx={{ fontSize: '14px', color: '#555' }}>
+                Document Preview:
               </Typography>
-            )}
-
-            {!document && documentFileName && (
-              <Typography sx={{ mt: 0.5, fontSize: '14px', color: '#555' }}>
-                Uploaded address proof: <strong>/kyc/{documentFileName}</strong>
-              </Typography>
-            )}
-
+              {document?.type === 'application/pdf' ? (
+                <img
+                  src={PDFImage}
+                  alt="PDF Preview"
+                  style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }}
+                />
+              ) : (
+                <img
+                  src={previewUrl}
+                  alt="Address Proof Preview"
+                  style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }}
+                />
+              )}
+            </Box>
+          )}
             {errors.document && (
               <Typography className="error-text" style={{ color: 'red', fontSize: '0.8rem' }}>
                 {errors.document}

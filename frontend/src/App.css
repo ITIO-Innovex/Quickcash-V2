@@ -1753,7 +1753,8 @@ margin: 0;
   border: 1px solid #ef6c00;
 }
 
-.status-chip.failed {
+.status-chip.failed,
+.status-chip.decline {
   background-color: #ffebee;
   color: #c62828;
   border: 1px solid #c62828;
