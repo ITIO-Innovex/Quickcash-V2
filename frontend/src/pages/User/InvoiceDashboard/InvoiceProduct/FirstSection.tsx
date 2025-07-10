@@ -117,7 +117,7 @@ const FirstSection = ({ refresh }: { refresh: boolean }) => {
       render: (row: any) => {
         if (!row.createdAt) return '';
         const date = new Date(row.createdAt);
-        return date.toLocaleDateString('en-GB'); 
+        return date.toLocaleDateString('en-GB');
       },
     },
     { field: 'name', headerName: 'Product Name' },
@@ -241,6 +241,7 @@ const FirstSection = ({ refresh }: { refresh: boolean }) => {
               localStorage.getItem('token') as string
             );
             getProduct(accountId.data.id);
+            console.log('Product updated successfully:', result.data);
           }
         })
         .catch((error) => {
@@ -327,43 +328,46 @@ const FirstSection = ({ refresh }: { refresh: boolean }) => {
             <Typography>
               <strong>Date:</strong>
             </Typography>
-            <Typography>{selectedRow?.date}</Typography>
+            <Typography>{selectedRow?.createdAt.slice(0, 10)}</Typography>
           </Box>
 
           <Box display="flex" justifyContent="space-between" mb={2}>
             <Typography>
-              <strong>Transaction ID:</strong>
+              <strong>Product Code:</strong>
             </Typography>
-            <Typography>{selectedRow?.id}</Typography>
+            <Typography>{selectedRow?.productCode}</Typography>
           </Box>
 
           <Box display="flex" justifyContent="space-between" mb={2}>
             <Typography>
-              <strong>Type:</strong>
+              <strong>Product Name:</strong>
             </Typography>
-            <Typography>{selectedRow?.type}</Typography>
+            <Typography>{selectedRow?.name}</Typography>
           </Box>
 
           <Box display="flex" justifyContent="space-between" mb={2}>
             <Typography>
-              <strong>Amount:</strong>
+              <strong>Unit Price:</strong>
             </Typography>
-            <Typography>${selectedRow?.amount}</Typography>
+            <Typography>{selectedRow?.unitPrice}</Typography>
           </Box>
 
           <Box display="flex" justifyContent="space-between" mb={2}>
             <Typography>
-              <strong>Balance:</strong>
+              <strong>Description:</strong>
             </Typography>
-            <Typography>${selectedRow?.balance}</Typography>
+            <Typography>{selectedRow?.description}</Typography>
           </Box>
 
           <Box display="flex" justifyContent="space-between" mb={2}>
             <Typography>
               <strong>Status:</strong>
             </Typography>
-            <Typography>{selectedRow?.status}</Typography>
+            <Typography>
+              {selectedRow?.status ? 'Active' : 'Inactive'}
+            </Typography>
           </Box>
+
 
           <Button
             className="custom-button"

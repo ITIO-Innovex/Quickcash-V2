@@ -112,7 +112,7 @@ const FirstSection = ({ refresh }: { refresh: boolean }) => {
           },
         })
         .then((result) => {
-          if (result.data.status == '201') {
+          if (result.data.status == 201) {
             const accountId = jwtDecode<JwtPayload>(
               localStorage.getItem('token') as string
             );

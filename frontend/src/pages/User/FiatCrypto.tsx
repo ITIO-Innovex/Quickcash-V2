@@ -174,8 +174,13 @@ const FiatCrypto = () => {
 
     const navigate = useNavigate();
     const handleClick = () => {
-        navigate('/account-section');
+        if (activeTab === 'Crypto') {
+            navigate('/wallet'); // navigate to coin page
+        } else {
+            navigate('/account-section'); // navigate to fiat account section
+        }
     };
+
     const [displayCryptoItem, setDisplayCryptoItem] = React.useState<any>("");
 
     const HandleDisplayCryptoItemData = (id: any) => {
@@ -500,7 +505,7 @@ const FiatCrypto = () => {
                                             <CardContent className='add-card-content'>
                                                 <AddIcon className='add-icon-currency' />
                                                 <Typography variant="subtitle1" className='text-add-currency'>
-                                                    Add Currency
+                                                    Add Coin
                                                 </Typography>
                                             </CardContent>
                                         </Card>
