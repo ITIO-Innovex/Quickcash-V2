@@ -257,7 +257,40 @@ const FirstSection = () => {
       )
     }
   ];
+  const sentAmount =
+    selectedRow?.receipient && selectedRow?.conversionAmount
+      ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`
+      : !selectedRow?.receipient && selectedRow?.conversionAmount
+        ? (() => {
+          if (selectedRow?.tr_type === "Stripe") {
+            return `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.amount}`;
+          } else if (selectedRow?.tr_type === "UPI") {
+            return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
+          } else if (selectedRow?.trans_type === "Exchange") {
+            return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
+          } else {
+            return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
+          }
+        })()
+        : "--";
 
+  // Define Received Amount
+  const receivedAmount =
+    selectedRow?.receipient && selectedRow?.conversionAmount
+      ? `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`
+      : !selectedRow?.receipient && selectedRow?.conversionAmount
+        ? (() => {
+          if (selectedRow?.tr_type === "Stripe") {
+            return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount}`;
+          } else if (selectedRow?.tr_type === "UPI") {
+            return `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
+          } else if (selectedRow?.trans_type === "Exchange") {
+            return `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
+          } else {
+            return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount}`;
+          }
+        })()
+        : "--";
   return (
     <Box>
       {/* Action buttons */}
@@ -309,110 +342,136 @@ const FirstSection = () => {
         onClose={handleClose}
         title="Transaction Details"
         transactionData={{
+          // ✅ Transaction Info
           transactionInfo: selectedRow && {
             "Trx": selectedRow?.trx,
             "Requested Date": selectedRow?.createdAt
               ? moment(selectedRow?.createdAt).local().format("YYYY-MM-DD hh:mm:ss A")
               : "-",
-            "Fee": selectedRow?.extraType === "debit"
-              ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`
-              : selectedRow?.tr_type === "Stripe"
-                ? `${getSymbolFromCurrency(selectedRow?.to_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`
-                : selectedRow?.trans_type === "Exchange"
-                  ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`
-                  : `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`,
-            "Bill Amount": selectedRow?.extraType === "debit"
-              ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`
-              : selectedRow?.tr_type === "Stripe"
-                ? `${getSymbolFromCurrency(selectedRow?.to_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`
-                : selectedRow?.trans_type === "Exchange"
-                  ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`
-                  : `${getSymbolFromCurrency(selectedRow?.from_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`,
-            "Transaction Type": selectedRow?.receipient ? "Transfer Money" : `${selectedRow?.extraType} - ${selectedRow?.trans_type}`,
-            // TRANSACTION STATUS
-            "Transaction Status": selectedRow?.status,
-            "Settlement Date": (selectedRow?.status === "Complete" || selectedRow?.status === "Success" || selectedRow?.status === "succeeded")
-              ? moment(selectedRow?.updatedAt).format('YYYY-MM-DD hh:mm:ss A')
-              : '--',
-            // BANK STATUS
-            "Trans Amt": (selectedRow?.receipient
-              ? getSymbolFromCurrency(selectedRow?.from_currency)
-              : selectedRow?.extraType === "debit"
-                ? getSymbolFromCurrency(selectedRow?.from_currency)
+            "Fee":
+              selectedRow?.extraType === "debit"
+                ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`
                 : selectedRow?.tr_type === "Stripe"
-                  ? getSymbolFromCurrency(selectedRow?.to_currency)
+                  ? `${getSymbolFromCurrency(selectedRow?.to_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`
                   : selectedRow?.trans_type === "Exchange"
-                    ? getSymbolFromCurrency(selectedRow?.from_currency)
-                    : getSymbolFromCurrency(selectedRow?.from_currency)) + (selectedRow?.amount || ''),
-            // Conversion info
-            // "Conversion": selectedRow?.receipient && selectedRow?.conversionAmount
-            //   ? `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount})`
-            //   : !selectedRow?.receipient && selectedRow?.conversionAmount
-            //   ? (() => {
-            //       if (selectedRow?.tr_type === "Stripe") {
-            //         return `(Convert ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount})`;
-            //       } else if (selectedRow?.tr_type === "UPI") {
-            //         return `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount})`;
-            //       } else if (selectedRow?.trans_type === "Exchange") {
-            //         return `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount})`;
-            //       } else {
-            //         return `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount})`;
-            //       }
-            //     })()
-            //   : '',
+                    ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`
+                    : `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`,
+            "Bill Amount":
+              selectedRow?.extraType === "debit"
+                ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`
+                : selectedRow?.tr_type === "Stripe"
+                  ? `${getSymbolFromCurrency(selectedRow?.to_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`
+                  : selectedRow?.trans_type === "Exchange"
+                    ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`
+                    : `${getSymbolFromCurrency(selectedRow?.from_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`,
+            "Transaction Type": selectedRow?.receipient
+              ? "Transfer Money"
+              : `${selectedRow?.extraType} - ${selectedRow?.trans_type}`,
+            "Conversion Info": selectedRow?.receipient && selectedRow?.conversionAmount
+              ? `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount})`
+              : !selectedRow?.receipient && selectedRow?.conversionAmount
+                ? (() => {
+                  if (selectedRow?.tr_type === "Stripe") {
+                    return `(Convert ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount})`;
+                  } else if (selectedRow?.tr_type === "UPI") {
+                    return `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount})`;
+                  } else if (selectedRow?.trans_type === "Exchange") {
+                    return `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount})`;
+                  } else {
+                    return `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount})`;
+                  }
+                })()
+                : "--",
+            "Transaction Status":
+              ["succeeded", "success", "Success", "Complete", "Completed"].includes(selectedRow?.status)
+                ? "Success"
+                : selectedRow?.status,
+
+            "Settlement Date":
+              selectedRow?.status &&
+                ["Complete", "Success", "succeeded"].includes(selectedRow?.status)
+                ? moment(selectedRow?.updatedAt).local().format("YYYY-MM-DD hh:mm:ss A")
+                : "--",
+            "Trans Amt":
+              (selectedRow?.receipient
+                ? getSymbolFromCurrency(selectedRow?.from_currency)
+                : selectedRow?.extraType === "debit"
+                  ? getSymbolFromCurrency(selectedRow?.from_currency)
+                  : selectedRow?.tr_type === "Stripe"
+                    ? getSymbolFromCurrency(selectedRow?.to_currency)
+                    : selectedRow?.trans_type === "Exchange"
+                      ? getSymbolFromCurrency(selectedRow?.from_currency)
+                      : getSymbolFromCurrency(selectedRow?.from_currency)) + (selectedRow?.amount || ""),
           },
           customerInfo: {
-            "Sender Name": selectedRow?.tr_type === "UPI"
-              ? selectedRow?.upi_email
-              : selectedRow?.tr_type === "bank-transfer"
+            "Sender Name":
+              selectedRow?.tr_type === "UPI"
+                ? selectedRow?.upi_email
+                : selectedRow?.tr_type === "bank-transfer"
+                  ? selectedRow?.receipient
+                    ? selectedRow?.senderAccountDetails?.[0]?.name
+                    : selectedRow?.senderAccountDetails?.[0]?.name
+                  : selectedRow?.extraType === "credit"
+                    ? selectedRow?.transferAccountDetails?.[0]?.name
+                    : selectedRow?.senderAccountDetails?.[0]?.name,
+
+            "Sender Account":
+              selectedRow?.tr_type === "UPI"
+                ? selectedRow?.upi_id
+                : selectedRow?.tr_type === "bank-transfer"
+                  ? selectedRow?.receipient
+                    ? selectedRow?.senderAccountDetails?.[0]?.iban
+                    : selectedRow?.senderAccountDetails?.[0]?.iban
+                  : selectedRow?.extraType === "credit"
+                    ? selectedRow?.transferAccountDetails?.[0]?.iban
+                    : selectedRow?.senderAccountDetails?.[0]?.iban,
+
+            "Sender Address":
+              selectedRow?.tr_type === "UPI"
+                ? selectedRow?.upi_contact
+                : selectedRow?.tr_type === "bank-transfer"
+                  ? selectedRow?.receipient
+                    ? selectedRow?.senderAccountDetails?.[0]?.address
+                    : selectedRow?.senderAccountDetails?.[0]?.address
+                  : selectedRow?.extraType === "credit"
+                    ? selectedRow?.transferAccountDetails?.[0]?.address
+                    : selectedRow?.senderAccountDetails?.[0]?.address,
+
+            "Receiver Name":
+              selectedRow?.extraType === "credit"
                 ? selectedRow?.senderAccountDetails?.[0]?.name
-                : selectedRow?.extraType === "credit"
-                  ? selectedRow?.transferAccountDetails?.[0]?.name
-                  : selectedRow?.senderAccountDetails?.[0]?.name,
-            "Sender Account": selectedRow?.tr_type === "UPI"
-              ? selectedRow?.upi_id
-              : selectedRow?.tr_type === "bank-transfer"
+                : selectedRow?.receipient
+                  ? selectedRow?.recAccountDetails?.[0]?.name
+                  : selectedRow?.transferAccountDetails?.[0]?.name,
+
+            "Receiver Account":
+              selectedRow?.extraType === "credit"
                 ? selectedRow?.senderAccountDetails?.[0]?.iban
-                : selectedRow?.extraType === "credit"
-                  ? selectedRow?.transferAccountDetails?.[0]?.iban
-                  : selectedRow?.senderAccountDetails?.[0]?.iban,
-            "Sender Address": selectedRow?.tr_type === "UPI"
-              ? selectedRow?.upi_contact
-              : selectedRow?.tr_type === "bank-transfer"
+                : selectedRow?.receipient
+                  ? selectedRow?.recAccountDetails?.[0]?.iban
+                  : selectedRow?.transferAccountDetails?.[0]?.iban,
+
+            "Receiver Address":
+              selectedRow?.extraType === "credit"
                 ? selectedRow?.senderAccountDetails?.[0]?.address
-                : selectedRow?.extraType === "credit"
-                  ? selectedRow?.transferAccountDetails?.[0]?.address
-                  : selectedRow?.senderAccountDetails?.[0]?.address,
-            // RECEIVER INFORMATION
-            "Receiver Name": selectedRow?.extraType === "credit"
-              ? selectedRow?.senderAccountDetails?.[0]?.name
-              : selectedRow?.receipient
-                ? selectedRow?.recAccountDetails?.[0]?.name
-                : selectedRow?.transferAccountDetails?.[0]?.name,
-            "Receiver Account": selectedRow?.extraType === "credit"
-              ? selectedRow?.senderAccountDetails?.[0]?.iban
-              : selectedRow?.receipient
-                ? selectedRow?.recAccountDetails?.[0]?.iban
-                : selectedRow?.transferAccountDetails?.[0]?.iban,
-            "Receiver Address": selectedRow?.extraType === "credit"
-              ? selectedRow?.senderAccountDetails?.[0]?.address
-              : selectedRow?.receipient
-                ? selectedRow?.recAccountDetails?.[0]?.address
-                : selectedRow?.transferAccountDetails?.[0]?.address,
-          },
-          // timeline: [
-          //   { label: "Payment initiated", date: "Jun 1, 2025 12:00 AM", color: "#7e57c2" },
-          //   { label: "Payment authorized", date: "Jun 1, 2025 12:00 AM", color: "#7e57c2" },
-          //   { label: "Payment completed", date: "Jun 1, 2025 12:00 AM", color: "#4caf50" }
-          // ],
-          // actions: [
-          //   { label: "Issue Refund", onClick: () => console.log("Refund") },
-          //   { label: "Send Receipt", onClick: () => console.log("Send Receipt") },
-          //   { label: "Create Dispute", onClick: () => console.log("Dispute") }
-          // ]
+                : selectedRow?.receipient
+                  ? selectedRow?.recAccountDetails?.[0]?.address
+                  : selectedRow?.transferAccountDetails?.[0]?.address,
+
+            "Sent Amount": sentAmount,
+            "Received Amount": receivedAmount
+
+          }
         }}
-        dialogContentSx={{ backgroundColor: theme.palette.background.default, color: theme.palette.text.primary }}
-        cardSx={{ boxShadow: "none", border: "1px solid #ddd", backgroundColor: theme.palette.background.default }}
+        dialogContentSx={{
+          backgroundColor: theme.palette.background.default,
+          color: theme.palette.text.primary,
+        }}
+        cardSx={{
+          boxShadow: "none",
+          border: "1px solid #ddd",
+          backgroundColor: theme.palette.background.default,
+        }}
         buttonSx={{ color: "white", borderColor: "white" }}
       />
 
