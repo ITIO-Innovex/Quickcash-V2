@@ -1,3 +1,4 @@
+import PDF from '@/assets/PDF.png';
 import { useEffect, useState } from 'react';
 import admin from '@/helpers/adminApiHelper';
 import CustomButton from '@/components/CustomButton';
@@ -198,10 +199,19 @@ const handleCloseWithUpdate = async () => {
                   <Typography>Uploaded Document Front</Typography>
                   <div className="kyc-doc-image-preview">
                     {selectedRow.documentPhotoFront ? (
-                      <img
-                       src={`${import.meta.env.VITE_PUBLIC_URL}/kyc/${selectedRow.documentPhotoFront}`}
-                        alt="Document Front"
-                      />
+                      selectedRow.documentPhotoFront.toLowerCase().endsWith('.pdf') ? (
+                        <img
+                          src={PDF}
+                          alt="PDF Document"
+                          className="kyc-doc-pdf-icon"
+                        />
+                      ) : (
+                        <img
+                          src={`${import.meta.env.VITE_PUBLIC_URL}/kyc/${selectedRow.documentPhotoFront}`}
+                          alt="Document Front"
+                          className="kyc-doc-image"
+                        />
+                      )
                     ) : (
                       <div className="kyc-doc-image-placeholder">
                         <img src={NoImage} alt="No Document" className="no-image-logo" />
@@ -213,16 +223,25 @@ const handleCloseWithUpdate = async () => {
                 <Box>
                   <Typography>Uploaded Document Back</Typography>
                   <div className="kyc-doc-image-preview">
-                    {selectedRow.documentPhotoBack ? (
+                   {selectedRow.documentPhotoBack ? (
+                    selectedRow.documentPhotoBack.toLowerCase().endsWith('.pdf') ? (
+                      <img
+                        src={PDF}
+                        alt="PDF Document"
+                        className="kyc-doc-pdf-icon"
+                      />
+                    ) : (
                       <img
                         src={`${import.meta.env.VITE_PUBLIC_URL}/kyc/${selectedRow.documentPhotoBack}`}
                         alt="Document Back"
+                        className="kyc-doc-image"
                       />
-                    ) : (
-                      <div className="kyc-doc-image-placeholder">
-                        <img src={NoImage} alt="No Document" className="no-image-logo" />
-                      </div>
-                    )}
+                    )
+                  ) : (
+                    <div className="kyc-doc-image-placeholder">
+                      <img src={NoImage} alt="No Document" className="no-image-logo" />
+                    </div>
+                  )}
                   </div>
                 </Box>
               </Box>
@@ -240,10 +259,19 @@ const handleCloseWithUpdate = async () => {
 
             <div className="kyc-doc-image-preview">
               {selectedRow?.addressProofPhoto ? (
-                <img
-                 src={`${import.meta.env.VITE_PUBLIC_URL}/kyc/${selectedRow.addressProofPhoto}`}
-                  alt="Address Document"
-                />
+                selectedRow.addressProofPhoto.toLowerCase().endsWith('.pdf') ? (
+                  <img
+                    src={PDF}
+                    alt="PDF Document"
+                    className="kyc-doc-pdf-icon"
+                  />
+                ) : (
+                  <img
+                    src={`${import.meta.env.VITE_PUBLIC_URL}/kyc/${selectedRow.addressProofPhoto}`}
+                    alt="Address Document"
+                    className="kyc-doc-image"
+                  />
+                )
               ) : (
                 <div className="kyc-doc-image-placeholder">
                   <img src={NoImage} alt="No Document" className="no-image-logo" />
