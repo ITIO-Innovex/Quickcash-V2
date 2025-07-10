@@ -36,11 +36,7 @@ const NewInvoice = () => {
   const [receiverDetails, setReceiverDetails] = useState({ name: '', email: '', address: '' });
   const [selectedTax, setSelectedTax] = useState({ name: 'Ganesh', rate: 35 });
 
-  const taxOptions = [
-    { name: 'Ganesh', rate: 35 },
-    { name: 'GST', rate: 18 },
-    { name: 'No Tax', rate: 0 },
-  ];
+
   const [items, setItems] = useState([{ id: 1, productId: '', productName: '', qty: '', unitPrice: '', amount: '', isAdded: false }]);
   // --- BEGIN LOGIC INTEGRATION ---
   const { currencyList } = useCurrency();
@@ -490,7 +486,7 @@ const NewInvoice = () => {
                       updated[index].amount = (qty * price).toFixed(2);
                       setItems(updated);
                     }}
-                    
+
                     fullWidth
                   />
                 </Grid>
@@ -543,21 +539,20 @@ const NewInvoice = () => {
 
             <Box mt={2}>
               <select
-                value={selectedTax.name}
-                onChange={(e) => {
-                  const selected = taxOptions.find(
-                    (t) => t.name === e.target.value
-                  );
-                  if (selected) setSelectedTax(selected);
-                }}
+                value={overAllTax}
+                onChange={(e) => setOverAllTax(String(e.target.value).split(','))}
                 style={{ padding: '12px', width: '100%', borderRadius: '6px', border: '1px solid #ccc' }}
               >
-                {taxOptions.map((tax) => (
-                  <option key={tax.name} value={tax.name}>
-                    {tax.name} - {tax.rate}
+                <option value="">
+                  -- Select Tax --
+                </option>
+                {taxList.map(tax => (
+                  <option key={tax._id} value={tax.taxvalue}>
+                    {tax.Name} - {tax.taxvalue}
                   </option>
                 ))}
               </select>
+
             </Box>
           </Grid>
 
@@ -566,19 +561,19 @@ const NewInvoice = () => {
             <Box display="flex" flexDirection="column" gap={1}>
               <Box display="flex" justifyContent="space-between">
                 <span>Sub Total:</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>{subtotal.toFixed(2)}</span>
               </Box>
               <Box display="flex" justifyContent="space-between">
                 <span>Discount:</span>
-                <span>${discountAmount.toFixed(2)}</span>
+                <span>{discountAmount.toFixed(2)}</span>
               </Box>
               <Box display="flex" justifyContent="space-between">
                 <span>Tax:</span>
-                <span>${taxAmount.toFixed(2)}</span>
+                <span>{taxAmount.toFixed(2)}</span>
               </Box>
               <Box display="flex" justifyContent="space-between" fontWeight="bold">
                 <span>Total:</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{total.toFixed(2)}</span>
               </Box>
             </Box>
           </Grid>

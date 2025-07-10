@@ -29,10 +29,10 @@ import CryptoJS from 'crypto-js';
 
 const AddQuote = () => {
   const theme = useTheme();
-    const toast = useAppToast(); 
+  const toast = useAppToast();
   const { errors, validate } = useValidation();
   const navigate = useNavigate();
-  
+
   const { currencyList } = useCurrency();
   const [note, setNote] = useState('');
   const [terms, setTerms] = useState('');
@@ -42,7 +42,7 @@ const AddQuote = () => {
   const [memberList, setMemberList] = useState<any[]>([]);
   const [currency, setCurrency] = useState('');
   const [taxList, setTaxList] = useState<any[]>([]);
-  const [overAllTax, setOverAllTax] = useState<string[]>([]);
+  const [overAllTax, setOverAllTax] = useState(''); // single tax selection
   const [inputs, setInputs] = useState([{ productName: '', productId: '', qty: '', price: '', tax: 0, taxValue: 0, amount: 0 }]);
   const [discountType, setDiscountType] = useState('');
   const [OverAllDiscount, setOverAllDiscount] = useState(0);
@@ -57,6 +57,7 @@ const AddQuote = () => {
   const [memberType, setMemberType] = useState('member');
   const [noteandTerms, setnoteandTerms] = useState(false);
   const [today] = useState(new Date().toISOString().split('T')[0]);
+  const [discountValue, setDiscountValue] = useState(0);
 
   useEffect(() => {
     const accountId = jwtDecode(localStorage.getItem('token') as string) as any;
@@ -85,28 +86,30 @@ const AddQuote = () => {
   }, []);
 
   useEffect(() => {
-    // Calculation logic (match reference)
     let subTotal = 0;
-    let taxVal = 0;
     inputs.forEach(itm => {
       if (itm.qty && itm.price) {
         subTotal += parseFloat(itm.qty) * parseFloat(itm.price);
       }
-      if (itm.tax > 0) {
-        taxVal += itm.taxValue;
-      }
     });
     setSubTotal(subTotal);
-    setTax(taxVal);
-    setTotal(subTotal + taxVal);
+
     // Discount
+    let discount = 0;
     if (discountType === 'fixed') {
-      setTotal(subTotal + taxVal - OverAllDiscount);
-      setDiscountGiven(OverAllDiscount);
+      discount = OverAllDiscount;
     } else if (discountType === 'percentage') {
-      setTotal((subTotal + taxVal) - (subTotal + taxVal) * (OverAllDiscount / 100));
-      setDiscountGiven((subTotal + taxVal) * (OverAllDiscount / 100));
+      discount = (subTotal * OverAllDiscount) / 100;
     }
+    setDiscountGiven(discount);
+
+    // Tax
+    const taxRate = parseFloat(overAllTax) || 0;
+    const taxVal = ((subTotal - discount) * taxRate) / 100;
+    setTax(taxVal);
+
+    // Total
+    setTotal(subTotal - discount + taxVal);
   }, [inputs, discountType, OverAllDiscount, overAllTax]);
 
   const handleAddInput = () => {
@@ -198,55 +201,55 @@ const AddQuote = () => {
           </>
         )}
         {/* Replace quoteData fields with correct state variables */}
-          <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Select Member"
-                value={userId}
-                onChange={(e) => setUserId(String(e.target.value))}
-                options={
-                  memberList?.map((item: any) => ({
-                    label: `${item?.firstName} ${item?.lastName}`,
-                    value: item?._id
-                  })) || []
-                }
-              />
-            </Grid>
+        <Grid item xs={12} md={6}>
+          <CustomSelect
+            label="Select Member"
+            value={userId}
+            onChange={(e) => setUserId(String(e.target.value))}
+            options={
+              memberList?.map((item: any) => ({
+                label: `${item?.firstName} ${item?.lastName}`,
+                value: item?._id
+              })) || []
+            }
+          />
+        </Grid>
         <Grid item xs={12} md={6}><CustomInput label="Quote Date" type="date" value={InvoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} /></Grid>
         <Grid item xs={12} md={6}><CustomInput label="Due Date" type="date" value={InvoiceDueDate} onChange={(e) => setInvoiceDueDate(e.target.value)} /></Grid>
         <Grid item xs={12} md={6}><CustomInput label="Invoice Template" value={invoiceOption} onChange={(e) => setInvoiceOption(e.target.value)} /></Grid>
         {/* <Grid item xs={12} md={6}><CustomInput label="Payment QR Code" value={quoteData.payment_qr_code} disabled /></Grid> */}
-       <Grid item xs={12} md={6}>
-            <CustomSelect
-              label="Select Currency"
-              value={currency}
-              onChange={e => setCurrency(String(e.target.value))}
-              options={currencyList?.map((item: any) => ({
-                label: `${getSymbolFromCurrency(item.base_code)} ${item.base_code}`,
-                value: item.base_code
-              })) || []}
-            />
-          </Grid>
+        <Grid item xs={12} md={6}>
+          <CustomSelect
+            label="Select Currency"
+            value={currency}
+            onChange={e => setCurrency(String(e.target.value))}
+            options={currencyList?.map((item: any) => ({
+              label: `${getSymbolFromCurrency(item.base_code)} ${item.base_code}`,
+              value: item.base_code
+            })) || []}
+          />
+        </Grid>
 
       </Grid>
 
-        <Grid item xs={12}>
-                  <Grid container spacing={2}
-                    sx={{ fontWeight: 'bold', pb: 2, mt: 4, backgroundColor: '#483594', color: theme.palette.text.primary,}} >
-      
-                    <Grid item xs={1}> # </Grid>
-      
-                    <Grid item xs={3}> Product </Grid>
-      
-                    <Grid item xs={2}> Qty </Grid>
-      
-                    <Grid item xs={2}>Unit Price </Grid>
-      
-                    <Grid item xs={2}> Amount</Grid>
-      
-                    <Grid item xs={2}>Action </Grid>
-      
-                  </Grid>
-                </Grid>
+      <Grid item xs={12}>
+        <Grid container spacing={2}
+          sx={{ fontWeight: 'bold', pb: 2, mt: 4, backgroundColor: '#483594', color: theme.palette.text.primary, }} >
+
+          <Grid item xs={1}> # </Grid>
+
+          <Grid item xs={3}> Product </Grid>
+
+          <Grid item xs={2}> Qty </Grid>
+
+          <Grid item xs={2}>Unit Price </Grid>
+
+          <Grid item xs={2}> Amount</Grid>
+
+          <Grid item xs={2}>Action </Grid>
+
+        </Grid>
+      </Grid>
 
       <Grid container spacing={2} mt={4}>
         {inputs.map((item, index) => (
@@ -296,17 +299,28 @@ const AddQuote = () => {
               <option value="percentage">Percentage</option>
             </select>
           </Box>
-          <select value={overAllTax} onChange={(e) => setOverAllTax(e.target.value.split(','))} style={{ padding: '12px', width: '100%', borderRadius: '6px', border: '1px solid #ccc' }}>
-            {taxList.map(tax => <option key={tax.name} value={`${tax.name},${tax.rate}`}>{tax.name} - {tax.rate}</option>)}
+          <select
+            value={overAllTax}
+            onChange={(e) => setOverAllTax(e.target.value)}
+            style={{ padding: '12px', width: '100%', borderRadius: '6px', border: '1px solid #ccc' }}
+          >
+            <option value="" disabled hidden>
+              -- Select Tax --
+            </option>
+            {taxList.map(tax => (
+              <option key={tax._id} value={tax.taxvalue}>
+                {tax.Name} - {tax.taxvalue}
+              </option>
+            ))}
           </select>
         </Grid>
 
         <Grid item xs={12} md={6}>
           <Box display="flex" flexDirection="column" gap={1}>
-            <Box display="flex" justifyContent="space-between"><span>Sub Total:</span><span>${subTotal.toFixed(2)}</span></Box>
-            <Box display="flex" justifyContent="space-between"><span>Discount:</span><span>${disCountGiven.toFixed(2)}</span></Box>
-            <Box display="flex" justifyContent="space-between"><span>Tax:</span><span>${tax.toFixed(2)}</span></Box>
-            <Box display="flex" justifyContent="space-between" fontWeight="bold"><span>Total:</span><span>${total.toFixed(2)}</span></Box>
+            <Box display="flex" justifyContent="space-between"><span>Sub Total:</span><span>{subTotal.toFixed(2)}</span></Box>
+            <Box display="flex" justifyContent="space-between"><span>Discount:</span><span>{disCountGiven.toFixed(2)}</span></Box>
+            <Box display="flex" justifyContent="space-between"><span>Tax:</span><span>{tax.toFixed(2)}</span></Box>
+            <Box display="flex" justifyContent="space-between" fontWeight="bold"><span>Total:</span><span>{total.toFixed(2)}</span></Box>
           </Box>
         </Grid>
       </Grid>
