@@ -8481,3 +8481,27 @@ color: var(--bs-primary);
   border: 1px solid #ccc;
   resize: vertical;
 }
+.swap-note-box {
+  background-color: #fff9e5;
+  border: 1px solid #ffd700;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.swap-note-text {
+  color: #7a6000;
+  font-weight: 500;
+}
+.inr-warning-box {
+  background-color: #ffeaea;
+  border: 1px solid #ff4d4f;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.inr-warning-text {
+  color: #a8071a;
+  font-weight: 500;
+}

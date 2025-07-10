@@ -740,6 +740,12 @@ const filteredSwapCoins = swapRawCoins.filter((coin) => coin.coin !== fromCoin);
                 <Box 
                   className="crypto-form-section"
                 >
+                  <Box className="inr-warning-box">
+                  <Typography variant="body2" className="inr-warning-text">
+                    <strong>Note:</strong> Buying in <strong>INR</strong> is currently <strong>not supported</strong>.
+                  </Typography>
+                </Box>
+
                   <Box className="crypto-form-row">
                     <Box className="crypto-form-field">
                       <Typography variant="subtitle2" className="crypto-form-label" sx={{ color: theme.palette.text.primary }}>
@@ -978,6 +984,13 @@ const filteredSwapCoins = swapRawCoins.filter((coin) => coin.coin !== fromCoin);
             )}
             {activeTab === 'swap' && (
               <>
+              <Box className="swap-note-box">
+                <Typography variant="body2" className="swap-note-text">
+                  <strong>Note:</strong> Please make sure that you have already generated wallets for the coins you want to swap.
+                  Swapping with <strong>USDT</strong> is currently <strong>not supported</strong>.
+                </Typography>
+              </Box>
+
                 <Box 
                   className="crypto-swap-container"
                 >
@@ -1101,6 +1114,7 @@ const filteredSwapCoins = swapRawCoins.filter((coin) => coin.coin !== fromCoin);
                     </Typography>
                   </Box>
                 </Box>
+                
 
                 {/* Confirmation checkbox for swap */}
                 <Box className="crypto-form-field" >
