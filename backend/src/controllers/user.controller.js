@@ -75,7 +75,7 @@ module.exports = {
         documentPhotoFront:'',
         documentPhotoBack:'',
         addressProofPhoto:'',
-        status: "created"
+        status: "Pending"
       });
     
       const createdUser = await User.findById({_id: user._id}).select("-password");

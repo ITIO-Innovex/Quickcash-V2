@@ -1,4 +1,6 @@
 
+import axios from 'axios';
+import {jwtDecode} from 'jwt-decode';
 import React, { useState } from 'react';
 import 'react-phone-input-2/lib/style.css'; 
 import PhoneInput from 'react-phone-input-2';
@@ -7,6 +9,8 @@ import CustomButton from '@/components/CustomButton';
 import EmailVerifyModal from '@/modal/emailVerifyModal';
 import OTPVerificationModal from '@/modal/otpVerificationModal';
 import { Box, Typography, Grid, useTheme } from '@mui/material';
+import { useAppToast } from '@/utils/toast';
+const url = import.meta.env.VITE_NODE_ENV == 'production' ? 'api' : 'api';
 
 interface ContactDetailsProps {
   onNext: () => void;
@@ -14,6 +18,7 @@ interface ContactDetailsProps {
 
 const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
   const theme = useTheme();
+  const toast = useAppToast();
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [primaryPhone, setPrimaryPhone] = useState('');
@@ -68,7 +73,7 @@ React.useEffect(() => {
         setIsAdditionalPhoneVerified(data.phoneSVerified);
       }
     } else {
-      // Naya user - Check userData (fallback)
+      
       const userData = localStorage.getItem('userData');
       if (userData) {
         try {
@@ -130,31 +135,102 @@ React.useEffect(() => {
   localStorage.setItem('KycData', JSON.stringify(updated));
 }, [email, primaryPhone, additionalPhone, primaryCountryCode, additionalCountryCode]);
 
-const handleOtpVerifySuccess = () => {
+
+const handleOtpVerifySuccess = async () => {
   const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
+  const token = localStorage.getItem('token');
+  const decoded = jwtDecode<{ data: { id: string } }>(token || '');
+  const updateID = existing._id;
+
+  const isPrimary = verificationTarget === 'primary';
+
   const updated = {
     ...existing,
     phone: `${primaryCountryCode}${primaryPhone}`,
     additionalPhone: `${additionalCountryCode}${additionalPhone}`,
+    phonePVerified: isPrimary ? true : existing.phonePVerified,
+    phoneSVerified: !isPrimary ? true : existing.phoneSVerified,
   };
-  localStorage.setItem('KycData', JSON.stringify(updated));
 
-  if (verificationTarget === 'primary') {
-    setIsPrimaryPhoneVerified(true);
-  } else {
-    setIsAdditionalPhoneVerified(true);
+  try {
+    const response = await axios.patch(`/${url}/v1/kyc/verify/${updateID}`, {
+      user: decoded?.data?.id,
+      email: existing.email || '',
+      type: isPrimary ? 'phone1' : 'phone2',
+      emailVerified: existing.emailVerified,
+      phonePVerified: updated.phonePVerified,
+      phoneSVerified: updated.phoneSVerified,
+      primaryPhoneNumber: updated.phone,
+      secondaryPhoneNumber: updated.additionalPhone,
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const isSuccess =
+      response?.data?.status === 'success' ||
+      response?.data?.status === 201 ||
+      response?.status === 200;
+
+    if (isSuccess) {
+      localStorage.setItem('KycData', JSON.stringify(updated));
+
+      if (isPrimary) setIsPrimaryPhoneVerified(true);
+      else setIsAdditionalPhoneVerified(true);
+
+      setOtpModalOpen(false); // ✅ Only if it worked
+      console.log('✅ OTP verified and modal closed.');
+    } else {
+      console.error('❌ OTP PATCH did not return success:', response?.data);
+      toast.error(response?.data?.message || 'Phone verification failed');
+    }
+  } catch (err: any) {
+    console.error('❌ OTP PATCH Failed:', err);
+    toast.error(err?.response?.data?.message || 'Failed to verify phone number');
   }
-
-  setOtpModalOpen(false);
 };
 
-const handleEmailVerifySuccess = () => {
+
+const handleEmailVerifySuccess = async () => {
   setIsEmailVerified(true);
   setEmailModalOpen(false);
 
   const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
-  localStorage.setItem('KycData', JSON.stringify({ ...existing, email }));
+  const token = localStorage.getItem('token');
+  const decoded = jwtDecode<{ data: { id: string } }>(token || '');
+  const updateID = existing._id;
+  console.log(updateID);
+
+  try {
+    await axios.patch(`/${url}/v1/kyc/verify/${updateID}`, {
+      user: decoded?.data?.id,
+      email,
+      type: 'email',
+      emailVerified: true,
+      phonePVerified: existing.phonePVerified,
+      phoneSVerified: existing.phoneSVerified,
+      primaryPhoneNumber: existing.phone || '',
+      secondaryPhoneNumber: existing.additionalPhone || '',
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    // 💾 Update localStorage
+    const updated = {
+      ...existing,
+      email,
+      emailVerified: true
+    };
+    localStorage.setItem('KycData', JSON.stringify(updated));
+
+  } catch (err) {
+    console.error('❌ Email PATCH Failed:', err);
+  }
 };
+
 
   const getPhoneNumber = () => {
     return verificationTarget === 'primary'

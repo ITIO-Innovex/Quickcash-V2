@@ -35,7 +35,6 @@ const ResidentialAddress: React.FC<ResidentialAddressProps> = ({ onBack, frontDo
   const validate = () => {
     const newErrors: typeof errors = {};
     if (!documentType) newErrors.documentType = 'Please select a document type';
-    if (!document) newErrors.document = 'Upload document is mandatory';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -79,107 +78,66 @@ const ResidentialAddress: React.FC<ResidentialAddressProps> = ({ onBack, frontDo
   }
 }, []);
 
-const handleUpdate = async () => {
-   if (!validate()) return;
+const handleUpdate = async (skipFileUpload = false) => {
+  if (!validate()) return;
+
+  const kycData = JSON.parse(localStorage.getItem('KycData') || '{}');
+  const token = localStorage.getItem('token');
+  const decoded = jwtDecode<JwtPayload>(token || '');
+  const formData = new FormData();
+
+  formData.append('email', kycData.email);
+  formData.append('user', decoded?.data?.id);
+  formData.append('documentType', kycData.documentType);
+  formData.append('documentNumber', kycData.documentNumber);
+  formData.append('primaryPhoneNumber', kycData.phone.replace(/\D/g, ''));
+  formData.append('secondaryPhoneNumber', kycData.additionalPhone.replace(/\D/g, ''));
+  formData.append('addressDocumentType', documentType);
+  formData.append('status', 'Pending');
+
+  // 🔁 Attach file only if it's new and required
+  if (!skipFileUpload && document) {
+    formData.append('addressProofPhoto', document);
+  }
+
+  if (!skipFileUpload && frontDocument?.raw) {
+    formData.append('documentPhotoFront', frontDocument.raw);
+  }
+
+  if (!skipFileUpload && backDocument?.raw) {
+    formData.append('documentPhotoBack', backDocument.raw);
+  }
+
   try {
-    const kycData = JSON.parse(localStorage.getItem('KycData') || '{}');
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-      toast.error('User not authenticated');
-      return;
-    }
-
-    const decoded = jwtDecode<JwtPayload>(token);
-
-    // ✅ Prepare FormData
-    const formData = new FormData();
-    formData.append('email', kycData.email);
-    formData.append('user', decoded?.data?.id);
-    formData.append('documentType', kycData.documentType);
-    formData.append('documentNumber', kycData.documentNumber);
-    formData.append('primaryPhoneNumber', kycData.phone.replace(/\D/g, ''));
-    formData.append('secondaryPhoneNumber', kycData.additionalPhone.replace(/\D/g, ''));
-
-
-    // 👇 Add File objects by fetching from FileUpload component states
-    formData.append('addressProofPhoto', document); // residential proof File
-    formData.append('documentPhotoFront', frontDocument?.raw);
-    formData.append('documentPhotoBack', backDocument?.raw);
-
-    formData.append('addressDocumentType', documentType);
-    formData.append('status', 'Pending');
-
-    // ✅ API Call
-    const response = await axios.post(`/${url}/v1/kyc/add`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.data.status === '201' || response.data.status === 201 || response.data.status === 'success') {
-      toast.success(response.data.message || 'KYC submitted successfully');
-      localStorage.removeItem('KycData');
-       navigate('/dashboard'); // ✅ clear KYC data
+    let response;
+    if (kycData._id) {
+      response = await axios.patch(`/${url}/v1/kyc/update/${kycData._id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      });
     } else {
-          toast.error(response.data.message || 'Submission failed');
-        }
-      } catch (err: any) {
-        console.error('KYC Submit Error:', err);
-        toast.error(err?.response?.data?.message || 'Failed to submit KYC data');
-      }
-    };
-
-
-    const HandleUpdateKycData = async () => {
-  try {
-    const kycData = JSON.parse(localStorage.getItem('KycData') || '{}');
-    const token = localStorage.getItem('token');
-    if (!token) {
-      toast.error('User not authenticated');
-      return;
+      response = await axios.post(`/${url}/v1/kyc/add`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      });
     }
 
-    const decoded = jwtDecode<JwtPayload>(token);
-
-    const formData = new FormData();
-    formData.append('user', decoded?.data?.id);
-    formData.append('email', kycData.email || '');
-    formData.append('documentType', kycData.documentType || '');
-    formData.append('primaryPhoneNumber', kycData.phone?.replace(/\D/g, '') || '');
-    formData.append('secondaryPhoneNumber', kycData.additionalPhone?.replace(/\D/g, '') || '');
-    formData.append('addressDocumentType', kycData.addressDocumentType || '');
-    formData.append('documentNumber', kycData.documentNumber || '');
-    formData.append('status', 'Processed');
-
-    // 👇 File fields
-    formData.append('addressProofPhoto', kycData.imageResi?.raw || '');
-    formData.append('documentPhotoFront', kycData.imageFront?.raw || '');
-    formData.append('documentPhotoBack', kycData.imageBack?.raw || '');
-
-    // ✅ Make PATCH call
-    const response = await axios.patch(`/${url}/v1/kyc/update/${kycData._id}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    if (response.data.status === '201' || response.data.status === 201 || response.data.status === 'success') {
-      toast.success(response.data.message || 'KYC updated successfully');
+    if (response?.data?.status === '201' || response?.data?.status === 201 || response?.data?.status === 'success') {
+      toast.success(response.data.message || 'KYC submitted successfully');
       localStorage.removeItem('KycData');
       navigate('/dashboard');
     } else {
-      toast.error(response.data.message || 'Failed to update KYC');
+      toast.error(response.data.message || 'Submission failed');
     }
-
-  } catch (error: any) {
-    console.log("error", error);
-    toast.error(error?.response?.data?.message || 'Something went wrong');
+  } catch (err: any) {
+    console.error('KYC Submit Error:', err);
+    toast.error(err?.response?.data?.message || 'Failed to submit KYC data');
   }
 };
-
 
   return (
     <Box className="contact-details-container">
@@ -295,13 +253,34 @@ const handleUpdate = async () => {
             <CustomButton className="back-button" onClick={handleBack}>
               Back
             </CustomButton>
-            <CustomButton
-              className="update-button"
-              onClick={isExistingKycData ? HandleUpdateKycData : handleUpdate}
-              disabled={!document || !documentType}
-            >
-              {isExistingKycData ? 'Update KYC' : 'Submit'}
-            </CustomButton>
+           <CustomButton
+            className="update-button"
+            onClick={async () => {
+              const kyc = JSON.parse(localStorage.getItem('KycData') || '{}');
+              const hasDocument = !!document;
+
+              // ✅ Always validate first
+              if (!validate()) return;
+
+              // 🟡 New KYC (POST)
+              if (!kyc._id) {
+                await handleUpdate(); // your existing POST logic
+              } 
+              
+              // 🟢 Existing KYC (PATCH)
+              else {
+                if (!hasDocument) {
+                  await handleUpdate(true); // 👈 pass flag to avoid attaching new file
+                } else {
+                  await handleUpdate(); // with file
+                }
+              }
+            }}
+            disabled={!documentType} // 🔁 document optional for PATCH
+          >
+            {documentFileName && !document ? 'Update KYC' : 'Submit'}
+          </CustomButton>
+
           </Box>
         </Grid>
       </Grid>
