@@ -304,6 +304,9 @@ const AddQuote = () => {
             onChange={(e) => setOverAllTax(e.target.value)}
             style={{ padding: '12px', width: '100%', borderRadius: '6px', border: '1px solid #ccc' }}
           >
+            <option value="" disabled hidden>
+              -- Select Tax --
+            </option>
             {taxList.map(tax => (
               <option key={tax._id} value={tax.taxvalue}>
                 {tax.Name} - {tax.taxvalue}
