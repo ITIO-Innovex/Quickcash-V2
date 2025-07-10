@@ -231,7 +231,40 @@ const FirstSection = () => {
       ),
     },
   ];
+  const sentAmount =
+    selectedRow?.receipient && selectedRow?.conversionAmount
+      ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`
+      : !selectedRow?.receipient && selectedRow?.conversionAmount
+        ? (() => {
+          if (selectedRow?.tr_type === "Stripe") {
+            return `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.amount}`;
+          } else if (selectedRow?.tr_type === "UPI") {
+            return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
+          } else if (selectedRow?.trans_type === "Exchange") {
+            return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
+          } else {
+            return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
+          }
+        })()
+        : "--";
 
+  // Define Received Amount
+  const receivedAmount =
+    selectedRow?.receipient && selectedRow?.conversionAmount
+      ? `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`
+      : !selectedRow?.receipient && selectedRow?.conversionAmount
+        ? (() => {
+          if (selectedRow?.tr_type === "Stripe") {
+            return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount}`;
+          } else if (selectedRow?.tr_type === "UPI") {
+            return `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
+          } else if (selectedRow?.trans_type === "Exchange") {
+            return `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
+          } else {
+            return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount}`;
+          }
+        })()
+        : "--";
   return (
     <Box>
       <Box display="flex" gap={2} mb={3} flexWrap="wrap" alignItems="center">
@@ -398,6 +431,9 @@ const FirstSection = () => {
                 : selectedRow?.receipient
                   ? selectedRow?.recAccountDetails?.[0]?.address
                   : selectedRow?.transferAccountDetails?.[0]?.address,
+
+            "Sent Amount": sentAmount,
+            "Received Amount": receivedAmount
           }
         }}
         dialogContentSx={{
