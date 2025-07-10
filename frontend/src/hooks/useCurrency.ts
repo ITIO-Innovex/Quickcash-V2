@@ -1,3 +1,4 @@
+import api from '@/helpers/apiHelper';
 import axios from 'axios';
 import {useState,useEffect} from 'react';
 
@@ -9,7 +10,7 @@ export const useCurrency = () => {
     
     const getList = async () => {
       try {
-        const result = await axios.get(`/${url}/v1/currency/list`);
+        const result = await api.get(`/${url}/v1/currency/list`);
 
         if (result.data.status === 201) {
           setCurrencyList(result?.data?.data);

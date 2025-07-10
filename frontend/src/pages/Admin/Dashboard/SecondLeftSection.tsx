@@ -14,7 +14,7 @@ const SecondLeftSection = ({ summary, loaderResult }: SecondLeftSection) => {
   const cardData = [
     { icon: <ReceiptIcon fontSize="large" />, label: 'Invoice', count: summary?.totalInvoice ?? 0, route: '/admin/invoices', },
     { icon: <DescriptionIcon fontSize="large" />, label: 'Ticket', count: summary?.totalTicket ?? 0, route: '/admin/help-center', },
-    { icon: <AccountBalanceWalletIcon fontSize="large" />, label: 'Wallet', count: summary?.totalAccount ?? 0, route: '/admin/wallet-request', },
+    { icon: <AccountBalanceWalletIcon fontSize="large" />, label: 'Total Account', count: summary?.totalAccount ?? 0, route: '/admin/wallet-request', },
     { icon: <CurrencyBitcoinIcon fontSize="large" />, label: 'Crypto Wallet', count: summary?.wallet ?? 0, route: '/admin/crypto-transfer', },
   ];
   return (

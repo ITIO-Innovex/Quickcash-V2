@@ -12,7 +12,7 @@ const FirstLeftSection = ({ summary, loaderResult }: FirstLeftSectionProps) => {
 
   const cardData = [
     { icon: <PersonIcon fontSize="large" />, value: summary?.totalAccount ?? 0, label: 'Total Account' },
-    { icon: <HourglassEmptyIcon fontSize="large" />, value: summary?.wallet ?? 0, label: 'Total Wallet' },
+    { icon: <HourglassEmptyIcon fontSize="large" />, value: summary?.wallet ?? 0, label: 'Total Crypto Wallet' },
     {
       icon: <BarChartIcon fontSize="large" />, value: summary?.transactionsallTotal !== undefined && summary?.transactionsallTotal !== null
          ? `$${summary.transactionsallTotal.toFixed(2)}`

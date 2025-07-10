@@ -268,7 +268,7 @@ const FirstSection = () => {
         <Box display="flex" gap={1}>
           <VisibilityIcon sx={{ cursor: 'pointer', color: 'blue' }} onClick={() => handleActionClick(row)}/>
 
-          <EditIcon sx={{ cursor: 'pointer', color: 'green' }} onClick={() => navigate(`/add-invoice/${row._id}`)}/>
+          {/* <EditIcon sx={{ cursor: 'pointer', color: 'green' }} onClick={() => navigate(`/add-invoice/${row._id}`)}/> */}
 
           <DeleteIcon sx={{ cursor: 'pointer', color: '#FF0000' }} onClick={() => handleDelete(row)} />
         </Box>
