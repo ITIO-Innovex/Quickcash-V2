@@ -54,21 +54,24 @@ module.exports = {
         })
       }
                  
-      return res.status(200).json({
-        status: 201,
-        message: "Client has been added Successfully!!!",
-        data:client
-      });
+      return res.status(201).json({
+      status: 201,
+      message: 'Client has been added successfully!',
+      data: client,
+    });
+  } catch (error) {
+    console.error('Add Client Error:', error);
 
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-          status: 500,
-          message: "Something went wrong with api",
-          data: error
-        });
-     }
-  },
+    // ✅ Safe-guard: only send if not already sent
+    if (!res.headersSent) {
+      return res.status(500).json({
+        status: 500,
+        message: 'Something went wrong with the API',
+        data: error.message || error,
+      });
+    }
+  }
+},
   // get all client list according to userwise
   clientList: async(req,res) => {
 

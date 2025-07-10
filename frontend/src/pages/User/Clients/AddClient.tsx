@@ -92,7 +92,7 @@ const AddClient = () => {
           },
         }
       );
-      if (response.data.status === "201") {
+      if (response.data.status === 201) {
         toast.success('Client added successfully!');
         navigate('/clients');
       } else {
@@ -152,15 +152,6 @@ const AddClient = () => {
               />
             </Box>
           </Box>
-
-          <CustomButton
-            fullWidth
-            loading={loading}
-            onClick={handleSubmit}
-            className="save-button"
-          >
-            Save
-          </CustomButton>
         </Box>
 
         <Grid container spacing={3}>
@@ -260,6 +251,14 @@ const AddClient = () => {
             />
           </Grid>
         </Grid>
+        <Box display="flex" justifyContent="flex-end" gap={2} >
+          <CustomButton
+            loading={loading}
+            onClick={handleSubmit}
+          >
+            Save
+          </CustomButton>
+          </Box>
       </Box>
     </Box>
   );
