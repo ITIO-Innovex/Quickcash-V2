@@ -80,6 +80,8 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
   const [currentBalance,setCurrentBalance] = useState<any>(0);
   const [fromAmount,setFromAmount] = useState<any>(0);
   const [feeCharge,setFeeCharge] = useState<any>(0);
+  const [transferMethod, setTransferMethod] = useState('Bank transfer');
+  const [editingTransferMethod, setEditingTransferMethod] = useState(false);
 
     const HandleSendCurrency = (val:any) => {
     var valChn = val.split('-');
@@ -176,14 +178,10 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
         updateFormData({
           fromCurrency,
           toCurrency,
-          sendAmount,
-          receiveAmount,
-          receivingOption: 'bank_account',
-          sendCurrencyCountry,  
-          sendCurrency,
-          fromAmount,
-          toCurrencyCountry,
-          convertedValue
+          sendAmount: fromAmount,
+          receiveAmount: convertedValue,
+          feeCharge,
+          // ...other fields as needed
         });
         onNext();
     }
@@ -382,6 +380,7 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
                 <Select
                   value={toCurrency}
                   onChange={(e) => HandleToCurrency(e.target.value)}
+                  disabled
                 >
                   {currencyList.map((currency) => (
                     <MenuItem key={currency.currency}  value={`${currency?.currency}-${currency?._id}-${currency?.country}`}>
@@ -390,9 +389,6 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
                   ))}
                 </Select>
               </FormControl>
-              <IconButton size="small" onClick={handleSwapCurrencies}>
-                <ArrowUpDown size={16} />
-              </IconButton>
             </Box>
             <TextField
               type="number"
@@ -409,139 +405,49 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
                 },
               }}
             />
+            <span style={{ fontWeight: 600, marginLeft: 8 }}>
+              {getSymbolFromCurrency(formData.selectedCurrency)} {formData.selectedCurrency}
+            </span>
           </Box>
         </Box>
 
         <Divider sx={{ my: 2 }} />
-
         {/* Payment Method Section */}
-
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <Building2 size={20} style={{ marginRight: 8 }} />
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="body2" color="text.primary">
               Paying with
             </Typography>
-            <Typography variant="body1" sx={{ fontWeight: 500 }}>
-              Bank transfer
-            </Typography>
+            {!editingTransferMethod ? (
+              <Typography variant="body1" sx={{ fontWeight: 700 }}>
+                {transferMethod}
+              </Typography>
+            ) : (
+              <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+                <Select
+                  value={transferMethod}
+                  onChange={(e) => {
+                    setTransferMethod(e.target.value);
+                    setEditingTransferMethod(false);
+                  }}
+                >
+                  <MenuItem value="Bank transfer">Bank transfer</MenuItem>
+                  <MenuItem value="Wallet">Wallet</MenuItem>
+                  {/* Add more methods as needed */}
+                </Select>
+              </FormControl>
+            )}
           </Box>
-          <Chip
-            label="Change"
-            size="small"
-            sx={{ bgcolor: '#e8f5e8', color: '#2e7d32' }}
-          />
+          {!editingTransferMethod && (
+            <Chip
+              label="Change"
+              size="small"
+              sx={{ bgcolor: '#e8f5e8', color: '#2e7d32', cursor: 'pointer' }}
+              onClick={() => setEditingTransferMethod(true)}
+            />
+          )}
         </Box>
-        <Divider sx={{ my: 2 }} />
-
-        {/* Charges will be paid by section */}
-
-        <Box sx={{ mb: 2 }}>
-          <Typography
-            variant="subtitle2"
-            sx={{ color: theme.palette.text.primary, marginBottom: '16px' }}
-          >
-            OCBC Singapore and other bank's{' '}
-            <CommonTooltip
-              title={
-                <div style={{ whiteSpace: 'pre-line' }}>
-                  You (OUR) – OCBC Singapore & other banks' charges to be paid
-                  by You.
-                  {'\n\n'}Recipient (BEN) – OCBC Singapore & other banks' charges
-                  to be paid by Recipient.
-                  {'\n\n'}Both (SHA) – OCBC Singapore charges to be paid by You,
-                  other banks' charges to be paid by Recipient.
-                </div>
-              }
-            >
-              <span
-                style={{
-                  color: '#ff5722',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                }}
-              >
-                charges
-              </span>
-            </CommonTooltip>
-            will be paid by
-          </Typography>
-          <RadioGroup
-            value={chargesPaidBy}
-            onChange={(e) => setChargesPaidBy(e.target.value)}
-            sx={{
-              display: 'flex',
-              flexDirection: 'row',
-              gap: '24px',
-              alignItems: 'center',
-            }}
-          >
-            <FormControlLabel
-              value="OUR"
-              control={
-                <Radio
-                  sx={{
-                    color: theme.palette.text.secondary,
-                    '&.Mui-checked': {
-                      color: '#483594',
-                    },
-                  }}
-                />
-              }
-              label={
-                <Typography
-                  variant="body2"
-                  sx={{ color: theme.palette.text.primary }}
-                >
-                  You (OUR)
-                </Typography>
-              }
-            />
-            <FormControlLabel
-              value="BEN"
-              control={
-                <Radio
-                  sx={{
-                    color: theme.palette.text.secondary,
-                    '&.Mui-checked': {
-                      color: '#483594',
-                    },
-                  }}
-                />
-              }
-              label={
-                <Typography
-                  variant="body2"
-                  sx={{ color: theme.palette.text.primary }}
-                >
-                  Recipient (BEN)
-                </Typography>
-              }
-            />
-            <FormControlLabel
-              value="SHA"
-              control={
-                <Radio
-                  sx={{
-                    color: theme.palette.text.secondary,
-                    '&.Mui-checked': {
-                      color: '#483594',
-                    },
-                  }}
-                />
-              }
-              label={
-                <Typography
-                  variant="body2"
-                  sx={{ color: theme.palette.text.primary }}
-                >
-                  Both (SHA)
-                </Typography>
-              }
-            />
-          </RadioGroup>
-        </Box>
-
         <Divider sx={{ my: 2 }} />
         {/* Arrival Time Section */}
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -558,37 +464,29 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
 
         <Divider sx={{ my: 2 }} />
 
-        {/* Total Fees Section */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Receipt size={20} style={{ marginRight: 8 }} />
-            <Box>
-              <Typography variant="body2" color="text.primary">
-                Total fees
-              </Typography>
-              <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                Included in {fromCurrency} amount
-              </Typography>
-            </Box>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography
-              variant="body1"
-              sx={{ fontWeight: 500, textDecoration: 'underline' }}
-            >
-              {fee} {fromCurrency}
+        {/* Transaction Fee and Net Amount Alert Box */}
+        <Paper elevation={0} sx={{ background: '#fff8e1', border: '1px solid #ffe082', borderRadius: 2, p: 2, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="body2" color="text.primary">
+              Transaction fee
             </Typography>
-            <IconButton size="small">
-              <ArrowUpDown size={16} />
-            </IconButton>
+            <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
+              {feeCharge} {fromCurrency}
+            </Typography>
           </Box>
-        </Box>
+
+          {/* Net Amount Recipient Gets Section */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="body2" color="text.primary">
+              Net amount recipient gets
+            </Typography>
+            <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
+              {(convertedValue - (chargesPaidBy === 'BEN' ? feeCharge : 0)).toFixed(2)} {toCurrency.split('-')[0]}
+            </Typography>
+          </Box>
+        </Paper>
+
+        
       </Box>
 
       {/* Action Buttons */}

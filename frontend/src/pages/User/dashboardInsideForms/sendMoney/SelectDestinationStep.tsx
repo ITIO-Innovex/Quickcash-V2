@@ -37,7 +37,7 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
   onNext,
   onBeneficiaryTab,
   onSelectBeneficiary,
-  currencyList,
+  currencyList = [],
 }) => {
   const theme  = useTheme();
   const navigate = useNavigate();
@@ -45,10 +45,28 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
   const [activeTab, setActiveTab] = useState(0);
   const [selectedCurrencyVal, setSelectedCurrencyVal] = useState<string | null>(null);
 
+  // --- Map currencyList to CountryOption structure expected by CountryDropdown ---
+  const mappedCurrencyList = currencyList.map((item: any) => {
+    const code = item.base_code || item.currency || '';
+    let currencyName = item.currencyName;
+    if (!currencyName || currencyName === 'undefined') currencyName = code;
+    let country = item.country;
+    if (!country || country === 'undefined') country = code.slice(0, 2) || code;
+    return {
+      _id: item._id || item.id || code,
+      currency: code,
+      currencyName,
+      country,
+      countryName: item.countryName || country,
+      status: item.status ?? true,
+      defaultc: item.defaultc ?? false,
+      base_code: code,
+    };
+  });
+
   // Featured countries displayed as cards
-    // Split currency list
-  const featuredCurrencies = currencyList.slice(0, 4);
-  const otherCurrencies = currencyList.slice(4);
+  const featuredCurrencies = mappedCurrencyList.slice(0, 4);
+  const otherCurrencies = mappedCurrencyList.slice(4);
   // Other countries available in dropdown
   // Filter out featured currencies from dropdown to avoid duplicates
   const filteredOtherCountries = otherCurrencies.filter(
@@ -59,6 +77,14 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
     const val = `${currency}-${id}-${country}`;
     setSelectedCurrencyVal(val);
     setSelectedCurrency(currency);
+    // Also update selectedCurrencyObj in formData
+    const selectedObj = mappedCurrencyList.find(c => c.currency === currency);
+    updateFormData({
+      selectedCurrency: currency,
+      toCurrency: currency,
+      sendCurrencyData: val,
+      selectedCurrencyObj: selectedObj,
+    });
   };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -82,6 +108,16 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
   };
 
   const isFeaturedSelected = featuredCurrencies.some(country => country.currency === selectedCurrency);
+
+  // --- Method type logic for selected currency ---
+  let methodType = '';
+  if (selectedCurrency === 'EUR') {
+    methodType = 'SEPA (EUR only)';
+  } else if (selectedCurrency === 'USD') {
+    methodType = 'ACH (USD only)';
+  } else if (selectedCurrency) {
+    methodType = 'SWIFT (Any currency)';
+  }
 
   return (
     <Box className="destination-step">
@@ -110,7 +146,7 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
           {/* Featured Currency Cards - Quick selection for popular countries */}
           <Grid container spacing={3} className="country-cards" >
             {featuredCurrencies.map((currency) => (
-              <Grid item xs={12} sm={6} md={3} key={currency.code}  >
+              <Grid item xs={12} sm={6} md={3} key={currency._id}  >
                 <CountryCard 
                   countryCode={currency.country}
                   currencyCode={currency.currency}
@@ -134,9 +170,12 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
               onChange={(e) => {
                 const value = e.target.value as string;
                 setSelectedCurrency(value);
+                // Also update selectedCurrencyObj in formData
+                const selectedObj = mappedCurrencyList.find(c => c.currency === value);
                 updateFormData({
                   selectedCurrency: value,
                   toCurrency: value,
+                  selectedCurrencyObj: selectedObj,
                 });
               }}
             />
@@ -153,6 +192,17 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
               Continue
             </CustomButton>
           </Box>
+          {/* Show method type info at the bottom */}
+          {selectedCurrency && (
+            <Box sx={{ mt: 3, p: 2, border: '1px solid #eee', borderRadius: 2, background: '#f9f9fb', textAlign: 'center' }}>
+              <Typography variant="subtitle1" sx={{ color: '#483594', fontWeight: 600 }}>
+                Method: {methodType}
+              </Typography>
+              {/* <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                SEPA: EUR only | SWIFT: Any currency | ACH: USD only
+              </Typography> */}
+            </Box>
+          )}
         </Box>
       )}
     </Box>

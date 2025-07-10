@@ -36,8 +36,18 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
   onPrevious,
 }) => {
   const theme = useTheme();
-  const [selectedMethod, setSelectedMethod] = useState(formData.transferMethod || 'sepa');
-  const [activeTab, setActiveTab] = useState(0);
+  // --- Static method selection logic ---
+  let staticMethod: 'sepa' | 'ach' | 'swift' | null = null;
+  if (formData.selectedCurrency === 'EUR') {
+    staticMethod = 'sepa';
+  } else if (formData.selectedCurrency === 'USD') {
+    staticMethod = 'ach';
+  } else if (formData.selectedCurrency) {
+    staticMethod = 'swift';
+  }
+  // If staticMethod is set, override state
+  const [selectedMethod, setSelectedMethod] = useState(staticMethod || formData.transferMethod || 'sepa');
+  const [activeTab, setActiveTab] = useState(staticMethod ? (staticMethod === 'sepa' ? 0 : staticMethod === 'swift' ? 1 : 2) : 0);
   const [formFields, setFormFields] = useState({
     // SEPA fields
     iban: '',
@@ -68,6 +78,16 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
     entryClassCode: 'PPD',
     paymentDescription: '',
   });
+
+  // Update converted amount when amount or currency changes
+  React.useEffect(() => {
+    let amount = '';
+    if (selectedMethod === 'sepa') amount = formFields.amount;
+    else if (selectedMethod === 'swift') amount = formFields.amount;
+    else if (selectedMethod === 'ach') amount = formFields.achAmount;
+    // The converted amount is now passed as a prop, so we don't need to calculate it here.
+    // The parent component will handle the conversion and pass the result.
+  }, [formFields.amount, formFields.achAmount, selectedMethod]);
 
   const transferMethods = [
     {
@@ -129,6 +149,14 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
     onNext();
   };
 
+  // If staticMethod is set, force method and tab
+  React.useEffect(() => {
+    if (staticMethod) {
+      setSelectedMethod(staticMethod);
+      setActiveTab(staticMethod === 'sepa' ? 0 : staticMethod === 'swift' ? 1 : 2);
+    }
+  }, [formData.selectedCurrency]);
+
   // SEPA Form Component
   const SEPAForm = () => (
     <Box sx={{p:2}}>
@@ -178,8 +206,8 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             label="Amount (EUR) *"
             placeholder="1000.00"
             type="number"
-            value={formFields.amount}
-            onChange={(e) => handleFieldChange('amount', e.target.value)}
+            value={formData.convertedAmount || ''}
+            disabled
           />
         </Grid>
         
@@ -295,19 +323,12 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
         </Grid>
         
         <Grid item xs={12} md={6}>
-          <FormControl fullWidth>
-            <InputLabel sx={{color:theme.palette.text.primary}}>Currency *</InputLabel>
-            <Select
-              value={formFields.currency}
-              onChange={(e) => handleFieldChange('currency', e.target.value)}
-            >
-              <MenuItem value="USD">USD - US Dollar</MenuItem>
-              <MenuItem value="EUR">EUR - Euro</MenuItem>
-              <MenuItem value="GBP">GBP - British Pound</MenuItem>
-              <MenuItem value="INR">INR - Indian Rupee</MenuItem>
-              <MenuItem value="CAD">CAD - Canadian Dollar</MenuItem>
-            </Select>
-          </FormControl>
+          <CustomTextField
+            fullWidth
+            label="Currency *"
+            value={formData.selectedCurrency || "N/A"}
+            InputProps={{ readOnly: true, disabled: true }}
+          />
         </Grid>
         
         <Grid item xs={12} md={6}>
@@ -316,8 +337,8 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             label="Amount *"
             placeholder="1000.00"
             type="number"
-            value={formFields.amount}
-            onChange={(e) => handleFieldChange('amount', e.target.value)}
+            value={formData.convertedAmount || ''}
+            disabled
           />
         </Grid>
         
@@ -407,8 +428,8 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             label="Amount (USD) *"
             placeholder="1000.00"
             type="number"
-            value={formFields.achAmount}
-            onChange={(e) => handleFieldChange('achAmount', e.target.value)}
+            value={formData.convertedAmount || ''}
+            disabled
           />
         </Grid>
         
@@ -456,24 +477,27 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
         Choose Transfer Method
       </Typography>
       <Typography variant="body2" className="step-description">
-        Select how you want to send money and fill in the required details
+        {staticMethod
+          ? `Transfer method is automatically selected based on your destination currency.`
+          : 'Select how you want to send money and fill in the required details'}
       </Typography>
+
 
       {/* Method Selection Cards */}
       <Grid container spacing={3} className="transfer-methods" sx={{ mt: 2, mb: 4 }}>
         {transferMethods.map((method, index) => {
           const IconComponent = method.icon;
+          // If staticMethod is set, only show the selected method
+          if (staticMethod && method.id !== staticMethod) return null;
           return (
             <Grid item xs={12} sm={4} key={method.id}>
               <Card
-                className={`transfer-method-card ${
-                  selectedMethod === method.id ? 'selected' : ''
-                }`}
-                onClick={() => handleMethodSelect(method.id)}
+                className={`transfer-method-card ${selectedMethod === method.id ? 'selected' : ''}`}
+                onClick={() => !staticMethod && handleMethodSelect(method.id)}
                 sx={{
-                  cursor: 'pointer',
+                  cursor: staticMethod ? 'not-allowed' : 'pointer',
                   border: selectedMethod === method.id ? '2px solid #483594' : '2px solid #e0e0e0',
-                  '&:hover': {
+                  '&:hover': staticMethod ? {} : {
                     borderColor: '#483594',
                     boxShadow: '0 4px 16px rgba(72, 53, 148, 0.15)',
                   }
@@ -507,7 +531,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
       <Box className="transfer-forms-section">
         <Tabs 
           value={activeTab} 
-          onChange={handleTabChange}
+          onChange={staticMethod ? undefined : handleTabChange}
           className="transfer-tabs"
           centered
           sx={{
@@ -520,18 +544,22 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             },
             '& .MuiTabs-indicator': {
               backgroundColor: 'text.primary',
-            }
+            },
+            pointerEvents: staticMethod ? 'none' : 'auto',
+            opacity: staticMethod ? 0.6 : 1,
           }}
         >
-          <Tab label="SEPA" />
-          <Tab label="SWIFT" />
-          <Tab label="ACH" />
+          {/* Only show the selected tab if staticMethod is set */}
+          {(!staticMethod || staticMethod === 'sepa') && <Tab label="SEPA" />}
+          {(!staticMethod || staticMethod === 'swift') && <Tab label="SWIFT" />}
+          {(!staticMethod || staticMethod === 'ach') && <Tab label="ACH" />}
         </Tabs>
 
         <Box className="form-container-transfer" sx={{ mt: 3 }}>
-          {activeTab === 0 && <SEPAForm />}
-          {activeTab === 1 && <SWIFTForm />}
-          {activeTab === 2 && <ACHForm />}
+          {/* Only show the selected form if staticMethod is set */}
+          {(activeTab === 0 && (!staticMethod || staticMethod === 'sepa')) && <SEPAForm />}
+          {(activeTab === 1 && (!staticMethod || staticMethod === 'swift')) && <SWIFTForm />}
+          {(activeTab === 2 && (!staticMethod || staticMethod === 'ach')) && <ACHForm />}
         </Box>
       </Box>
 
