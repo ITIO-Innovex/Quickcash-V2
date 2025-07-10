@@ -15,7 +15,7 @@ import CustomButton from '@/components/CustomButton';
 import axios from 'axios';
 import { useAppToast } from '@/utils/toast'; 
 
-const FirstSection = () => {
+const FirstSection = ({ refresh }: { refresh: boolean }) => {
   const theme = useTheme();
   const toast = useAppToast(); 
   const [open, setOpen] = useState(false);
@@ -39,7 +39,7 @@ const FirstSection = () => {
       localStorage.getItem('token') as string
     );
     getCategories(accountId.data.id);
-  }, []);
+  }, [refresh]);
   const getCategories = async (id: any) => {
     try {
       const result = await api.get(`/${url}/v1/category/list/${id}`);
@@ -155,7 +155,7 @@ const FirstSection = () => {
           }
         )
         .then((result) => {
-          if (result.data.status == '201') {
+          if (result.data.status == 201) {
             toast.success('Category data has been updated successfully');
             setEditModalOpen(false);
             setSelectedRow(null);
@@ -175,7 +175,17 @@ const FirstSection = () => {
   };
 
   const columns = [
-    { field: 'createdAt', headerName: 'Created Date' },
+    {
+      field: 'createdAt',
+      headerName: 'Created Date',
+      minWidth: 180,
+      render: (row: any) => {
+        if (!row.createdAt) return '';
+        const date = new Date(row.createdAt);
+        return date.toLocaleDateString('en-GB'); 
+      },
+    },
+
     { field: 'name', headerName: 'Category' },
     {
       field: 'product',

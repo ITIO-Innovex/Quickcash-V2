@@ -13,6 +13,7 @@ const Main = () => {
   const theme = useTheme();
   const toast = useAppToast(); 
    const [isModalOpen, setIsModalOpen] = useState(false);
+  const [refresh, setRefresh] = useState(false);
   
     const handleAddProduct = async (data: { name: string; productCode: string; category: string; unitPrice: string; description: string; }) => {
       try {
@@ -31,9 +32,10 @@ const Main = () => {
           }
         });
 
-        if (response.data.status === "201") {
+        if (response.data.status === 201) {
           setIsModalOpen(false);
           toast.success(response?.data?.message);
+            setRefresh(!refresh);
         }
       } catch (error: any) {
         toast.error(error?.response?.data?.message || "Error adding product");
@@ -47,7 +49,7 @@ const Main = () => {
       sx={{ backgroundColor: theme.palette.background.default }}
     >
       <PageHeader title='Invoice-products'  buttonText='product' onButtonClick={() => setIsModalOpen(true)}/>
-      <FirstSection />
+        <FirstSection refresh={refresh} />
 
       <CustomModal
         open={isModalOpen}

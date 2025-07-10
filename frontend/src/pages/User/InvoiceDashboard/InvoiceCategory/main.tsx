@@ -47,8 +47,7 @@ const Main = () => {
       className="clients-container dashboard-container" sx={{ backgroundColor: theme.palette.background.default }}
     >
       <PageHeader title='Category' buttonText='Category' onButtonClick={handleOpen}/>
-      <FirstSection />
-
+      <FirstSection refresh={refresh} />
       <CustomModal open={isModalOpen} onClose={handleClose} title="Add Category Form" maxWidth="sm" sx={{backgroundColor:theme.palette.background.default}} >
         <AddCategoryForm onSave={handleSave} onCancel={handleClose}  />
       </CustomModal>

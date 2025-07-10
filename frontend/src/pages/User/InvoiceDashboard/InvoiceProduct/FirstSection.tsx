@@ -12,11 +12,12 @@ import GenericTable from '../../../../components/common/genericTable';
 import { Box, Button, Typography, useTheme, TextField } from '@mui/material';
 import CustomFormModal from '@/components/CustomFormModal';
 import axios from 'axios';
-import { useAppToast } from '@/utils/toast'; 
+import { useAppToast } from '@/utils/toast';
+import moment from 'moment';
 
-const FirstSection = () => {
+const FirstSection = ({ refresh }: { refresh: boolean }) => {
   const theme = useTheme();
-  const toast = useAppToast(); 
+  const toast = useAppToast();
   const [open, setOpen] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [showFilter, setShowFilter] = useState(false);
@@ -40,7 +41,7 @@ const FirstSection = () => {
     );
     getProduct(accountId.data.id);
     getProductList();
-  }, []);
+  }, [refresh]);
 
   const getProduct = async (id: any) => {
     try {
@@ -109,7 +110,16 @@ const FirstSection = () => {
   };
 
   const columns = [
-    { field: 'createdAt', headerName: 'Created Date' },
+    {
+      field: 'createdAt',
+      headerName: 'Created Date',
+      minWidth: 180,
+      render: (row: any) => {
+        if (!row.createdAt) return '';
+        const date = new Date(row.createdAt);
+        return date.toLocaleDateString('en-GB'); 
+      },
+    },
     { field: 'name', headerName: 'Product Name' },
     {
       field: 'category',
@@ -223,7 +233,7 @@ const FirstSection = () => {
           }
         )
         .then((result) => {
-          if (result.data.status == '201') {
+          if (result.data.status == 201) {
             toast.success('Product data has been updated successfully');
             setEditModalOpen(false);
             setSelectedRow(null);
