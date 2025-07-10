@@ -128,7 +128,7 @@ const AllAccounts: React.FC = () => {
     fetchAccounts(e.target.value);
   };
 
-  const handleAddAccount = async (currency: string) => {
+  const handleAddAccount = async (currency: string, onSuccess?: () => void) => {
     const url = import.meta.env.VITE_NODE_ENV === 'production' ? 'api' : 'api';
     const accountId = jwtDecode<any>(localStorage.getItem('token') as string);
     try {
@@ -141,8 +141,8 @@ const AllAccounts: React.FC = () => {
         }
       );
       if (result.data.status == 201) {
-        // Optionally, refresh accounts or handle success
-        fetchAccounts();
+         await fetchAccounts(); // Wait for accounts to refresh
+      if (onSuccess) onSuccess(); // Close modal after refresh
       }
     } catch (error: any) {
       // Optionally, handle error
@@ -239,7 +239,7 @@ const AllAccounts: React.FC = () => {
       <AddAccountModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSubmit={handleAddAccount}
+        onSubmit={(currency) => handleAddAccount(currency, () => setIsAddModalOpen(false))}
       />
 
       <AccountDetailsModal

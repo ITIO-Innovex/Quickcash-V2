@@ -11,56 +11,10 @@ interface Account {
   flag: string;
 }
 
-const accounts: Account[] = [
-  {
-    id: 'usd',
-    name: 'USD account',
-    isDefault: true,
-    amount: '$4552.83',
-    currency: 'USD',
-    flag: '🇺🇸',
-  },
-  {
-    id: 'inr',
-    name: 'INR account',
-    isDefault: false,
-    amount: '₹85861.63',
-    currency: 'INR',
-    flag: '🇮🇳',
-  },
-  {
-    id: 'eur',
-    name: 'EUR account',
-    isDefault: false,
-    amount: '€468.00',
-    currency: 'EUR',
-    flag: '🇪🇺',
-  },
-  {
-    id: 'gbp',
-    name: 'GBP account',
-    isDefault: false,
-    amount: '£3189.76',
-    currency: 'GBP',
-    flag: '🇬🇧',
-  },
-  {
-    id: 'awg',
-    name: 'AWG account',
-    isDefault: false,
-    amount: 'ƒ0.00',
-    currency: 'AWG',
-    flag: '🇦🇼',
-  },
-  {
-    id: 'aud',
-    name: 'AUD account',
-    isDefault: false,
-    amount: '$0.00',
-    currency: 'AUD',
-    flag: '🇦🇺',
-  },
-];
+interface AllAccountsProps {
+  accounts: Account[];
+  onAddNew: () => void;
+}
 
 const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
   return (
@@ -90,7 +44,7 @@ const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
   );
 };
 
-const AllAcounts: React.FC = () => {
+const AllAccounts: React.FC<AllAccountsProps> = ({ accounts, onAddNew }) => {
   return (
     <Box className="app-root">
       <Box className="header">
@@ -100,7 +54,7 @@ const AllAcounts: React.FC = () => {
             All Accounts
           </Typography>
         </Box>
-        <Button variant="contained" color="success" className="add-new-btn">
+        <Button variant="contained" color="success" className="add-new-btn" onClick={onAddNew}>
           <span className="plus-sign">+</span> Add New
         </Button>
       </Box>
@@ -125,4 +79,4 @@ const AllAcounts: React.FC = () => {
   );
 };
 
-export default AllAcounts;
+export default AllAccounts;
