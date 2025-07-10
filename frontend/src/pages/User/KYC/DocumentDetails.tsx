@@ -167,14 +167,14 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({
               selectedFile={frontFile}
               acceptedFormats=".jpg,.jpeg,.png,.pdf"
             />
+
             {frontPreview && (
-            <Typography
-              className="file-name-text"
-              sx={{ mt: 1, fontSize: '14px', color: '#555' }}
-            >
-              Uploaded front: <strong>{frontPreview}</strong>
-            </Typography>
-          )}
+              <img 
+                src={frontPreview} 
+                alt="Front Preview" 
+                style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }} 
+              />
+            )}
           </Box>
         </Grid>
 
