@@ -785,50 +785,61 @@ async function convertCurrencyAmount(from,to,amount) {
     }
   }
 }
-// const getBase64FromUrl = async (url, autosign) => {
-//   const response = await axios.get(url, { responseType: 'arraybuffer' });
-//   const buffer = Buffer.from(response.data, 'binary');
-//   const base64 = buffer.toString('base64');
-//   const prefix = 'data:application/pdf;base64,';
-//   return autosign ? `${prefix}${base64}` : base64;
-// };
+
+const getBase64FromUrl = async (url, autosign) => {
+  const response = await axios.get(url, { responseType: 'arraybuffer' });
+  const buffer = Buffer.from(response.data, 'binary');
+  const base64 = buffer.toString('base64');
+  const prefix = 'data:application/pdf;base64,';
+  return autosign ? `${prefix}${base64}` : base64;
+};
  
-// const convertPdfArrayBuffer = async (url) => {
-//   const response = await axios.get(url, { responseType: 'arraybuffer' });
-//   return Buffer.from(response.data, 'binary');
-// };
+const convertPdfArrayBuffer = async (url) => {
+  const response = await axios.get(url, { responseType: 'arraybuffer' });
+  return Buffer.from(response.data, 'binary');
+};
  
 // // Endpoint 1: Get Base64 of PDF
-// app.get('/pdf-base64', async (req, res) => {
-//   const encodedUrl = req.query.url;
-//   const autosign = req.query.autosign === 'true';
-//   if (!encodedUrl) return res.status(400).send('Missing PDF URL');
+app.get('/pdf-base64', async (req, res) => {
+  const encodedUrl = req.query.url;
+  const autosign = req.query.autosign === 'true';
+  if (!encodedUrl) return res.status(400).send('Missing PDF URL');
  
-//   try {
-//     const decodedUrl = decodeURIComponent(encodedUrl);
-//     const base64 = await getBase64FromUrl(decodedUrl, autosign);
-//     res.send(base64);
-//   } catch (err) {
-//     console.error(err.message);
-//     res.status(500).send('Failed to fetch or convert PDF');
-//   }
-// });
+  try {
+    const decodedUrl = decodeURIComponent(encodedUrl);
+    const base64 = await getBase64FromUrl(decodedUrl, autosign);
+    res.send(base64);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Failed to fetch or convert PDF');
+  }
+});
  
-// app.get('/pdf-buffer', async (req, res) => {
-//   const encodedUrl = req.query.url;
-//   if (!encodedUrl) return res.status(400).send('Missing PDF URL');
+app.get('/pdf-buffer', async (req, res) => {
+  const encodedUrl = req.query.url;
+  if (!encodedUrl) return res.status(400).send('Missing PDF URL');
  
-//   try {
-//     const decodedUrl = decodeURIComponent(encodedUrl);
-//     const buffer = await convertPdfArrayBuffer(decodedUrl);
-//     res.setHeader('Content-Type', 'application/pdf');
-//     res.send(buffer);
-//   } catch (err) {
-//     console.error(err.message);
-//     res.status(500).send('Failed to fetch PDF buffer');
-//   }
-// });
+  try {
+    const decodedUrl = decodeURIComponent(encodedUrl);
+    const response = await axios.get(decodedUrl, { responseType: 'arraybuffer' });
  
+    // Check content-type and buffer size
+    if (
+      !response.headers['content-type']?.includes('pdf') ||
+      !response.data ||
+      response.data.byteLength < 1000 // arbitrary minimum size for a real PDF
+    ) {
+      return res.status(400).send('Invalid PDF file');
+    }
+ 
+    res.setHeader('Content-Type', 'application/pdf');
+    res.send(Buffer.from(response.data, 'binary'));
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Failed to fetch PDF buffer');
+  }
+});
+
 // app.post('/generate-httpsnippet', (req, res) => {
 //   try {
 //     const snippet = new HTTPSnippet(req.body);
