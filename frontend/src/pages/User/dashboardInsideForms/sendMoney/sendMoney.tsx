@@ -134,7 +134,7 @@ const SendMoney = () => {
         // Step 3: Transfer Method Component - Choose how to send money (bank, card, etc.)
         return (
           <TransferMethodStep
-            formData={formData}
+            formData={{ ...formData, convertedAmount: formData.receiveAmount }}
             updateFormData={updateFormData}
             onNext={handleNext}
             onPrevious={handlePrevious}
