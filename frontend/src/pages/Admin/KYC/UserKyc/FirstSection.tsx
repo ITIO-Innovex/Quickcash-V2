@@ -215,7 +215,7 @@ const handleCloseWithUpdate = async () => {
                   <div className="kyc-doc-image-preview">
                     {selectedRow.documentPhotoBack ? (
                       <img
-                        src={`http://localhost:5000/kyc/${selectedRow.documentPhotoBack}`}
+                        src={`${import.meta.env.VITE_PUBLIC_URL}/kyc/${selectedRow.documentPhotoBack}`}
                         alt="Document Back"
                       />
                     ) : (
@@ -241,7 +241,7 @@ const handleCloseWithUpdate = async () => {
             <div className="kyc-doc-image-preview">
               {selectedRow?.addressProofPhoto ? (
                 <img
-                  src={`http://localhost:5000/kyc/${selectedRow.addressProofPhoto}`}
+                 src={`${import.meta.env.VITE_PUBLIC_URL}/kyc/${selectedRow.addressProofPhoto}`}
                   alt="Address Document"
                 />
               ) : (
