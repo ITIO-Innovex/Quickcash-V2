@@ -70,6 +70,15 @@ const AddQuote = () => {
         setQuoteNumber(res.data.data);
         setProductList(res.data.productData);
       }
+    }).catch(error => {
+      console.log('error', error);
+      const errorMessage = error?.response?.data?.message;
+      if (errorMessage?.includes("Invoice Settings")) {
+        toast.error("Please save invoice setting to add invoice");
+        setTimeout(() => {
+          navigate('/settings');
+        }, 1500);
+      }
     });
     // Member list
     axios.get(`/${url}/v1/client/list/${accountId?.data?.id}`, {

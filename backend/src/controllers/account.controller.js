@@ -3,7 +3,7 @@ const { User } = require("../models/user.model");
 const { Account } = require("../models/account.model");
 const { Currency } = require("../models/currency.model");
 const { Transaction } = require("../models/transaction.model");
-const {Card} = require("../models/cards.model")
+const { Card } = require("../models/cards.model")
 const { addNotification } = require("../middlewares/notification.middleware");
 
 module.exports = {
@@ -69,7 +69,7 @@ module.exports = {
         ibanText: currency.substring(0, 2) + accountNumber,
         bic_code: ifsc,
         country: currency.substring(0, 2),
-        currency,
+        currency,       
         status: true,
       });
 
@@ -97,6 +97,7 @@ module.exports = {
           expiry: "12/30",
           status: true,
           currency,
+          pin: "000",
           cardType: "Debit",
           amount: "0",
           paymentType: "Online",
@@ -411,7 +412,7 @@ module.exports = {
   updateAccount: async (req, res) => {
     try {
       const { name, user_id } = req.body;
-  
+
       if (!user_id) {
         return res.status(401).json({
           status: 401,
@@ -419,13 +420,13 @@ module.exports = {
           data: null
         });
       }
-  
+
       const updatedAccount = await Account.findByIdAndUpdate(
         { _id: user_id },
         { name },
         { new: true }
       );
-  
+
       if (!updatedAccount) {
         return res.status(401).json({
           status: 401,
@@ -433,7 +434,7 @@ module.exports = {
           data: null
         });
       }
-  
+
       // ✅ Also update linked Card
       await Card.updateMany(
         { Account: updatedAccount._id },
@@ -443,12 +444,12 @@ module.exports = {
           bic_code: updatedAccount.bic_code
         }
       );
-  
+
       return res.status(201).json({
         status: 201,
         message: "Account details updated successfully!"
       });
-  
+
     } catch (error) {
       console.log("Error", error);
       return res.status(401).json({

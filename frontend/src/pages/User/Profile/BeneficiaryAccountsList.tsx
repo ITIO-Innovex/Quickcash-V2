@@ -31,11 +31,8 @@ const BeneficiaryAccountsList = () => {
       const token = localStorage.getItem('token');
       const decoded = jwtDecode<JwtPayload>(token as string);
 
-      const response = await api.get(`/${url}/v1/receipient/list/${decoded?.data?.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get(`/${url}/v1/receipient/list/${decoded?.data?.id}`
+      );
 
       if (response?.data?.status === 201) {
         const fetchedAccounts = response.data.data;

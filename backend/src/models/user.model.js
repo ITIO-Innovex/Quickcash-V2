@@ -120,6 +120,8 @@ const userSchema = new mongoose.Schema({
     required: false,
     default: false
   },
+  otp: { type: String },
+  otpCreatedAt: { type: Date },
 },
 {
   timestamps: true

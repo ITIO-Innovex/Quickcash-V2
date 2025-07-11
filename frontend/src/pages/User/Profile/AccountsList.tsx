@@ -29,11 +29,7 @@ const AccountsList = () => {
       const token = localStorage.getItem('token');
       const decoded = jwtDecode<JwtPayload>(token as string);
 
-      const response = await api.get(`/${url}/v1/receipient/list/${decoded?.data?.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get(`/${url}/v1/account/list/${decoded?.data?.id}`);
 
       if (response?.data?.status === 201) {
         const fetchedAccounts = response.data.data;
@@ -104,7 +100,7 @@ const AccountsList = () => {
               }}
             >
               <ReactCountryFlag
-                countryCode={account.code}
+                countryCode={account.currency.slice(0,2)}
                 svg
                 style={{
                   width: '2em',

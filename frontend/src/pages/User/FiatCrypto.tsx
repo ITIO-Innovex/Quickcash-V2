@@ -180,7 +180,9 @@ const FiatCrypto = () => {
             navigate('/account-section'); // navigate to fiat account section
         }
     };
-
+const handleAccount = () =>{
+    navigate('/account-section'); // navigate to fiat account section
+}
     const [displayCryptoItem, setDisplayCryptoItem] = React.useState<any>("");
 
     const HandleDisplayCryptoItemData = (id: any) => {
@@ -218,7 +220,7 @@ const FiatCrypto = () => {
                                 <Tab label="Crypto" value="Crypto" className='label-fiat-crypto' sx={{ color: theme.palette.text.primary }} />
                             </Tabs>
 
-                            <Box className="icon-account" onClick={handleClick} sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                            <Box className="icon-account" onClick={handleAccount} sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                                 <AppsIcon fontSize="small" sx={{ color: theme.palette.text.primary }} />
                                 <Typography variant="body2" sx={{ fontWeight: 500, ml: 1 }}>
                                     <span className="button-text" style={{ color: theme.palette.text.primary }}>Account Section</span>

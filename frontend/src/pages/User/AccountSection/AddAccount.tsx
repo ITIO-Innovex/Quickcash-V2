@@ -42,7 +42,6 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({
     if (selectedCurrency) {
       onSubmit(selectedCurrency);
       setSelectedCurrency('');
-      onClose();
     }
   };
 
