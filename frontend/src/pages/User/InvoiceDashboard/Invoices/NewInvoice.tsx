@@ -104,7 +104,17 @@ const NewInvoice = () => {
         setInvoiceNumber(result.data.data);
         setProductList(result?.data?.productData);
       }
-    } catch (error) { console.log('error', error); }
+    } catch (error) { console.log('error', error); 
+       const errorMessage = error?.response?.data?.message;
+
+    if (errorMessage?.includes("Invoice Settings")) {
+      toast.error("Please save invoice setting to add invoice");
+     setTimeout(() => {
+        navigate('/settings'); 
+      }, 1500);
+
+    }
+    }
   };
 
   // Calculation logic for subtotal, tax, discount, total

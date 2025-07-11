@@ -7,7 +7,7 @@ import CustomButton from '../../../components/CustomButton';
 import { jwtDecode } from 'jwt-decode';
 import api from '@/helpers/apiHelper';
 import axios from 'axios';
-import { useAppToast } from '@/utils/toast'; 
+import { useAppToast } from '@/utils/toast';
 interface JwtPayload {
   sub: string;
   role: string;
@@ -25,7 +25,7 @@ const url = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
 
 const UpdateDetails = () => {
   const theme = useTheme();
-const toast = useAppToast(); 
+  const toast = useAppToast();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -55,8 +55,7 @@ const toast = useAppToast();
         });
         const data = userRes.data.data;
 
-        const countryObj = countryList.find((c: any) => c.name === data.country);
-
+        const countryObj = countryList.find((c: any) => c.id === (data.country?.id || data.country));
         let statesList: any[] = [];
         let stateObj;
         if (countryObj) {
@@ -66,7 +65,7 @@ const toast = useAppToast();
           if (stateRes.data.status === 201) {
             statesList = stateRes.data.data;
             setStates(statesList);
-            stateObj = statesList.find(s => s.name === data.state);
+            stateObj = statesList.find(s => s.id === (data.state?.id || data.state));
           }
         }
         let citiesList: any[] = [];
@@ -78,7 +77,7 @@ const toast = useAppToast();
           if (cityRes.data.status === 201) {
             citiesList = cityRes.data.data;
             setCities(citiesList);
-            cityObj = citiesList.find(c => c.name === data.city);
+            cityObj = citiesList.find(c => c.id === (data.city?.id || data.city));
           }
         }
         setFormData({
@@ -99,43 +98,43 @@ const toast = useAppToast();
 
     fetchAll();
   }, []);
- useEffect(() => {
+  useEffect(() => {
     getUserDetails();
     getCountryList();
-  },[]);
-  const getUserDetails = async () => {
-    try {
-      const result = await axios.post(`/${url}/v1/user/auth`, {}, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (result?.data?.status === 201) {
-        const data = result.data.data;
-
-        // Find IDs for country, state, city
-        const countryObj = countries.find(c => c.name === data.country);
-        const stateObj = states.find(s => s.name === data.state);
-        const cityObj = cities.find(c => c.name === data.city);
-
-        setFormData({
-          name: data.name || '',
-          email: data.email || '',
-          mobile: "+" + data.mobile || '',
-          address: data.address || '',
-          country: countryObj ? countryObj.id : '',
-          state: stateObj ? stateObj.id : '',
-          city: cityObj ? cityObj.id : '',
-          postalCode: data.postalcode || '',
-          title: data.ownerTitle || '',
-        });
-
+  }, []);
+ const getUserDetails = async () => {
+  try {
+    const result = await axios.post(`/${url}/v1/user/auth`, {}, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
       }
-    } catch (error: any) {
-      console.error("User fetch error", error);
+    });
+
+    if (result?.data?.status === 201) {
+      const data = result.data.data;
+
+      const countryId = typeof data.country === 'object' ? data.country.id : data.country;
+      const stateId = typeof data.state === 'object' ? data.state.id : data.state;
+      const cityId = typeof data.city === 'object' ? data.city.id : data.city;
+
+      setFormData({
+        name: data.name || '',
+        email: data.email || '',
+        mobile: "+" + (data.mobile || ''),
+        address: data.address || '',
+        country: countryId || '',
+        state: stateId || '',
+        city: cityId || '',
+        postalCode: data.postalcode || '',
+        title: data.ownerTitle || '',
+      });
     }
-  };
+
+  } catch (error: any) {
+    console.error("User fetch error", error);
+  }
+};
+
   const getCountryList = async () => {
     try {
       const result = await api.get(`/${url}/v1/user/getCountryList`, {
@@ -217,7 +216,7 @@ const toast = useAppToast();
       });
 
       if (result.data.status === 201) {
-        toast.success(result.data.message || "Profile updated successfully!", );
+        toast.success(result.data.message || "Profile updated successfully!",);
         console.log('Success:', result.data.message);
       }
     } catch (error: unknown) {

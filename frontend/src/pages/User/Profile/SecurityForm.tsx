@@ -26,8 +26,8 @@ const SecurityForm = () => {
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [otpStatus, setOtpStatus] = useState(false);
-  const [verifyOtp, setVerifyOtp] = useState('');
+  const [otpStatus, setOtpStatus] = useState(false); // OTP sent
+  const [otpVerified, setOtpVerified] = useState(false); // OTP verified
   const [valOtp, setValOtp] = useState('');
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
@@ -41,8 +41,8 @@ const SecurityForm = () => {
     if (token) {
       try {
         const decoded = jwtDecode<JwtPayload>(token);
-      if (decoded.data?.email) setEmail(decoded.data.email);
-      if (decoded.data?.name) setName(decoded.data.name);
+        if (decoded.data?.email) setEmail(decoded.data.email);
+        if (decoded.data?.name) setName(decoded.data.name);
       } catch (err) {
         console.error("Invalid token:", err);
       }
@@ -50,33 +50,17 @@ const SecurityForm = () => {
   }, []);
 
   const sendOTP = async () => {
-    if (password === '' || confirmPassword === '') {
-      setMessage('Please enter both password and confirm password');
+    console.log('Sending OTP to:', email);
+    if (!email || !name) {
+      setMessage('User email or name missing');
       return;
     }
-
-    if (!validatePassword(password)) {
-      setMessage('Password must be at least 6 characters');
-      return;
-    }
-
-    if (!passwordsMatch(password, confirmPassword)) {
-      setMessage('Passwords do not match');
-      return;
-    }
-
     try {
       const response = await api.post(`/${url}/v1/user/send-email`, {
-        email,
+        email: email.trim().toLowerCase(),
         name
-      }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
       });
-
       if (response.data.status === 201) {
-        setVerifyOtp(response.data.data);
         setOtpStatus(true);
         setMessage('OTP sent to your email');
       }
@@ -85,34 +69,44 @@ const SecurityForm = () => {
     }
   };
 
+  const verifyOtpBackend = async () => {
+    console.log('Verifying OTP for:', email);
+
+    if (!valOtp) {
+      setMessage('Please enter the OTP');
+      return;
+    }
+    try {
+      console.log('Verifying OTP for email:', email);
+      const response = await api.post(`/${url}/v1/user/verify-otp`, { email: email.trim().toLowerCase(), otp: valOtp });
+      if (response.data.status === 200) {
+        setOtpVerified(true);
+        setMessage('OTP verified! You can now change your password.');
+      } else {
+        setMessage('Invalid OTP');
+      }
+    } catch (error: any) {
+      setMessage(error.response?.data?.message || 'OTP verification failed');
+    }
+  };
+
   const changePassword = async () => {
     if (!validatePassword(password)) {
       setMessage('Password must be at least 6 characters');
       return;
     }
-
     if (!passwordsMatch(password, confirmPassword)) {
       setMessage('Passwords do not match');
       return;
     }
-
-    if (verifyOtp !== valOtp) {
-      setMessage('Invalid OTP');
-      return;
-    }
-
     try {
       const response = await api.patch(`/${url}/v1/user/change-password`, {
         new_passsword: password,
         confirm_password: confirmPassword
-      }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
       });
-
       if (response.data.status === 201) {
         setOtpStatus(false);
+        setOtpVerified(false);
         setPassword('');
         setConfirmPassword('');
         setValOtp('');
@@ -127,6 +121,8 @@ const SecurityForm = () => {
     e.preventDefault();
     if (!otpStatus) {
       sendOTP();
+    } else if (!otpVerified) {
+      verifyOtpBackend();
     } else {
       changePassword();
     }
@@ -139,25 +135,8 @@ const SecurityForm = () => {
       </Typography>
 
       <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 600 }}>
-        <TextField
-          label="New Password"
-          fullWidth
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          sx={{ mb: 3 }}
-        />
-
-        <TextField
-          label="Confirm Password"
-          fullWidth
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          sx={{ mb: 3 }}
-        />
-
-        {otpStatus && (
+        {/* Show OTP input after OTP is sent, before verified */}
+        {otpStatus && !otpVerified && (
           <TextField
             label="Enter OTP"
             fullWidth
@@ -167,6 +146,29 @@ const SecurityForm = () => {
           />
         )}
 
+        {/* Show password fields only if OTP is not sent yet, or OTP is verified */}
+        {(!otpStatus || otpVerified) && (
+          <>
+            <TextField
+              label="New Password"
+              fullWidth
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              sx={{ mb: 3 }}
+            />
+
+            <TextField
+              label="Confirm Password"
+              fullWidth
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              sx={{ mb: 3 }}
+            />
+          </>
+        )}
+
         {message && (
           <Typography variant="body2" color="error" sx={{ mb: 2 }}>
             {message}
@@ -174,7 +176,7 @@ const SecurityForm = () => {
         )}
 
         <CustomButton type="submit">
-          {otpStatus ? 'VERIFY & CHANGE PASSWORD' : 'SEND OTP'}
+          {!otpStatus ? 'SEND OTP' : !otpVerified ? 'VERIFY OTP' : 'CHANGE PASSWORD'}
         </CustomButton>
       </Box>
     </Box>

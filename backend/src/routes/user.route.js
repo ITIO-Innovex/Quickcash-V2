@@ -5,16 +5,16 @@ const express = require('express');
 
 var storage = multer.diskStorage({
   destination: function(req, file, callback) {
-    const folderName = path.resolve(path.join(__dirname, '../../../storage/profile'+'/'+req.user?._id));
+    const folderName = path.join(__dirname, '../../storage/profile', req.user._id.toString());
     try {
      if (!fs.existsSync(folderName)) {
       console.log("folder creating", folderName);
-      fs.mkdirSync(folderName);
+      fs.mkdirSync(folderName, { recursive: true });
      } 
     } catch (err) {
       console.error("errdor",err);
     }
-    callback(null, `../storage/profile/${req.user?._id}`);
+    callback(null, folderName); // <-- use absolute path here
   },
   filename: function(req, file, callback) {
     if(file.originalname.length > 6)
@@ -40,6 +40,7 @@ const {
   changePassword,
   updateUserSuspend,
   sendOtpEmail,
+  verifyOtp, // <-- add this
   getStateList,
   getCityLists,
   getCountryList,
@@ -68,6 +69,7 @@ router.route('/updateuseradmin').patch(verifySecondaryToken,updateUserStatus);
 router.route('/updateUserSuspend').patch(verifySecondaryToken,updateUserSuspend);
 router.route('/change-password').patch(verifyToken,changePassword);
 router.route('/send-email').post(verifyToken,sendOtpEmail);
+router.route('/verify-otp').post(verifyOtp); // <-- add this route
 router.route('/getCountryList').get(verifyToken,getCountryList);
 router.route('/getStateList/:id').get(verifyToken,getStateList);
 router.route('/getCityList/:id').get(verifyToken,getCityLists);

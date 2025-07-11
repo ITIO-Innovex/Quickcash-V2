@@ -19,11 +19,7 @@ const AdditionalInformation = () => {
       const result = await api.post(
         `/${url}/v1/user/auth`,
         {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
+       
       );
       // console.log("User Details:", result.data);
       if (result?.data?.status === 201) {
@@ -70,13 +66,13 @@ const AdditionalInformation = () => {
             <Typography variant="body1" sx={{ minWidth: 250, fontWeight: 500 }}>
               City:
             </Typography>
-            <Typography variant="body1">{userDetails.city}</Typography>
+            <Typography variant="body1">{userDetails.city?.name}</Typography>
           </Box>
           <Box sx={{ display: 'flex', mb: 1 }}>
             <Typography variant="body1" sx={{ minWidth: 250, fontWeight: 500 }}>
               State:
             </Typography>
-            <Typography variant="body1">{userDetails.state}</Typography>
+            <Typography variant="body1">{userDetails.state?.name}</Typography>
           </Box>
           <Box sx={{ display: 'flex', mb: 1 }}>
             <Typography variant="body1" sx={{ minWidth: 250, fontWeight: 500 }}>
