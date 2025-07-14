@@ -78,9 +78,9 @@ if(process.env.NODE_ENV == "production") {
 
 app.use(express.static("public"));
 app.use(express.static("uploads"));
-
-console.log("Path", path.resolve(path.join(__dirname, '../../storage/profile')));
-app.use('/storage',express.static(path.resolve(path.join(__dirname, '../../storage/profile'))));
+app.use('/storage/profile',express.static(path.resolve(path.join(__dirname, '../storage/profile'))));
+// console.log("Path", path.resolve(path.join(__dirname, '../../storage/profile')));
+// app.use('/storage',express.static(path.resolve(path.join(__dirname, '../../storage/profile'))));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/exports', express.static(path.join(__dirname, '../exports')));
 

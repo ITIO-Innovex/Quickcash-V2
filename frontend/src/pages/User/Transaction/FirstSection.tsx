@@ -225,7 +225,7 @@ const FirstSection = () => {
     {
       field: 'balance',
       headerName: 'Balance',
-      render: (row: any) => `$${parseFloat(row.postBalance).toFixed(2)}`
+      render: (row: any) => `${getSymbolFromCurrency(row?.to_currency)} ${parseFloat(row.postBalance).toFixed(2)}`
     },
     {
       field: 'status',
