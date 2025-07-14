@@ -5,7 +5,7 @@ import { downloadPDF } from '../../../../utils/downloadPDF';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { downloadExcel } from '../../../../utils/downloadExcel';
 import { Filter, FileSpreadsheet, FileText } from 'lucide-react';
-import { Avatar, Box, Button, Typography, useTheme,Grid } from '@mui/material';
+import { Avatar, Box, Button, Typography, useTheme, Grid } from '@mui/material';
 import GenericTable from '../../../../components/common/genericTable';
 import { jwtDecode } from 'jwt-decode';
 import { JwtPayload } from '@/types/jwt';
@@ -27,9 +27,9 @@ const FirstSection = () => {
 
   const [currentData, setCurrentData] = useState([]);
   useEffect(() => {
-   const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
-   getManualInvoiceList();
-  },[]);
+    const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
+    getManualInvoiceList();
+  }, []);
 
   const getManualInvoiceList = async () => {
     try {
@@ -44,61 +44,63 @@ const FirstSection = () => {
       console.error('Error fetching invoice list:', error);
     }
   }
-    const handleExcelDownload = () => {
-      const formattedData = currentData.map((row) => ({
-        'Created Date': row.date,
-        ID: row.id,
-        Type:row.type,
-        // Amount: `$${Math.abs(row.amount)}`,
-        Status: row.status,
-      }));
-  
-      downloadExcel(formattedData, 'ManualInvoicePaymentList.xlsx', 'ManualInvoicePaymentList');
-    };
-  
-    const handleDownloadPDF = () => {
-      const headers = [
-        'Date',
-        'ID',
-        'Type',
-        'Status',
-      ];
-      const formattedData = currentData.map((row) => ({
-        'Date': row.date,
-        'ID': row.id,
-        // Amount: `$${Math.abs(row.amount)}`,
-        'Type':row.type,
-        Status: row.status,
-      }));
-  
-      downloadPDF(
-        formattedData,
-        headers,
-        'ManualPayementList.pdf',
-        'ManualPayementList'
-      );
-    };
-  
-    const handleGlobalSearch = (text: string) => {
+  const handleExcelDownload = () => {
+    const formattedData = currentData.map((row) => ({
+      'Date': row.paymentDate.slice(0, 10),
+      'ID': row.invoice,
+      // Amount: `$${Math.abs(row.amount)}`,
+      'Payment Mode': row.paymentMode,
+      // 'Amount': `${row.amountCurrencyText ?? ''}${Math.abs(row.amount ?? 0)}`
+      'Amount': row.amount
+    }));
+
+    downloadExcel(formattedData, 'ManualInvoicePaymentList.xlsx', 'ManualInvoicePaymentList');
+  };
+
+  const handleDownloadPDF = () => {
+    const headers = [
+      'Date',
+      'ID',
+      'Payment Mode',
+      'Amount',
+    ];
+    const formattedData = currentData.map((row) => ({
+      'Date': row.paymentDate.slice(0, 10),
+      'ID': row.invoice,
+      // Amount: `$${Math.abs(row.amount)}`,
+      'Payment Mode': row.paymentMode,
+      // 'Amount': `${row.amountCurrencyText ?? ''}${Math.abs(row.amount ?? 0)}`
+      'Amount': row.amount
+    }));
+
+    downloadPDF(
+      formattedData,
+      headers,
+      'ManualPayementList.pdf',
+      'ManualPayementList'
+    );
+  };
+
+  const handleGlobalSearch = (text: string) => {
     setFilterText(text);
-  
+
     if (text.trim() === '') {
       setCurrentData(currentData);
       return;
     }
-  
+
     const lower = text.toLowerCase();
-  
+
     const filtered = currentData.filter((row) =>
       Object.values(row).some((val) =>
         String(val).toLowerCase().includes(lower)
       )
     );
-  
+
     setCurrentData(filtered.length ? filtered : []);
     console.log('Filtering by:', text, '→ Found:', filtered.length, 'items');
   };
-  
+
 
   const HandleGetProductData = async (val: any) => {
     console.log('Fetching details for ID:', val);
@@ -133,30 +135,30 @@ const FirstSection = () => {
 
 
   const columns = [
-    { 
-      field: 'invoices', 
+    {
+      field: 'invoices',
       headerName: 'Invoices',
-      render: (row:any) => (
+      render: (row: any) => (
         <>
-        <Grid sx={{ display:'flex', flexDirection: 'row', gap: '12px' }}>
-          <Grid sx={{ display: {xs:'none', md:'flex'}, flexDirection: 'row',alignItems: 'center' }}>
+          <Grid sx={{ display: 'flex', flexDirection: 'row', gap: '12px' }}>
+            <Grid sx={{ display: { xs: 'none', md: 'flex' }, flexDirection: 'row', alignItems: 'center' }}>
               <Avatar sx={{ color: 'white', background: '#8657E5' }}>
                 <AssignmentIcon />
               </Avatar>
-          </Grid>
-            <Grid sx={{ display:'flex', flexDirection: 'column' }}>
-              <Grid>{ row?.clientInfo?.[0]?.name } {row?.invoiceDetails?.[0]?.invoice_number}</Grid>
+            </Grid>
+            <Grid sx={{ display: 'flex', flexDirection: 'column' }}>
+              <Grid>{row?.clientInfo?.[0]?.name} {row?.invoiceDetails?.[0]?.invoice_number}</Grid>
               <Grid>{row?.clientInfo?.[0]?.email}</Grid>
             </Grid>
-         </Grid>
+          </Grid>
         </>
-      ) 
+      )
     },
     { field: 'paymentDate', headerName: 'Payment Date' },
-    { 
-      field: 'amount', 
+    {
+      field: 'amount',
       headerName: 'Amount',
-      render: (row: any) => `${row?.amountCurrencyText} ${row?.amount}` 
+      render: (row: any) => `${row?.amountCurrencyText} ${row?.amount}`
     },
     {
       field: 'action',
@@ -207,7 +209,7 @@ const FirstSection = () => {
         </Button>
       </Box>
 
-        {showFilter && (
+      {showFilter && (
         <CommonFilter label="Search any field"
           value={filterText}
           onChange={handleGlobalSearch}
@@ -222,47 +224,51 @@ const FirstSection = () => {
         </Typography>
       )}
 
+      <CustomModal open={open} onClose={handleClose} title="Invoice Payment Details" sx={{ backgroundColor: theme.palette.background.default }}>
+        <div className="header-divider" />
+        <Box display="flex" justifyContent="space-between" mb={2}>
+          <Typography><strong>Date:</strong></Typography>
+          <Typography>
+            {viewDetails?.paymentDate
+              ? viewDetails.paymentDate.slice(0, 10)
+              : viewDetails?.date?.slice(0, 10) ||
+              selectedRow?.paymentDate?.slice(0, 10) ||
+              selectedRow?.date?.slice(0, 10)}
+          </Typography>
+        </Box>
 
-      <CustomModal open={open} onClose={handleClose} title="Invoice Payment Details" sx={{backgroundColor: theme.palette.background.default }}>
-              <div className="header-divider" />
-                 <Box display="flex" justifyContent="space-between" mb={2}>
-                      <Typography><strong>Date:</strong></Typography>
-                      <Typography>{viewDetails?.paymentDate || viewDetails?.date || selectedRow?.paymentDate || selectedRow?.date}</Typography>
-                      </Box>
-      
-                      <Box display="flex" justifyContent="space-between" mb={2}>
-                      <Typography><strong>Transaction ID:</strong></Typography>
-                      <Typography>{viewDetails?.id || selectedRow?.id}</Typography>
-                      </Box>
-      
-                      <Box display="flex" justifyContent="space-between" mb={2}>
-                      <Typography><strong>Type:</strong></Typography>
-                      <Typography>{viewDetails?.type || selectedRow?.type}</Typography>
-                      </Box>
-      
-                      <Box display="flex" justifyContent="space-between" mb={2}>
-                      <Typography><strong>Amount:</strong></Typography>
-                      <Typography>{viewDetails?.amountCurrencyText ? `${viewDetails?.amountCurrencyText} ${viewDetails?.amount}` : viewDetails?.amount || selectedRow?.amount}</Typography>
-                      </Box>
-      
-                      <Box display="flex" justifyContent="space-between" mb={2}>
-                      <Typography><strong>Balance:</strong></Typography>
-                      <Typography>{viewDetails?.balance !== undefined ? `$${viewDetails?.balance}` : '-'}</Typography>
-                      </Box>
-      
-                      <Box display="flex" justifyContent="space-between" mb={2}>
-                      <Typography><strong>Status:</strong></Typography>
-                      <Typography>{viewDetails?.status || selectedRow?.status}</Typography>
-                      </Box>
-      
-                      <Button
-                      className="custom-button"
-                      onClick={handleClose}
-                      sx={{ mt: 3 }}
-                      >
-                      <span className="button-text">Close</span>
-                      </Button>
-              </CustomModal>
+        <Box display="flex" justifyContent="space-between" mb={2}>
+          <Typography><strong>Invoice ID:</strong></Typography>
+          <Typography>{viewDetails?.invoice || selectedRow?.invoice}</Typography>
+        </Box>
+
+        <Box display="flex" justifyContent="space-between" mb={2}>
+          <Typography><strong>Payment Mode:</strong></Typography>
+          <Typography>{viewDetails?.paymentMode || selectedRow?.paymentMode}</Typography>
+        </Box>
+
+        <Box display="flex" justifyContent="space-between" mb={2}>
+          <Typography><strong>Amount:</strong></Typography>
+          <Typography>
+            {(viewDetails?.amount !== undefined && viewDetails?.amount !== null)
+              ? `${viewDetails?.amountCurrencyText ?? ''} ${viewDetails?.amount}`
+              : `${selectedRow?.amountCurrencyText ?? ''} ${selectedRow?.amount}`}
+          </Typography>
+        </Box>
+
+        <Box display="flex" justifyContent="space-between" mb={2}>
+          <Typography><strong>Note:</strong></Typography>
+          <Typography>{viewDetails?.notes || selectedRow?.notes}</Typography>
+        </Box>
+
+        <Button
+          className="custom-button"
+          onClick={handleClose}
+          sx={{ mt: 3 }}
+        >
+          <span className="button-text">Close</span>
+        </Button>
+      </CustomModal>
     </Box>
   );
 };

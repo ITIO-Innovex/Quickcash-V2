@@ -1,9 +1,6 @@
 import axios from 'axios';
-import Card from 'react-credit-cards-2';
 import React, { useEffect } from 'react';
-import getSymbolFromCurrency from 'currency-symbol-map';
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import 'react-credit-cards-2/dist/es/styles-compiled.css';
 import { Grid, TextField, Typography } from '@mui/material';
 import { Backdrop, Box,CardContent, CircularProgress, Stack } from '@mui/material';
 

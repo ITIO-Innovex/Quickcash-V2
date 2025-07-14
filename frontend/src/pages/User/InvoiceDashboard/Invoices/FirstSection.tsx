@@ -16,7 +16,7 @@ import { downloadPDF } from '../../../../utils/downloadPDF';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AccessAlarmsIcon from '@mui/icons-material/AccessAlarms';
 import { downloadExcel } from '../../../../utils/downloadExcel';
-import { Box, Button, Typography, useTheme} from '@mui/material';
+import { Box, Button, Typography, useTheme } from '@mui/material';
 import { Filter, FileSpreadsheet, FileText } from 'lucide-react';
 import GenericTable from '../../../../components/common/genericTable';
 import axios from 'axios';
@@ -39,9 +39,9 @@ const FirstSection = () => {
   };
 
   useEffect(() => {
-   const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
-   getInvoiceList(accountId.data.id);
-  },[]);
+    const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
+    getInvoiceList(accountId.data.id);
+  }, []);
 
   const getInvoiceList = async (id: string) => {
     try {
@@ -57,7 +57,7 @@ const FirstSection = () => {
       console.error('Error fetching invoice list:', error);
     }
   }
-  
+
   const handleActionClick = (row: any) => {
     setSelectedRow(row);
     setOpen(true);
@@ -68,64 +68,65 @@ const FirstSection = () => {
     setSelectedRow(null);
   };
 
- const handleExcelDownload = () => {
-      const formattedData = currentData.map((row) => ({
-        'Invoice Number': row.invoiceNumber,
-        'Created Date': row.date,
-        ID: row.id,
-        Amount: `$${Math.abs(row.amount)}`,
-        Status: row.status,
-      }));
-  
-      downloadExcel(formattedData, 'InvoiceList.xlsx', 'InvoiceList');
-    };
-  
-    const handleDownloadPDF = () => {
-      const headers = [
-        'Invoice Number',
-        'Date',
-        'Transaction ID',
-        'Amount',
-        'Status',
-      ];
-      const formattedData = currentData.map((row) => ({
-        'Invoice Number':row.invoiceNumber,
-        'Date': row.date,
-        'Transaction ID': row.id,
-        Amount: `$${Math.abs(row.amount)}`,
-        Status: row.status,
-      }));
-  
-      downloadPDF(
-        formattedData,
-        headers,
-        'InvoiceList.pdf',
-        'Invoice List'
-      );
-    };
-  
-    const handleGlobalSearch = (text: string) => {
+  const handleExcelDownload = () => {
+    const formattedData = currentData.map((row) => ({
+       'Invoice Number': row.invoice_number,
+      'Date': row.invoice_date,
+      'Transaction ID': row.reference,
+      Amount: `${row.currency_text ?? ''}${Math.abs(row.total ?? 0)}`,
+      Status: row.status,
+    }));
+
+    downloadExcel(formattedData, 'InvoiceList.xlsx', 'InvoiceList');
+  };
+
+  const handleDownloadPDF = () => {
+    const headers = [
+      'Invoice Number',
+      'Date',
+      'Transaction ID',
+      'Amount',
+      'Status',
+    ];
+
+    const formattedData = currentData.map((row) => ({
+      'Invoice Number': row.invoice_number,
+      'Date': row.invoice_date,
+      'Transaction ID': row.reference,
+      Amount: `${row.currency_text ?? ''}${Math.abs(row.total ?? 0)}`,
+      Status: row.status,
+    }));
+
+    downloadPDF(
+      formattedData,
+      headers,
+      'InvoiceList.pdf',
+      'Invoice List'
+    );
+  };
+
+  const handleGlobalSearch = (text: string) => {
     setFilterText(text);
-  
+
     if (text.trim() === '') {
       setCurrentData(currentData);
       return;
     }
-  
+
     const lower = text.toLowerCase();
-  
+
     const filtered = currentData.filter((row) =>
       Object.values(row).some((val) =>
         String(val).toLowerCase().includes(lower)
       )
     );
-  
+
     setCurrentData(filtered.length ? filtered : []);
     console.log('Filtering by:', text, '→ Found:', filtered.length, 'items');
   };
 
-  
-  
+
+
   // Temporary alertnotify if not globally available
   const alertnotify = (text: string, type: string) => {
     if (type === 'success') window.alert(text);
@@ -176,13 +177,13 @@ const FirstSection = () => {
   };
 
   const columns = [{
-  field: 'invoice_number',
-  headerName: 'Invoice Number',
-  render: (row: any) => (
-  //  <CommonTooltip title={copiedInvoice === row.invoice_number ? "URL Copied" : "Click to copy the URL"} arrow>
-  <Box component="span" className="clickable-content" onClick={() => { navigator.clipboard.writeText(`https://yourdomain.com/invoice/${row.invoice_number}`); setCopiedInvoice(row.invoice_number); setTimeout(() => setCopiedInvoice(null), 1000);}} sx={{ display: 'flex', alignItems: 'center', gap: 1 ,position: 'relative' }}>
+    field: 'invoice_number',
+    headerName: 'Invoice Number',
+    render: (row: any) => (
+      //  <CommonTooltip title={copiedInvoice === row.invoice_number ? "URL Copied" : "Click to copy the URL"} arrow>
+      <Box component="span" className="clickable-content" onClick={() => { navigator.clipboard.writeText(`https://yourdomain.com/invoice/${row.invoice_number}`); setCopiedInvoice(row.invoice_number); setTimeout(() => setCopiedInvoice(null), 1000); }} sx={{ display: 'flex', alignItems: 'center', gap: 1, position: 'relative' }}>
 
-    {/* <AnimatePresence mode="wait">
+        {/* <AnimatePresence mode="wait">
       {copiedInvoice === row.invoice_number ? (
         <motion.span  key="tick" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ duration: 0.3 }}>
           <CheckCircleIcon color="success" fontSize="small" />
@@ -195,93 +196,96 @@ const FirstSection = () => {
         </motion.span>
       )}
     </AnimatePresence> */}
-    <AnimatePresence mode="wait">
-        {copiedInvoice === row.invoice_number ? (
-          <motion.span key="tick" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ duration: 0.3 }} >
-            <CheckCircleIcon color="success" fontSize="small" />
-          </motion.span>
-        ) : (
-          <motion.span key="text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-            <Typography variant="body2"
-              sx={{
-                color: "primary.main",
-                textDecoration: "underline",
+        <AnimatePresence mode="wait">
+          {copiedInvoice === row.invoice_number ? (
+            <motion.span key="tick" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ duration: 0.3 }} >
+              <CheckCircleIcon color="success" fontSize="small" />
+            </motion.span>
+          ) : (
+            <motion.span key="text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+              <Typography variant="body2"
+                sx={{
+                  color: "primary.main",
+                  textDecoration: "underline",
+                }}
+              >
+                {row.invoice_number}
+              </Typography>
+            </motion.span>
+          )}
+        </AnimatePresence>
+        {/* Tooltip only when copied */}
+        <AnimatePresence>
+          {copiedInvoice === row.invoice_number && (
+            <motion.div
+              key="tooltip"
+              initial={{ y: -10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -10, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              style={{
+                position: "absolute",
+                top: "-30px",
+                left: 0,
+                background: "#333",
+                color: "#fff",
+                padding: "4px 10px",
+                borderRadius: "4px",
+                fontSize: "12px",
+                whiteSpace: "nowrap",
+                zIndex: 10,
               }}
             >
-             { row.invoice_number}
-            </Typography>
-          </motion.span>
-        )}
-      </AnimatePresence>
-      {/* Tooltip only when copied */}
-      <AnimatePresence>
-        {copiedInvoice === row.invoice_number && (
-          <motion.div
-            key="tooltip"
-            initial={{ y: -10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -10, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            style={{
-              position: "absolute",
-              top: "-30px",
-              left: 0,
-              background: "#333",
-              color: "#fff",
-              padding: "4px 10px",
-              borderRadius: "4px",
-              fontSize: "12px",
-              whiteSpace: "nowrap",
-              zIndex: 10,
-            }}
-          >
-            Invoice Number Copied!
-          </motion.div>
-        )}
-      </AnimatePresence>
-  </Box>
-  )
-},
-    { field: 'invoice_date', headerName: 'Invoice Date' },
-    { field: 'due_date', headerName: 'Due Date' },
-    { field: 'amount', headerName: 'Amount', render: (row: any) => `${getSymbolFromCurrency(row?.currency)} ${row?.total}`, },
-    { field:'paidAmount', headerName: 'Transactions', render: (row: any) => `${getSymbolFromCurrency(row?.currency)} ${row?.paidAmount}`, },
-       { field: 'reminders', headerName: 'Reminders', render: (row: any) => (
-    <Box display="flex" gap={1}>
-      <CommonTooltip title="Click to send reminder on email" arrow>
-        <SendIcon sx={{ cursor: 'pointer', color: '#1976d2' }} onClick={() => HandleReminder(row._id)} />
-      </CommonTooltip>
-      <CommonTooltip title="Overdue" arrow>
-        <AccessAlarmsIcon sx={{ color: 'red' }} />
-      </CommonTooltip>
-    </Box>
-  ),
-},
-    { field: 'status', headerName: 'Status',render: (row: any) => (
-        <span className={`status-chip ${row.status.toLowerCase()}`}>
-          {row.status}
-        </span>
-      )
-    },
-      { field: 'action', headerName: 'Actions', render: (row: any) => (
+              Invoice Number Copied!
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Box>
+    )
+  },
+  { field: 'invoice_date', headerName: 'Invoice Date' },
+  { field: 'due_date', headerName: 'Due Date' },
+  { field: 'amount', headerName: 'Amount', render: (row: any) => `${getSymbolFromCurrency(row?.currency)} ${row?.total}`, },
+  { field: 'paidAmount', headerName: 'Transactions', render: (row: any) => `${getSymbolFromCurrency(row?.currency)} ${row?.paidAmount}`, },
+  {
+    field: 'reminders', headerName: 'Reminders', render: (row: any) => (
+      <Box display="flex" gap={1}>
+        <CommonTooltip title="Click to send reminder on email" arrow>
+          <SendIcon sx={{ cursor: 'pointer', color: '#1976d2' }} onClick={() => HandleReminder(row._id)} />
+        </CommonTooltip>
+        <CommonTooltip title="Overdue" arrow>
+          <AccessAlarmsIcon sx={{ color: 'red' }} />
+        </CommonTooltip>
+      </Box>
+    ),
+  },
+  {
+    field: 'status', headerName: 'Status', render: (row: any) => (
+      <span className={`status-chip ${row.status.toLowerCase()}`}>
+        {row.status}
+      </span>
+    )
+  },
+  {
+    field: 'action', headerName: 'Actions', render: (row: any) => (
 
-        <Box display="flex" gap={1}>
-          <VisibilityIcon sx={{ cursor: 'pointer', color: 'blue' }} onClick={() => handleActionClick(row)}/>
+      <Box display="flex" gap={1}>
+        <VisibilityIcon sx={{ cursor: 'pointer', color: 'blue' }} onClick={() => handleActionClick(row)} />
 
-          {/* <EditIcon sx={{ cursor: 'pointer', color: 'green' }} onClick={() => navigate(`/add-invoice/${row._id}`)}/> */}
+        {/* <EditIcon sx={{ cursor: 'pointer', color: 'green' }} onClick={() => navigate(`/add-invoice/${row._id}`)}/> */}
 
-          <DeleteIcon sx={{ cursor: 'pointer', color: '#FF0000' }} onClick={() => handleDelete(row)} />
-        </Box>
-      ),
-    },
+        <DeleteIcon sx={{ cursor: 'pointer', color: '#FF0000' }} onClick={() => handleDelete(row)} />
+      </Box>
+    ),
+  },
   ];
 
-     const handleDelete = (row: any) => { setRowToDelete(row); setDeleteModalOpen(true); console.log('Trying to delete:', row); };
+  const handleDelete = (row: any) => { setRowToDelete(row); setDeleteModalOpen(true); console.log('Trying to delete:', row); };
 
   return (
     <Box>
       {/* Action Buttons */}
-    <Box
+      <Box
         sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center', }}>
         <Button startIcon={<FileSpreadsheet size={20} />}
           sx={{ color: theme.palette.navbar.text }} onClick={handleExcelDownload} disabled={currentData.length === 0} >
@@ -299,7 +303,7 @@ const FirstSection = () => {
         </Button>
       </Box>
 
-        {showFilter && (
+      {showFilter && (
         <CommonFilter label="Search any field" value={filterText} onChange={handleGlobalSearch} width="200px" />
       )}
       {currentData.length ? (
@@ -310,7 +314,7 @@ const FirstSection = () => {
         </Typography>
       )}
 
-      <CustomModal open={open} onClose={handleClose} title="Invoice-Section Details" sx={{backgroundColor: theme.palette.background.default }}>
+      <CustomModal open={open} onClose={handleClose} title="Invoice-Section Details" sx={{ backgroundColor: theme.palette.background.default }}>
         <div className="header-divider" />
         <Box sx={{ mt: 2 }}>
           {selectedRow && (
@@ -337,8 +341,8 @@ const FirstSection = () => {
         </Box>
       </CustomModal>
 
-       {/* Delete Modal */}
-      <CustomModal open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Confirm Delete" sx={{backgroundColor:theme.palette.background.default}} >
+      {/* Delete Modal */}
+      <CustomModal open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Confirm Delete" sx={{ backgroundColor: theme.palette.background.default }} >
         <Typography>
           Are you sure you want to delete this Invoice?
         </Typography>

@@ -1,6 +1,7 @@
 import { Box } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 interface InvoiceStatsSectionProps {
   activeTab: 'invoice' | 'quote';
@@ -9,9 +10,9 @@ interface InvoiceStatsSectionProps {
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 const InvoiceStatsSection: React.FC<InvoiceStatsSectionProps> = ({ activeTab }) => {
   const [statsData, setStatsData] = useState([
-    { title: 'PRODUCTS', value: '', link: 'View Products' },
-    { title: 'CATEGORIES', value: '', link: 'View Categories' },
-    { title: 'CLIENTS', value: '', link: 'View Clients' }
+    { title: 'PRODUCTS', value: '', link: 'View Products', path: '/invoice-products' },
+    { title: 'CATEGORIES', value: '', link: 'View Categories', path: '/invoice-category' },
+    { title: 'CLIENTS', value: '', link: 'View Clients', path: '/clients' }
   ]);
 
   useEffect(() => {
@@ -26,9 +27,9 @@ const InvoiceStatsSection: React.FC<InvoiceStatsSectionProps> = ({ activeTab }) 
           const apiData = result.data.data;
           // Transform API data to card format
           const cards = [
-            { title: 'PRODUCTS', value: apiData.totalProducts, link: 'View Products' },
-            { title: 'CATEGORIES', value: apiData.totalCategory, link: 'View Categories' },
-            { title: 'CLIENTS', value: apiData.totalClients, link: 'View Clients' }
+            { title: 'PRODUCTS', value: apiData.totalProducts, link: 'View Products',  path: '/invoice-products'  },
+            { title: 'CATEGORIES', value: apiData.totalCategory, link: 'View Categories',  path: '/invoice-category'  },
+            { title: 'CLIENTS', value: apiData.totalClients, link: 'View Clients',  path: '/clients'  }
           ];
           setStatsData(cards);
         }
@@ -49,7 +50,7 @@ const InvoiceStatsSection: React.FC<InvoiceStatsSectionProps> = ({ activeTab }) 
           <Box key={index} className="info-card">
             <Box className="info-card-title">{stat.title}</Box>
             <Box className="info-card-value">{stat.value}</Box>
-            <a href="#" className="info-card-link">{stat.link}</a>
+            <Link to={stat.path} className="info-card-link">{stat.link}</Link>
           </Box>
         ))}
       </Box>
