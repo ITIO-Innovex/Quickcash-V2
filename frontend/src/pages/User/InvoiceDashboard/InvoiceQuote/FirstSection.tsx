@@ -11,21 +11,21 @@ import getSymbolFromCurrency from 'currency-symbol-map';
 import { downloadPDF } from '../../../../utils/downloadPDF';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { Filter, FileSpreadsheet, FileText} from 'lucide-react';
+import { Filter, FileSpreadsheet, FileText } from 'lucide-react';
 import { downloadExcel } from '../../../../utils/downloadExcel';
 import { Box, Button, Typography, useTheme } from '@mui/material';
 import GenericTable from '../../../../components/common/genericTable';
 import axios from 'axios';
-import { useAppToast } from '@/utils/toast'; 
+import { useAppToast } from '@/utils/toast';
 
 const FirstSection = () => {
   const theme = useTheme();
-  const toast = useAppToast(); 
+  const toast = useAppToast();
   const [open, setOpen] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [showFilter, setShowFilter] = useState(false);
   const [currentData, setCurrentData] = useState<any[]>([]);
-   const [rowToDelete, setRowToDelete] = useState<any>(null);
+  const [rowToDelete, setRowToDelete] = useState<any>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [copiedQuote, setCopiedQuote] = useState<string | null>(null);
@@ -34,74 +34,74 @@ const FirstSection = () => {
   const handleFilter = () => {
     setShowFilter((prev) => !prev);
   };
-  
-  useEffect(()=>{
+
+  useEffect(() => {
     const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
     getQuoteList(accountId.data.id);
-  },[]);
-  const getQuoteList = async(id:any) => {
-    try{
+  }, []);
+  const getQuoteList = async (id: any) => {
+    try {
       const result = await api.get(`/${url}/v1/quote/list/${id}`);
       if (result.status === 201) {
         setCurrentData(result.data.data);
       }
-    }catch(error){
+    } catch (error) {
       console.error('Error fetching quote list:', error);
     }
   }
 
   const handleExcelDownload = () => {
-      const formattedData = currentData.map((row) => ({
-        'Created Date': row.date,
-        'Due Date': row.dueDate,
-        ID: row.id,
-        Amount: `$${Math.abs(row.amount)}`,
-        Status: row.status,
-      }));
-  
-      downloadExcel(formattedData, 'QuotesList.xlsx', 'QuotesList');
-    };
-  
-    const handleDownloadPDF = () => {
-      const headers = [
-        'Date',
-        'Due Date',
-        'Transaction ID',
-        'Amount',
-        'Status',
-      ];
-      const formattedData = currentData.map((row) => ({
-        'Date': row.date,
-         'Due Date':row.dueDate,
-        'Transaction ID': row.id,
-        Amount: `$${Math.abs(row.amount)}`,
-        Status: row.status,
-      }));
-  
-      downloadPDF(
-        formattedData,
-        headers,
-        'QuotesList.pdf',
-        'Quote List'
-      );
-    };
-  
-    const handleGlobalSearch = (text: string) => {
+    const formattedData = currentData.map((row) => ({
+      'Created Date': row.invoice_date,
+      'Due Date': row.due_date,
+      'Quote Number': row.quote_number,
+      Amount: `${getSymbolFromCurrency(row?.currency)} ${row?.total}`,
+      Status: row.status,
+    }));
+
+    downloadExcel(formattedData, 'QuotesList.xlsx', 'QuotesList');
+  };
+
+  const handleDownloadPDF = () => {
+    const headers = [
+      'Date',
+      'Due Date',
+      'Quote Number',
+      'Amount',
+      'Status',
+    ];
+    const formattedData = currentData.map((row) => ({
+      'Date': row.invoice_date,
+      'Due Date': row.due_date,
+      'Quote Number': row.quote_number,
+      Amount: `${getSymbolFromCurrency(row?.currency)} ${row?.total}`,
+      Status: row.status,
+    }));
+
+    downloadPDF(
+      formattedData,
+      headers,
+      'QuotesList.pdf',
+      'Quote List'
+    );
+  };
+
+  const handleGlobalSearch = (text: string) => {
     setFilterText(text);
-  
+
     if (text.trim() === '') {
       setCurrentData(currentData);
       return;
     }
-  
+
     const lower = text.toLowerCase();
-  
+
     const filtered = currentData.filter((row) =>
       Object.values(row).some((val) =>
         String(val).toLowerCase().includes(lower)
       )
     );
-  
+
     setCurrentData(filtered.length ? filtered : []);
     console.log('Filtering by:', text, '→ Found:', filtered.length, 'items');
   };
@@ -148,59 +148,59 @@ const FirstSection = () => {
   };
 
   const columns = [
-   {
-  field: 'quote_number',
-  headerName: 'Quote Number',
-  render: (row: any) => (
-    <Box component="span" className="clickable-content" onClick={() => { navigator.clipboard.writeText(`https://yourdomain.com/Quote/${row.quote_number}`); setCopiedQuote(row.quote_number); setTimeout(() => setCopiedQuote(null), 1000); }} sx={{ display: 'flex', alignItems: 'center', gap: 1, position: 'relative' }}>
+    {
+      field: 'quote_number',
+      headerName: 'Quote Number',
+      render: (row: any) => (
+        <Box component="span" className="clickable-content" onClick={() => { navigator.clipboard.writeText(`https://yourdomain.com/Quote/${row.quote_number}`); setCopiedQuote(row.quote_number); setTimeout(() => setCopiedQuote(null), 1000); }} sx={{ display: 'flex', alignItems: 'center', gap: 1, position: 'relative' }}>
 
-      <AnimatePresence mode="wait">
-        {copiedQuote === row.quote_number ? (
-          <motion.span key="tick" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ duration: 0.3 }} >
-            <CheckCircleIcon color="success" fontSize="small" />
-          </motion.span>
-        ) : (
-          <motion.span key="text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-            <Typography variant="body2"
-              sx={{
-                color: "primary.main",
-                textDecoration: "underline",
-              }}
-            >
-              {row.quote_number}
-            </Typography>
-          </motion.span>
-        )}
-      </AnimatePresence>
-      {/* Tooltip only when copied */}
-      <AnimatePresence>
-        {copiedQuote === row.quote_number && (
-          <motion.div
-            key="tooltip"
-            initial={{ y: -10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -10, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            style={{
-              position: "absolute",
-              top: "-30px",
-              left: 0,
-              background: "#333",
-              color: "#fff",
-              padding: "4px 10px",
-              borderRadius: "4px",
-              fontSize: "12px",
-              whiteSpace: "nowrap",
-              zIndex: 10,
-            }}
-          >
-            Quote Number Copied!
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </Box>
-  )
-},
+          <AnimatePresence mode="wait">
+            {copiedQuote === row.quote_number ? (
+              <motion.span key="tick" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ duration: 0.3 }} >
+                <CheckCircleIcon color="success" fontSize="small" />
+              </motion.span>
+            ) : (
+              <motion.span key="text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                <Typography variant="body2"
+                  sx={{
+                    color: "primary.main",
+                    textDecoration: "underline",
+                  }}
+                >
+                  {row.quote_number}
+                </Typography>
+              </motion.span>
+            )}
+          </AnimatePresence>
+          {/* Tooltip only when copied */}
+          <AnimatePresence>
+            {copiedQuote === row.quote_number && (
+              <motion.div
+                key="tooltip"
+                initial={{ y: -10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -10, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                style={{
+                  position: "absolute",
+                  top: "-30px",
+                  left: 0,
+                  background: "#333",
+                  color: "#fff",
+                  padding: "4px 10px",
+                  borderRadius: "4px",
+                  fontSize: "12px",
+                  whiteSpace: "nowrap",
+                  zIndex: 10,
+                }}
+              >
+                Quote Number Copied!
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Box>
+      )
+    },
     { field: 'invoice_date', headerName: 'Quote Date' },
     { field: 'due_date', headerName: 'Due Date' },
     {
@@ -229,7 +229,7 @@ const FirstSection = () => {
     }
   ];
 
-     const handleDelete = (row: any) => {
+  const handleDelete = (row: any) => {
     setRowToDelete(row);
     setDeleteModalOpen(true);
     console.log('Trying to delete:', row);
@@ -275,8 +275,8 @@ const FirstSection = () => {
         </Button>
       </Box>
 
-        {showFilter && (
-        <CommonFilter          label="Search any field"
+      {showFilter && (
+        <CommonFilter label="Search any field"
           value={filterText}
           onChange={handleGlobalSearch}
           width="200px"
@@ -290,9 +290,9 @@ const FirstSection = () => {
         </Typography>
       )}
 
-      <CustomModal open={open} onClose={handleClose} title="Product Details" sx={{backgroundColor: theme.palette.background.default }}>
+      <CustomModal open={open} onClose={handleClose} title="Product Details" sx={{ backgroundColor: theme.palette.background.default }}>
         <div className="header-divider" />
-        
+
         <Box sx={{ mt: 2 }}>
           <Box display="flex" justifyContent="space-between" mb={2}>
             <Typography><strong>Quote Date:</strong></Typography>
@@ -310,7 +310,7 @@ const FirstSection = () => {
 
           <Box display="flex" justifyContent="space-between" mb={2}>
             <Typography><strong>Amount:</strong></Typography>
-            <Typography>{ getSymbolFromCurrency(selectedRow?.currency) }{selectedRow?.total}</Typography>
+            <Typography>{getSymbolFromCurrency(selectedRow?.currency)}{selectedRow?.total}</Typography>
           </Box>
 
           <Box display="flex" justifyContent="space-between" mb={2}>
@@ -328,8 +328,8 @@ const FirstSection = () => {
         </Box>
       </CustomModal>
 
-       {/* Delete Modal */}
-      <CustomModal open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Confirm Delete" sx={{backgroundColor:theme.palette.background.default}} >
+      {/* Delete Modal */}
+      <CustomModal open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Confirm Delete" sx={{ backgroundColor: theme.palette.background.default }} >
         <Typography>
           Are you sure you want to delete this Invoice?
         </Typography>

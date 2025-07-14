@@ -90,6 +90,7 @@ import ResetPassword from '@/pages/User/AccountSection/ResetPassword';
 import UserNotification from '@/pages/User/Notification/notification';
 import InvoiceEcommercePayment from '../pages/User/InvoiceDashboard/Invoices/InvoicePay';
 import QuotesView from '@/pages/User/InvoiceDashboard/InvoiceQuote/QuoteView';
+import ResponseInvoice from '@/pages/User/InvoiceDashboard/Invoices/InvoiceResponse';
 
 // --- Auth Route Wrapper ---
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
@@ -191,6 +192,7 @@ const authRoutes = [
   { path: '/add-beneficiary', element: <AddBeneficiaryForm /> },
   { path: '/invoice-dashboard', element: <InvoiceDashboard /> },
   { path: '/invoice-pay', element: <InvoiceEcommercePayment /> },
+  { path: '/inv-response/:id', element: <ResponseInvoice /> },
   { path: '//quote/:id/:type', element: <QuotesView /> },
   { path: '/notifications', element: <UserNotification /> },
   { path: '/beneficiary', element: <SelectBeneficiary /> },

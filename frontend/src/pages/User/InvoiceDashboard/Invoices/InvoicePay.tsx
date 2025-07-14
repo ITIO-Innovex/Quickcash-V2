@@ -27,12 +27,10 @@ function Copyright(props:any) {
 export default function InvoiceEcommercePayment() {
     const location = useLocation();
 
-    // Encrypt
-    var ciphertext = location?.search?.replace("?code=","");
+    // Get code param from URL
+    const params = new URLSearchParams(location.search);
+    const originalText = params.get("code");
     const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
-    // Decrypt
-    var bytes  = CryptoJS.AES.decrypt(ciphertext, 'ganesh');
-    var originalText = bytes.toString(CryptoJS.enc.Utf8);
     const navigate = useNavigate();
     const [status,setStatus] = React.useState<any>('');
     const [amount,setAmount] = React.useState<number>(0);
@@ -57,6 +55,10 @@ export default function InvoiceEcommercePayment() {
     }); 
     
     const getAmount = async () => {
+      if (!originalText) {
+        setErrorMsg("Invalid or missing invoice code.");
+        return;
+      }
       await api.get(`/${url}/v1/ecommerce/invoice-frontend/${originalText}`)
       .then(result => {
         if(result.data.status == 201) {
@@ -320,9 +322,9 @@ export default function InvoiceEcommercePayment() {
                 <span className="title">Payment Already done</span> 
                 <p className="message">Thank you for payment.</p> 
                 </div> 
-                <div className="actions">
+                {/* <div className="actions">
                   <button type="button" className="history">Neo Connect</button> 
-                </div> 
+                </div>  */}
               </div> 
             </div>
           </Grid>
@@ -346,9 +348,9 @@ export default function InvoiceEcommercePayment() {
                   }  
                   </p> 
                   </div> 
-                  <div className="actions">
+                  {/* <div className="actions">
                     <button type="button" className="history">Neo Connect</button> 
-                  </div> 
+                  </div>  */}
                 </div> 
               </div>
             </Grid>
