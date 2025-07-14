@@ -154,7 +154,11 @@ const FirstSection = () => {
         </>
       )
     },
-    { field: 'paymentDate', headerName: 'Payment Date' },
+    {
+      field: 'paymentDate',
+      headerName: 'Payment Date',
+      renderCell: (params) => params.value?.slice(0, 10),
+    },
     {
       field: 'amount',
       headerName: 'Amount',
