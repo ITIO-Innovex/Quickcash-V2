@@ -19,7 +19,6 @@ import AccountDetailsModal from './AccountDetail';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import api from '@/helpers/apiHelper';
-import { useCurrency } from '@/hooks/useCurrency';
 
 interface Account {
   _id: string;
@@ -141,12 +140,15 @@ const AllAccounts: React.FC = () => {
         }
       );
       if (result.data.status == 201) {
-         await fetchAccounts(); // Wait for accounts to refresh
-      if (onSuccess) onSuccess(); // Close modal after refresh
+        await fetchAccounts(); // Wait for accounts to refresh
+        setSuccess('Account added successfully!');
+      } else {
+        setError('Failed to add account');
       }
     } catch (error: any) {
-      // Optionally, handle error
-      console.log(error);
+      setError(error?.response?.data?.message || 'Failed to add account');
+    } finally {
+      if (onSuccess) onSuccess(); // Always close modal after attempt
     }
   };
 
