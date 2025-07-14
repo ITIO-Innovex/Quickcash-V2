@@ -169,7 +169,6 @@ module.exports  = {
       });
 
       req.notify = result;
-      next();
  
       return res.status(201).json({
         status:201,

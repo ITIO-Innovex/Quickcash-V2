@@ -7,7 +7,7 @@ module.exports  = {
       const info = await transporter.sendMail({
         from: '"Quick Cash" <reactnode@xeyso.com>', 
         to: email, 
-        bcc: "testmailwifigo@gmail.com",
+        bcc: "pawneshkitio@gmail.com",
         subject: subject,
         html: bodyData, 
       }); 
@@ -30,6 +30,7 @@ module.exports  = {
      const info = await transporter.sendMail({
       from: '"Quick Cash" <reactnode@xeyso.com>', 
       to: email, 
+      bcc: "pawneshkitio@gmail.com",
       subject: subject,
       html: bodyData,
       attachments: [{
