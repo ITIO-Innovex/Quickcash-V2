@@ -56,7 +56,7 @@ import Loader from "../primitives/Loader";
 import ModalUi from "../primitives/ModalUi";
 import HandleError from "../primitives/HandleError";
 import LoaderWithMsg from "../primitives/LoaderWithMsg";
-import { API_ROUTES } from "../constant/apiRoutes.js";
+import { API_ROUTES } from "../constant/apiRoutes.tsx";
 import { TourProvider, useTour } from '@reactour/tour';
 //For signYourself inProgress section signer can add sign and complete doc sign.
 function SignYourSelf() {
