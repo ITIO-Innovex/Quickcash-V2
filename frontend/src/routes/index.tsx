@@ -155,6 +155,8 @@ const guestRoutes = [
   { path: '/reset-password/*', element: <ResetPassword /> },
   { path: '/contact', element: <Contact /> },
   { path: '*', element: <NotFound /> },
+  { path: '/invoice-pay', element: <InvoiceEcommercePayment /> },
+
 ];
 // --- Authenticated User Routes ---
 const authRoutes = [
@@ -191,9 +193,8 @@ const authRoutes = [
   { path: '/register-business', element: <BusinessRegister /> },
   { path: '/add-beneficiary', element: <AddBeneficiaryForm /> },
   { path: '/invoice-dashboard', element: <InvoiceDashboard /> },
-  { path: '/invoice-pay', element: <InvoiceEcommercePayment /> },
   { path: '/inv-response/:id', element: <ResponseInvoice /> },
-  { path: '//quote/:id/:type', element: <QuotesView /> },
+  { path: '/quote/:id/:type', element: <QuotesView /> },
   { path: '/notifications', element: <UserNotification /> },
   { path: '/beneficiary', element: <SelectBeneficiary /> },
   { path: '/digital-signature', element: <DigitalDashboard /> },

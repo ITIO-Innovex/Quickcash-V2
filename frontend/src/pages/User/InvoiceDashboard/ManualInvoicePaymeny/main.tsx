@@ -5,6 +5,20 @@ import { useState, useEffect } from 'react';
 import CustomModal from '@/components/CustomModal';
 import AddManualPayment from '@/components/forms/AddManualPayment';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
+interface JwtPayload {
+  sub: string;
+  role: string;
+  iat: number;
+  exp: number;
+  data: {
+    defaultcurr: string;
+    email: string;
+    id: string;
+    name: string;
+    type: string;
+  };
+}
 
 const Main = () => {
   const theme = useTheme();
@@ -16,7 +30,10 @@ const Main = () => {
   const fetchUnpaidInvoices = async () => {
     setLoadingInvoices(true);
     try {
-      const result = await axios.get(`/${url}/v1/manualPayment/list`, {
+      const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
+  
+      const result = await axios.get(`/${url}/v1/manualPayment/unpaidList/${accountId?.data?.id}`, {
+
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

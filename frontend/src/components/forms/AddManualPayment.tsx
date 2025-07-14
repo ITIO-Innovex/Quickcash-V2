@@ -4,6 +4,8 @@ import CustomButton from '../CustomButton';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { JwtPayload } from '../../types/jwt';
+import { useAppToast } from '@/utils/toast';
+
 
 // Simple local alertnotify function
 const alertnotify = (text: string, type: string) => {
@@ -21,7 +23,7 @@ interface AddManualPaymentProps {
     notes: string;
   }) => void;
   onCancel: () => void;
-  unpaidInvoice?: any[]; 
+  unpaidInvoice?: any[];
 }
 
 const AddManualPayment: React.FC<AddManualPaymentProps> = ({ onSave, onCancel, unpaidInvoice = [] }) => {
@@ -32,9 +34,10 @@ const AddManualPayment: React.FC<AddManualPaymentProps> = ({ onSave, onCancel, u
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [amountError, setAmountError] = useState('');
-  const theme = false; 
+  const theme = false;
   const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
   const [msgLoading, setmsgLoading] = useState(false);
+  const toast = useAppToast();
 
   // --- Fetch Invoice Details ---
   const HandleInvoiceDetails = async (val: string) => {
@@ -45,7 +48,7 @@ const AddManualPayment: React.FC<AddManualPaymentProps> = ({ onSave, onCancel, u
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      if (result?.data?.status == "201") {
+      if (result?.data?.status == 201) {
         setInvoiceD(result?.data?.data);
       } else {
         setInvoiceD(null);
@@ -61,7 +64,7 @@ const AddManualPayment: React.FC<AddManualPaymentProps> = ({ onSave, onCancel, u
     setmsgLoading(true);
     const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
     try {
-      const result = await axios.post(`/${url}/v1/manualPayment/add`,{
+      const result = await axios.post(`/${url}/v1/manualPayment/add`, {
         "user": accountId?.data?.id,
         "invoice": invoiceD?._id,
         "client": invoiceD?.userid,
@@ -73,21 +76,21 @@ const AddManualPayment: React.FC<AddManualPaymentProps> = ({ onSave, onCancel, u
         "notes": notes,
         "payment_date": new Date().toISOString().substring(0, 10),
         "mode": "Cash"
-      }, 
-      {
-        headers: 
+      },
         {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if(result.data.status == "201") {
+          headers:
+          {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+      if (result.data.status == 201) {
         setmsgLoading(false);
-        alertnotify(result?.data?.message, "Success");
+        toast.success(result?.data?.message);
         onCancel(); // Close modal on success
       }
     } catch (error: any) {
       setmsgLoading(false);
-      alertnotify(error?.response?.data?.message, "error");  
+      toast.error(error?.response?.data?.message);
       console.log("error", error);
     }
   }
@@ -112,11 +115,11 @@ const AddManualPayment: React.FC<AddManualPaymentProps> = ({ onSave, onCancel, u
         {/* Invoice Selection Section */}
         <Grid item xs={12} md={6}>
           <label htmlFor="Invoice" style={{ marginBottom: 8, display: 'block', fontWeight: 500 }}>Invoice</label>
-          <Select 
-            onChange={(e) => { setSelectedInvoice(e.target.value); HandleInvoiceDetails(e.target.value); }} 
-            sx={{ 
-              color: `${theme ? 'white': 'black'}`,
-              border: `${theme ? '1px solid silver': 'black'}`,
+          <Select
+            onChange={(e) => { setSelectedInvoice(e.target.value); HandleInvoiceDetails(e.target.value); }}
+            sx={{
+              color: `${theme ? 'white' : 'black'}`,
+              border: `${theme ? '1px solid silver' : 'black'}`,
             }}
             value={selectedInvoice}
             displayEmpty
@@ -125,8 +128,8 @@ const AddManualPayment: React.FC<AddManualPaymentProps> = ({ onSave, onCancel, u
             <MenuItem value="" disabled>
               <em>Select an invoice</em>
             </MenuItem>
-            {unpaidInvoice?.map((item:any,index:number) => (
-              <MenuItem value={item?.invoice_number} key={index} sx={{ color: `${theme ? 'white': 'black'}`}}>
+            {unpaidInvoice?.map((item: any, index: number) => (
+              <MenuItem value={item?.invoice_number} key={index} sx={{ color: `${theme ? 'white' : 'black'}` }}>
                 {item?.invoice_number}
               </MenuItem>
             ))}

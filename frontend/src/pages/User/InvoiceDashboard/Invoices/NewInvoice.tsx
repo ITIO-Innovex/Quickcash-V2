@@ -104,16 +104,17 @@ const NewInvoice = () => {
         setInvoiceNumber(result.data.data);
         setProductList(result?.data?.productData);
       }
-    } catch (error) { console.log('error', error); 
-       const errorMessage = error?.response?.data?.message;
+    } catch (error) {
+      console.log('error', error);
+      const errorMessage = error?.response?.data?.message;
 
-    if (errorMessage?.includes("Invoice Settings")) {
-      toast.error("Please save invoice setting to add invoice");
-     setTimeout(() => {
-        navigate('/settings'); 
-      }, 1500);
+      if (errorMessage?.includes("Invoice Settings")) {
+        toast.error("Please save invoice setting to add invoice");
+        setTimeout(() => {
+          navigate('/settings');
+        }, 1500);
 
-    }
+      }
     }
   };
 
@@ -253,6 +254,18 @@ const NewInvoice = () => {
     setItems(updatedItems);
   };
 
+  const countryOptions = [
+    { label: 'Default', value: 'Default' },
+    { label: 'New York', value: 'New York' },
+    { label: 'Toronto', value: 'Toronto' },
+    { label: 'Rio', value: 'Rio' },
+    { label: 'London', value: 'London' },
+    { label: 'Istanbul', value: 'Istanbul' },
+    { label: 'Mumbai', value: 'Mumbai' },
+    { label: 'Hong Kong', value: 'Hong Kong' },
+    { label: 'Tokyo', value: 'Tokyo' },
+    { label: 'Paris', value: 'Paris' }
+  ];
 
   return (
     <Box className="dashboard-container" sx={{ p: 3 }}>
@@ -262,7 +275,7 @@ const NewInvoice = () => {
       <>
         <Grid container spacing={2} mt={2}>
           <Grid item xs={12} md={6}>
-            <CustomInput label="Invoice #" value={invoiceNumber} />
+            <CustomInput label="Invoice #" value={invoiceNumber} disabled/>
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -354,7 +367,12 @@ const NewInvoice = () => {
           </Grid>
 
           <Grid item xs={12} md={6}>
-            <CustomInput label="Invoice Template" value={invoiceOption} />
+            <CustomSelect
+              label="Invoice Template"
+              value={invoiceOption}
+              onChange={(e) => setInvoiceOption(String(e.target.value))}
+              options={countryOptions}
+            />
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -496,7 +514,7 @@ const NewInvoice = () => {
                       updated[index].amount = (qty * price).toFixed(2);
                       setItems(updated);
                     }}
-
+                    disabled
                     fullWidth
                   />
                 </Grid>
@@ -553,9 +571,9 @@ const NewInvoice = () => {
                 onChange={(e) => setOverAllTax(String(e.target.value).split(','))}
                 style={{ padding: '12px', width: '100%', borderRadius: '6px', border: '1px solid #ccc' }}
               >
-                <option value="">
+                {/* <option value="">
                   -- Select Tax --
-                </option>
+                </option> */}
                 {taxList.map(tax => (
                   <option key={tax._id} value={tax.taxvalue}>
                     {tax.Name} - {tax.taxvalue}

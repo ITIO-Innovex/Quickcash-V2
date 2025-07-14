@@ -70,7 +70,7 @@ const FirstSection = () => {
 
   const handleExcelDownload = () => {
     const formattedData = currentData.map((row) => ({
-       'Invoice Number': row.invoice_number,
+      'Invoice Number': row.invoice_number,
       'Date': row.invoice_date,
       'Transaction ID': row.reference,
       Amount: `${row.currency_text ?? ''}${Math.abs(row.total ?? 0)}`,
@@ -140,7 +140,7 @@ const FirstSection = () => {
       }
     })
       .then(result => {
-        if (result.data.status == "201") {
+        if (result.data.status == 201) {
           alertnotify("Remider has been sent on email address", "success");
         }
       })
@@ -159,7 +159,7 @@ const FirstSection = () => {
         }
       })
         .then(result => {
-          if (result.data.status == "201") {
+          if (result.data.status == 201) {
             const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
             getInvoiceList(accountId.data.id);
             alertnotify("Selected Invoice has been deleted Successfully", "success");
@@ -253,9 +253,11 @@ const FirstSection = () => {
         <CommonTooltip title="Click to send reminder on email" arrow>
           <SendIcon sx={{ cursor: 'pointer', color: '#1976d2' }} onClick={() => HandleReminder(row._id)} />
         </CommonTooltip>
-        <CommonTooltip title="Overdue" arrow>
-          <AccessAlarmsIcon sx={{ color: 'red' }} />
-        </CommonTooltip>
+        {row.status === 'overdue' && (
+          <CommonTooltip title="Overdue" arrow>
+            <AccessAlarmsIcon sx={{ color: 'red' }} />
+          </CommonTooltip>
+        )}
       </Box>
     ),
   },

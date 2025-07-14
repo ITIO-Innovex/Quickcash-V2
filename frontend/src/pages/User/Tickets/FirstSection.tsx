@@ -35,17 +35,17 @@ const FirstSection = forwardRef<any, FirstSectionProps>(({ refreshSignal }, ref)
     // eslint-disable-next-line
   }, [refreshSignal]);
 
-const getTicketList = async (id: any) => {
-  try {
-    const result = await api.get(`/${url}/v1/support/list/${id}`);
-    if (result?.status === 201) {
-      const tickets = result?.data?.data || [];
-      setList(tickets.reverse()); // Reverse to show newest first
+  const getTicketList = async (id: any) => {
+    try {
+      const result = await api.get(`/${url}/v1/support/list/${id}`);
+      if (result?.status === 201) {
+        const tickets = result?.data?.data || [];
+        setList(tickets.reverse()); // Reverse to show newest first
+      }
+    } catch (error) {
+      console.error("Error fetching ticket list:", error);
     }
-  } catch (error) {
-    console.error("Error fetching ticket list:", error);
-  }
-};
+  };
 
   const handleActionClick = (row: any) => {
     setSelectedRow(row);
@@ -65,9 +65,17 @@ const getTicketList = async (id: any) => {
     {
       field: 'status',
       headerName: 'Status',
-      render: (row: any) => (
-        <span className={`status-chip ${row.status?.toLowerCase?.()}`}>{row.status}</span>
-      )
+      render: (row: any) => {
+        const rawStatus = row.status?.toLowerCase?.();
+        const normalizedStatus = rawStatus === 'closed' ? 'close' : rawStatus;
+        const displayStatus = rawStatus === 'closed' ? 'Close' : row.status;
+
+        return (
+          <span className={`status-chip ${normalizedStatus}`}>
+            {displayStatus}
+          </span>
+        );
+      }
     },
     {
       field: 'action',
