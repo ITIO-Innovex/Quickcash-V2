@@ -12,7 +12,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import DownloadIcon from '@mui/icons-material/Download';
 
 // import Parse from "parse";
-import { API_ROUTES } from "../../constant/apiRoutes.js";
+import { API_ROUTES } from "../../constant/apiRoutes.tsx";
 import axios from "axios";
 
 function EmailComponent({
