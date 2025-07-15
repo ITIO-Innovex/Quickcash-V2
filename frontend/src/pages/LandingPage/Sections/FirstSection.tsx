@@ -13,6 +13,10 @@ const FirstSection: React.FC = () => {
   const signup = () =>{
     navigate('/register');
   }
+
+   const contact = () =>{
+    navigate('/contact');
+  }
   
   useEffect(() => {
    const observer = new IntersectionObserver(
@@ -72,7 +76,7 @@ const FirstSection: React.FC = () => {
 
           <Box className="hero-buttons">
             <CustomButton className="btn btn-primary" onClick={signup}>Create a Free Account</CustomButton>
-            <CustomButton className="btn btn-outline">Speak to Sales</CustomButton>
+            <CustomButton className="btn btn-primary" onClick={contact}>Speak to Sales</CustomButton>
           </Box>
         </Box>
       </Box>

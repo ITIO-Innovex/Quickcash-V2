@@ -29,7 +29,7 @@ const ContactForm = () => {
     e.preventDefault();
     try {
       const res = await api.post(`/${url}/v1/contact/send`, formData);
-      toast.success(res.data.message || 'Message sent successfully!');
+     toast.success(res.data.message || 'Thanks for reaching out! We’ve received your message and will get back to you soon.');
       setFormData({
         fullName: '',
         contactNumber: '',
