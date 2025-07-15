@@ -19,6 +19,7 @@ import AccountDetailsModal from './AccountDetail';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import api from '@/helpers/apiHelper';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 interface Account {
   _id: string;
@@ -177,9 +178,9 @@ const AllAccounts: React.FC = () => {
       {/* Header */}
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={3}>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <IconButton size="small" onClick={handleBack}>
-            <ChevronLeft />
-          </IconButton>
+         <IconButton onClick={handleBack}>
+          <ArrowBackIcon />
+        </IconButton>
           <Typography variant="h5">All Accounts</Typography>
         </Stack>
         <Button
