@@ -133,7 +133,7 @@ const NewInvoice = () => {
     let discount = discountType === 'Fixed' ? discountValue : (subTotal * discountValue) / 100;
     setDiscountGiven(discount);
     // Tax
-    let taxRate = selectedTax?.rate || 0;
+    let taxRate = selectedTax?.taxvalue || 0;
     let taxAmount = ((subTotal - discount) * taxRate) / 100;
     setTax(taxAmount);
     // Total is now derived, not set in state
@@ -218,7 +218,7 @@ const NewInvoice = () => {
 
   const subtotal = items.filter((item) => item.isAdded).reduce((sum, item) => sum + parseFloat(item.amount || '0'), 0);
   const discountAmount = discountType === 'Fixed' ? discountValue : (subtotal * discountValue) / 100;
-  const taxAmount = selectedTax ? ((subtotal - discountAmount) * selectedTax.rate) / 100 : 0;
+  const taxAmount = selectedTax ? ((subtotal - discountAmount) * selectedTax.taxvalue) / 100 : 0;
   const total = subtotal - discountAmount + taxAmount;
 
   const handleAddRow = () => {
