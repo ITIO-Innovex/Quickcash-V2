@@ -50,7 +50,9 @@ import BusinessRegister from '@/pages/User/BusinessRegister/main';
 import AddTax from '@/pages/User/InvoiceDashboard/Settings/AddTax';
 import Settings from '@/pages/User/InvoiceDashboard/Settings/main';
 import CardDetail from '@/pages/User/cards/card-details/cardDetail';
+import EditQr  from '@/pages/User/InvoiceDashboard/Settings/EditQr';
 import WalletRequest from '@/pages/Admin/Crypto/WalletRequests/main';
+import EditTax from '@/pages/User/InvoiceDashboard/Settings/EditTax';
 import InvoiceDashboard from '@/pages/User/InvoiceDashboard/Dashboard';
 import SendMoney from '@/pages/User/dashboardInsideForms/sendMoney/main';
 import InvoiceSection from '@/pages/User/InvoiceDashboard/Invoices/main';
@@ -182,25 +184,27 @@ const authRoutes = [
   { path: '/user-profile', element: <UserProfile /> },
   { path: '/admin-dashboard', element: <Dashboard /> },
   { path: '/transactions', element: <Transactions /> },
+  { path: '/quote/:id/:type', element: <QuotesView /> },
   { path: '/settings/add-qr-code', element: <AddQr  /> },
   { path: '/account-section', element: <AllAccounts /> },
   { path: '/invoice-quotes', element: <InvoiceQuotes /> },
   { path: '/manual-payment', element: <ManualPayment /> },
   { path: '/beneficiary', element: <SelectBeneficiary /> },
+  { path: '/beneficiary', element: <SelectBeneficiary /> },
+  { path: '/settings/edit-tax/:id', element: <EditTax  /> },
   { path: '/invoice-section', element: <InvoiceSection /> },
+  { path: '/notifications', element: <UserNotification /> },
   { path: '/buysellswap/proceed', element: <ProceedPage /> },
   { path: '/invoice-products', element: <InvoiceProduct /> },
   { path: '/invoice-category', element: <InvoiceCategory /> },
   { path: '/crypto-dashboard', element: <CryptoDashboard /> },
+  { path: '/inv-response/:id', element: <ResponseInvoice /> },
   { path: '/template-settings', element: <InvoiceTemplate /> },
+  { path: '/settings/edit-qr-code/:id', element: <EditQr  /> },
   { path: '/help-center/history', element: <TicketsHistory /> },
   { path: '/register-business', element: <BusinessRegister /> },
   { path: '/add-beneficiary', element: <AddBeneficiaryForm /> },
   { path: '/invoice-dashboard', element: <InvoiceDashboard /> },
-  { path: '/inv-response/:id', element: <ResponseInvoice /> },
-  { path: '/quote/:id/:type', element: <QuotesView /> },
-  { path: '/notifications', element: <UserNotification /> },
-  { path: '/beneficiary', element: <SelectBeneficiary /> },
   { path: '/digital-signature', element: <DigitalDashboard /> },
   { path: '/digital-signature/templates', element: <TemplatePage /> },
   { path: '/digital-signature/dummy-file', element: <DigitalDashboard /> },
