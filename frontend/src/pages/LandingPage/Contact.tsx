@@ -39,10 +39,11 @@ const ContactForm = () => {
       if (res.status !== 200) {
         toast.success(res.data.message || 'Something went wrong!');
       }
-     toast.success(res.data.message || 'Thanks for reaching out! We’ve received your message and will get back to you soon.');
+     toast.success( 'Thanks for reaching out! We’ve received your message and will get back to you soon.');
       setFormData({
         fullName: '',
-        contactNumber: '',
+        contactNumber: '',git reset --soft HEAD~2
+
         companyName: '',
         email: '',
         description: '',
