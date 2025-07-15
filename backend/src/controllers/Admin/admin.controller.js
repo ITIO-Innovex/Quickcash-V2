@@ -241,7 +241,7 @@ module.exports = {
      const LoggedInData = await Admin.findById(user._id).select("-password");
    
      return res.cookie('adminAccessToken', generateToken, options).status(200).json({
-       status: 201,
+       status: 200,
        message: "ADmin is logged In Successfully",
        user_id: user._id,
        data:LoggedInData,

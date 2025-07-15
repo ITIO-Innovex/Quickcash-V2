@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import admin from '@/helpers/adminApiHelper';
+import { useAuth } from '@/contexts/authContext';
 import { Link, useNavigate } from 'react-router-dom';
 import CustomButton from '@/components/CustomButton';
 import CustomInput from '@/components/CustomInputField';
@@ -16,10 +18,10 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import { useAuth } from '@/contexts/authContext';
-import admin from '@/helpers/adminApiHelper';
+import { useAppToast } from '@/utils/toast';
 
 const AdminLogin = () => {
+  const toast = useAppToast();
   const theme = useTheme();
   const navigate = useNavigate();
   const { themeMode, toggleTheme } = useSettings();
@@ -37,23 +39,32 @@ const AdminLogin = () => {
 
   // Handle form submit
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const result = await admin.post(`/${url}/v1/admin/login`, { email, password });
-      if (result.status === 200 && result.data.token) {
-        adminLogin(result.data.token); // Save token and set admin state
-        console.log(`${result.data.data.fname} is Logged In Successfully!`);
-        navigate('/admin/dashboard');
-      } else {
-        console.log('Login failed: Invalid response');
-      }
-    } catch (error: any) {
-      console.log('Login error:', error?.response?.data?.message || error.message);
-    } finally {
-      setLoading(false);
+  e.preventDefault();
+  setLoading(true);
+  try {
+    const result = await admin.post(`/${url}/v1/admin/login`, { email, password });
+
+    // ✅ Success condition
+    if (result.status === 200 && result.data.token) {
+      adminLogin(result.data.token);
+      console.log(`${result.data.data.fname} is Logged In Successfully!`);
+      toast.success("Login successful!");
+      navigate('/admin/dashboard');
+    } else {
+      toast.error(result.data.message || 'Login failed: Invalid response');
     }
-  };
+
+  } catch (error: any) {
+    console.error('Login error:', error);
+
+    // ✅ Show backend error message in toast
+    const errorMsg = error?.response?.data?.message || "Something went wrong!";
+    toast.error(errorMsg);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <Box className="login-container">

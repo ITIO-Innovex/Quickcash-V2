@@ -178,24 +178,23 @@ useEffect(() => {
         }
       };
 
-      console.log('Payload:', Object.fromEntries(formPayload.entries()));
+      // console.log('Payload:', Object.fromEntries(formPayload.entries()));
 
       let res;
         console.log("invoiceSettingId", invoiceSettingId);
         if (invoiceSettingId) {
           res = await axios.patch(`/${url}/v1/invoicesetting/update/${invoiceSettingId}`, formPayload, config);
+          toast.success("Invoice updated successfully");
         } else {
           res = await axios.post(`/${url}/v1/invoicesetting/add`, formPayload, config);
-           toast.success("Invoice added successfully ");
+          const newId = res.data.data?._id;
+          if (newId) {
+            setInvoiceSettingId(newId);
+            toast.success("Invoice added successfully");
+          } else {
+            toast.error("Something went wrong");
+          }
         }
-
-        if (!invoiceSettingId && res.data.data?._id) {
-        const newId = res.data.data._id;
-        setInvoiceSettingId(newId);
-
-      }else {
-        toast.error("Something went wrong");
-      }
     } catch (error: any) {
       console.error("API Error:", error);
       toast.error(error?.response?.data?.message || "API Error");
