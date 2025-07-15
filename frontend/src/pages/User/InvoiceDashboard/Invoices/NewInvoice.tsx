@@ -34,7 +34,7 @@ const NewInvoice = () => {
   const [isRecurring, setIsRecurring] = useState<'yes' | 'no'>('no');
   const [recurringCycle, setRecurringCycle] = useState('');
   const [receiverDetails, setReceiverDetails] = useState({ name: '', email: '', address: '' });
-  const [selectedTax, setSelectedTax] = useState({ name: 'Ganesh', rate: 35 });
+  const [selectedTax, setSelectedTax] = useState<any>(null);
 
 
   const [items, setItems] = useState([{ id: 1, productId: '', productName: '', qty: '', unitPrice: '', amount: '', isAdded: false }]);
@@ -218,7 +218,7 @@ const NewInvoice = () => {
 
   const subtotal = items.filter((item) => item.isAdded).reduce((sum, item) => sum + parseFloat(item.amount || '0'), 0);
   const discountAmount = discountType === 'Fixed' ? discountValue : (subtotal * discountValue) / 100;
-  const taxAmount = ((subtotal - discountAmount) * selectedTax.rate) / 100;
+  const taxAmount = selectedTax ? ((subtotal - discountAmount) * selectedTax.rate) / 100 : 0;
   const total = subtotal - discountAmount + taxAmount;
 
   const handleAddRow = () => {
@@ -567,15 +567,16 @@ const NewInvoice = () => {
 
             <Box mt={2}>
               <select
-                value={overAllTax}
-                onChange={(e) => setOverAllTax(String(e.target.value).split(','))}
+                value={selectedTax ? selectedTax._id : ''}
+                onChange={e => {
+                  const selected = taxList.find(tax => tax._id === e.target.value);
+                  setSelectedTax(selected || null);
+                }}
                 style={{ padding: '12px', width: '100%', borderRadius: '6px', border: '1px solid #ccc' }}
               >
-                {/* <option value="">
-                  -- Select Tax --
-                </option> */}
+                <option value="">-- Select Tax --</option>
                 {taxList.map(tax => (
-                  <option key={tax._id} value={tax.taxvalue}>
+                  <option key={tax._id} value={tax._id}>
                     {tax.Name} - {tax.taxvalue}
                   </option>
                 ))}
@@ -597,7 +598,7 @@ const NewInvoice = () => {
               </Box>
               <Box display="flex" justifyContent="space-between">
                 <span>Tax:</span>
-                <span>{taxAmount.toFixed(2)}</span>
+                <span>{selectedTax ? taxAmount.toFixed(2) : '-'}</span>
               </Box>
               <Box display="flex" justifyContent="space-between" fontWeight="bold">
                 <span>Total:</span>

@@ -1,4 +1,4 @@
-const { sendMail } = require('../middlewares/common.middleware');
+const { sendMail } = require('../middlewares/mail.middleware');
 
 exports.sendContactMail = async (req, res) => {
   const { fullName, contactNumber, companyName, email, description } = req.body;
@@ -18,6 +18,7 @@ exports.sendContactMail = async (req, res) => {
     if (isSent) {
       return res.status(200).json({ message: 'Mail sent successfully!' });
     } else {
+      console.log(`Mail Error: ${isSent}`);
       return res.status(500).json({ message: 'Mail failed to send.' });
     }
   } catch (error) {
