@@ -8,10 +8,13 @@ import { useAppToast } from '@/utils/toast';
 import { useNavigate } from 'react-router-dom';
 import CustomButton from '@/components/CustomButton';
 import CustomInput from '@/components/CustomInputField';
+
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api'; 
+
 const ContactForm = () => {
   const navigate = useNavigate();
   const toast = useAppToast();
+
   const [formData, setFormData] = useState({
     fullName: '',
     contactNumber: '',
@@ -20,6 +23,8 @@ const ContactForm = () => {
     description: '',
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false); // track submit state
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -27,8 +32,15 @@ const ContactForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true); // disable button
+
     try {
       const res = await api.post(`/${url}/v1/contact/send`, formData);
+
+      if (res.status !== 200) {
+        toast.success(res.data.message || 'Message sent successfully!');
+      }
+
       toast.success(res.data.message || 'Message sent successfully!');
       setFormData({
         fullName: '',
@@ -43,6 +55,8 @@ const ContactForm = () => {
       toast.error(
         error?.response?.data?.message || 'Something went wrong while sending your message.'
       );
+    } finally {
+      setIsSubmitting(false); // re-enable button
     }
   };
 
@@ -98,7 +112,9 @@ const ContactForm = () => {
           />
 
           <Box className="form-button-box">
-            <CustomButton type="submit">Submit</CustomButton>
+            <CustomButton type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit'}
+            </CustomButton>
           </Box>
         </Box>
       </Box>
