@@ -1,4 +1,5 @@
-import { Box, Typography, Link, IconButton } from '@mui/material';
+import { Link } from 'react-router-dom';
+import { Box, Typography, IconButton } from '@mui/material';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import InstagramIcon from '@mui/icons-material/Instagram';
@@ -12,13 +13,13 @@ const Footer = () => {
         </Typography>
 
         <Box className="footer-links">
-          <Link href="#" underline="none" className="footer-link">
+          <Link to="/login" className="footer-link">
             Login
           </Link>
-          <Link href="#" underline="none" className="footer-link">
+          <Link to="/register" className="footer-link">
             Get Started
           </Link>
-          <Link href="#" underline="none" className="footer-link">
+          <Link to="/privacy-policy"  className="footer-link">
             Privacy Policy
           </Link>
         </Box>

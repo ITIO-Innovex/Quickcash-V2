@@ -2,12 +2,18 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Box, Typography } from '@mui/material';
 import CustomButton from '@/components/CustomButton';
-
+import { useNavigate } from 'react-router-dom';
+  
 const FirstSection: React.FC = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
+  const signup = () =>{
+    navigate('/register');
+  }
+  
   useEffect(() => {
    const observer = new IntersectionObserver(
       ([entry]) => {
@@ -65,7 +71,7 @@ const FirstSection: React.FC = () => {
           </Typography>
 
           <Box className="hero-buttons">
-            <CustomButton className="btn btn-primary">Create a Free Account</CustomButton>
+            <CustomButton className="btn btn-primary" onClick={signup}>Create a Free Account</CustomButton>
             <CustomButton className="btn btn-outline">Speak to Sales</CustomButton>
           </Box>
         </Box>

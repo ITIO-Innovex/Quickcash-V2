@@ -60,7 +60,7 @@ const [swapAvailableData, setSwapAvailableData] = useState<any>(null);
 
   // Log activeTab changes for debugging
   useEffect(() => {
-    console.log('FormPage - Active Tab Changed:', activeTab);
+    // console.log('FormPage - Active Tab Changed:', activeTab);
     // console.log('FormPage - Current amount:', amount);
     // console.log('FormPage - Current youSend:', youSend);
     // console.log('FormPage - Current youReceive:', youReceive);
@@ -73,7 +73,7 @@ useEffect(() => {
     const savedData = localStorage.getItem("calculationData");
     if (savedData) {
       const parsed = JSON.parse(savedData);
-      console.log("✅ Loaded from localStorage:", parsed);
+      // console.log("✅ Loaded from localStorage:", parsed);
 
       setAmount(parsed.amount);
       setCurrency(parsed.currency);
@@ -125,7 +125,7 @@ useEffect(() => {
     }
 
     calculateSellValues(coin, currency, amount).then(res => {
-      console.log('🔥 Auto Sell Calculation Response:', res);
+      // console.log('🔥 Auto Sell Calculation Response:', res);
 
       if (res?.amount) {
         setSellAmountToGet(res.amount);
@@ -154,7 +154,7 @@ useEffect(() => {
   const saved = localStorage.getItem('sellCalculationData');
   if (saved) {
     const parsed = JSON.parse(saved);
-    console.log('📦 Restoring from localStorage:', parsed);
+    // console.log('📦 Restoring from localStorage:', parsed);
 
     if (parsed.AvailableCoins) {
       setAvailableCoins(parseFloat(parsed.AvailableCoins));
@@ -412,7 +412,7 @@ const handleSellCoinChange = async (
   }
 
   const amount = await loadSellCoinAmount(selectedCoin);
-  console.log(`✅ Coins available for ${type}:`, amount);
+  // console.log(`✅ Coins available for ${type}:`, amount);
 
   // ✅ Update availableCoins immediately
   setAvailableCoins(amount || 0);
@@ -483,11 +483,7 @@ useEffect(() => {
     }
 
     try {
-      const response = await api.get(`/${url}/v1/crypto/fetchswapcoins`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get(`/${url}/v1/crypto/fetchswapcoins`);
 
       const coinsArray = Array.isArray(response.data?.data) ? response.data.data : [];
 
@@ -621,22 +617,16 @@ const handleSwap = async () => {
       coinsAdded,
     };
 
-    console.log("📤 Swap API Payload:", payloadData);
+    // console.log("📤 Swap API Payload:", payloadData);
 
     const response = await api.post(
       `/${url}/v1/crypto/updateswap`,
       payloadData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
     );
 
-    console.log("✅ Swap Response:", response.data);
+    // console.log("✅ Swap Response:", response.data);
 
     if (response.status === 200) {
-      console.log("🎉 Swap successful. Cleaning up...");
 
       // ✅ Clear only swap-related keys
      localStorage.removeItem("coinsAdded");
@@ -782,7 +772,9 @@ const filteredSwapCoins = swapRawCoins.filter((coin) => coin.coin !== fromCoin);
                           onChange={(e) => setCurrency(e.target.value as string)}
                           disabled={!amount}
                           options={
-                            list?.map((item: any, index: number) => ({
+                            list
+                            ?.filter((item: any) => item.currency !== 'INR') 
+                              .map((item: any, index: number) => ({
                               label: (
                                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                   <img

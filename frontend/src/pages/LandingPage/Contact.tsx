@@ -1,33 +1,91 @@
-import React, { useEffect , useState} from 'react';
-import GenericTable from '../../components/common/genericTable';
-import Loader from '../../components/common/loader';
+import React, { useState } from 'react';
+import {
+  Box,
+  Typography,
+} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import CustomButton from '@/components/CustomButton';
+import CustomInput from '@/components/CustomInputField';
 
-const ContactUs: React.FC = () => {
-    const [loading, setloading] = useState(true);
+const ContactForm = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    fullName: '',
+    contactNumber: '',
+    companyName: '',
+    email: '',
+    description: '',
+  });
 
-    useEffect(()=>{
-        const timer = setTimeout(()=> setloading(false),200);
-        return ()=> clearTimeout(timer);
-    }, []);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    if (loading) return <Loader/>
-    const columns =[
-        {field: 'name', headerName: 'Name'},
-        {field: 'email', headerName: 'Email'},
-        {field: 'message', headerName: 'Message'},
-        {field: 'module', headerName: 'Module'},
-    ];
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Submitted Data:', formData);
+    navigate('/');
+  };
 
-    const data = [
-        {name:'SHRISTY', email:'s@example.com', message:'Need help with my account.', module:'Crypto'},
-        {name:'Riya', email:'r@example.com', message:'Issue with payment.', module:'invoice'},
-    ]
+  return (
+    <Box className="contact-form-wrapper">
+      <Box className="contact-form-box">
+        <Typography variant="h4" className="form-heading">
+          Contact Us
+        </Typography>
 
-    return(
-        <div style={{padding: '2rem'}}>
-            <h2>Contact Requests</h2>
-            <GenericTable columns={columns} data={data}/>
-        </div>
-    )
+        <Box component="form" onSubmit={handleSubmit} className="contact-form">
+          <CustomInput
+            label="Full Name"
+            name="fullName"
+            required
+            value={formData.fullName}
+            onChange={handleChange}
+          />
+
+          <CustomInput
+            label="Contact Number"
+            name="contactNumber"
+            required
+            value={formData.contactNumber}
+            onChange={handleChange}
+          />
+
+          <CustomInput
+            label="Company Name"
+            name="companyName"
+            required
+            value={formData.companyName}
+            onChange={handleChange}
+          />
+
+          <CustomInput
+            label="Email"
+            name="email"
+            required
+            value={formData.email}
+            onChange={handleChange}
+          />
+
+          <CustomInput
+            label="Description"
+            name="description"
+            required
+            value={formData.description}
+            onChange={handleChange}
+            multiline
+            minRows={4}
+            className="description-field"
+          />
+
+          <Box className="form-button-box">
+            <CustomButton type="submit">Submit</CustomButton>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
 };
-export default ContactUs;
+
+export default ContactForm;
