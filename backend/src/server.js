@@ -119,6 +119,7 @@ const templateSettingRoute   =   require('./routes/templatesetting.route');
 const WalletAddressRequest   =   require('./routes/walletaddressrequest.route');
 const invoiceCategoryRoute   =   require('./routes/category.route');
 const invoiceProductRoute    =   require('./routes/product.route');
+const contactRoute           =   require('./routes/contact.route.js')
 const invoiceUserClientRoute =   require('./routes/client.route');
 const ManualPaymentRoute     =   require('./routes/manualPayment.route');
 const QuoteRoute             =   require('./routes/quote.route');
@@ -390,6 +391,7 @@ app.use('/api/v1/session', UserSession);
 app.use('/api/v1/invoice', invoiceRoute);
 app.use('/api/v1/currency',CurrencyRoute);
 app.use('/api/v1/company',UserCompanyRoute);
+app.use('/api/v1/contact', contactRoute);
 app.use('/api/v1/receipient',ReceipientRoute);
 app.use('/api/v1/transaction',TransactionRoute);
 app.use('/api/v1/invoicesetting', invoiceSettingRoute);
