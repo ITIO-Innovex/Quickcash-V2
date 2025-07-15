@@ -20,9 +20,8 @@ module.exports = {
       if(req?.files?.profilePhoto) {
         Image1 = req.files.profilePhoto[0].filename;
       }
-
       const emailExists = await Client.findOne({ email: email });
-
+      
       if(emailExists) {
         return res.status(401).json({
           status: 401,
@@ -30,7 +29,8 @@ module.exports = {
           data: null
         })
       }
-    
+      
+      console.log("📸 Files received:", req.files);
       const client = await Client.create({
         user,
         firstName,

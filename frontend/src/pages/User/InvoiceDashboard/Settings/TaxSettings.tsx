@@ -1,33 +1,55 @@
-
 import React, { useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import CustomButton from '@/components/CustomButton';
+import GenericTable from '@/components/common/genericTable'; 
+import { useNavigate } from 'react-router-dom';
 
 const TaxSettings = () => {
-  const [taxSettings, setTaxSettings] = useState({
-    taxRate: '',
-    taxType: '',
-    includeTax: false,
-  });
+  const navigate = useNavigate();
+  const [taxData, setTaxData] = useState([
+    {
+      date: '2025-07-11',
+      name: 'GST',
+      value: '18%',
+      default: 'Yes',
+    },
+    {
+      date: '2025-06-10',
+      name: 'VAT',
+      value: '12%',
+      default: 'No',
+    },
+  ]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Tax Settings:', taxSettings);
+  const handleAddTax = () => {
+    console.log("Add Tax clicked");
+    navigate('/settings/add-tax');
   };
 
-  return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Typography variant="h6" sx={{ mb: 3 }}>
-        Tax Configuration
-      </Typography>
-      
-      <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary' }}>
-        Tax settings will be available in future updates.
-      </Typography>
+  const columns = [
+    { field: 'date', headerName: 'Date' },
+    { field: 'name', headerName: 'Name' },
+    { field: 'value', headerName: 'Value' },
+    { field: 'default', headerName: 'Default' },
+    {
+      field: 'action',
+      headerName: 'Action',
+      render: (row: any) => (
+        <CustomButton variant="outlined" size="small" onClick={() => console.log('Edit', row)}>
+          Edit
+        </CustomButton>
+      ),
+    },
+  ];
 
-      <CustomButton type="submit">
-        Save Tax Settings
-      </CustomButton>
+  return (
+    <Box className="tax-settings-container">
+      <Box className="tax-settings-header">
+        <Typography variant="h6">Tax Settings</Typography>
+        <CustomButton onClick={handleAddTax} >Add Tax</CustomButton>
+      </Box>
+
+      <GenericTable columns={columns} data={taxData} />
     </Box>
   );
 };

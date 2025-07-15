@@ -1,33 +1,42 @@
-
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 import CustomButton from '@/components/CustomButton';
+import GenericTable from '@/components/common/genericTable';
 
 const PaymentQrSettings = () => {
-  const [qrSettings, setQrSettings] = useState({
-    qrEnabled: false,
-    paymentMethod: '',
-    qrData: '',
-  });
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('QR Settings:', qrSettings);
+  const dummyData = [
+    {
+      date: '2025-07-11',
+      title: 'UPI Payment',
+      image: 'upi_qr.png',
+      default: 'Yes',
+      action: 'Edit/Delete',
+    },
+  ];
+
+  const columns = [
+    { field: 'date', headerName: 'Date' },
+    { field: 'title', headerName: 'Title' },
+    { field: 'image', headerName: 'Image' },
+    { field: 'default', headerName: 'Default' },
+    { field: 'action', headerName: 'Action' },
+  ];
+
+  const handleAddQr = () => {
+    navigate('/settings/add-qr-code');
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Typography variant="h6" sx={{ mb: 3 }}>
-        Payment QR Code Configuration
-      </Typography>
-      
-      <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary' }}>
-        Payment QR code settings will be available in future updates.
-      </Typography>
+    <Box className="tax-settings-container">
+       <Box className="tax-settings-header">
+          <Typography variant="h6">Payment QR Code List</Typography>
+          <CustomButton onClick={handleAddQr} >Add Qr code</CustomButton>
+        </Box>
 
-      <CustomButton type="submit">
-        Save QR Settings
-      </CustomButton>
+      <GenericTable columns={columns} data={dummyData} />
     </Box>
   );
 };

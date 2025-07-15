@@ -27,9 +27,11 @@ const {
 
 const { verifyToken } = require('../middlewares/auth.middleware');
 
-router.route('/add').post(verifyToken,upload.fields([
-  { name: 'profilePhoto', maxCount: 1},
-]),addClient);
+router.route('/add').post(
+  verifyToken,
+  upload.fields([{ name: 'profilePhoto', maxCount: 1 }]), 
+  addClient
+);
 router.route('/list/:id').get(verifyToken,clientList);
 router.route('/:id').get(verifyToken,clientById);
 router.route('/numberofinvoice/:id').get(verifyToken,getInvoiceNumbertoClient);

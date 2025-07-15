@@ -1,13 +1,16 @@
+import axios from 'axios';
+import api from '@/helpers/apiHelper';
+import { jwtDecode } from 'jwt-decode';
+import { useAppToast } from '@/utils/toast'; 
 import { useNavigate } from 'react-router-dom';
 import { ArrowBack } from '@mui/icons-material';
 import React, { useRef, useState } from 'react';
+import { Autocomplete, TextField } from '@mui/material';
+import { Country, State, City } from 'country-state-city';
 import CustomButton from '../../../components/CustomButton';
 import CustomSelect from '../../../components/CustomDropdown';
 import CustomInput from '../../../components/CustomInputField';
 import { Box, Typography, Grid, useTheme } from '@mui/material';
-import { useAppToast } from '@/utils/toast'; 
-import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 const AddClient = () => {
@@ -16,7 +19,11 @@ const AddClient = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [imageProfile, setImageProfile] = useState<File | null>(null);
+  const [countryOptions, setCountryOptions] = useState<{ label: string; value: string }[]>([]);
+  const [stateOptions, setStateOptions] = useState<{ label: string; value: string }[]>([]);
+  const [cityOptions, setCityOptions] = useState<{ label: string; value: string }[]>([]);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -31,28 +38,50 @@ const AddClient = () => {
     notes: ''
   });
 
-  const countryOptions = [
-    { label: 'Germany', value: 'DE' },
-    { label: 'United States', value: 'US' },
-    { label: 'United Kingdom', value: 'UK' },
-    { label: 'France', value: 'FR' },
-    { label: 'Spain', value: 'ES' },
-    { label: 'Italy', value: 'IT' }
-  ];
+  React.useEffect(() => {
+  const countries = Country.getAllCountries().map((c) => ({
+    label: c.name,
+    value: c.isoCode,
+  }));
+  setCountryOptions(countries);
+}, []);
 
-  const stateOptions = [
-    { label: 'Berlin', value: 'Berlin' },
-    { label: 'Munich', value: 'Munich' },
-    { label: 'Hamburg', value: 'Hamburg' },
-    { label: 'Frankfurt', value: 'Frankfurt' }
-  ];
+// Update states when country changes
+React.useEffect(() => {
+  if (formData.country) {
+    const states = State.getStatesOfCountry(formData.country).map((s) => ({
+      label: s.name,
+      value: s.isoCode,
+    }));
+    setStateOptions(states);
+    setFormData((prev) => ({ ...prev, state: '', city: '' })); // reset state & city
+    setCityOptions([]); // clear cities
+  }
+}, [formData.country]);
 
-  const cityOptions = [
-    { label: 'Berlin', value: 'Berlin' },
-    { label: 'Munich', value: 'Munich' },
-    { label: 'Hamburg', value: 'Hamburg' },
-    { label: 'Frankfurt', value: 'Frankfurt' }
-  ];
+// Updtae cities when coutry changes
+React.useEffect(() => {
+  if (formData.country && formData.state) {
+    const cities = City.getCitiesOfState(formData.country, formData.state).map((c) => ({
+      label: c.name,
+      value: c.name, // city doesn’t have isoCode
+    }));
+    setCityOptions(cities);
+    setFormData((prev) => ({ ...prev, city: '' })); // reset city
+  }
+}, [formData.state]);
+
+
+const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (file) {
+    setImageProfile(file);
+
+    // Create preview URL
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+  }
+};
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -81,17 +110,20 @@ const AddClient = () => {
       form.append('notes', formData.notes);
       if (imageProfile) {
         form.append('profilePhoto', imageProfile);
+        console.log("📦 Image appended:", imageProfile);
+      } else {
+        console.log("⛔ No image selected");
       }
       const response = await axios.post(
-        `/${url}/v1/client/add`,
-        form,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
+      `${url}/v1/client/add`,
+      form,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+      console.log('👀 Full API response:', response.data);
       if (response.data.status === 201) {
         toast.success('Client added successfully!');
         navigate('/clients');
@@ -110,12 +142,6 @@ const AddClient = () => {
     fileInputRef.current?.click(); 
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setImageProfile(file);
-    }
-  };
 
   return (
     <Box 
@@ -133,9 +159,22 @@ const AddClient = () => {
         <Box className="form-actions">
           <Box className="client-avatar-section">
             <Box className="avatar-placeholder">
-              <Typography variant="h3" className="avatar-text">
-                {formData.firstName?.charAt(0)?.toUpperCase() || 'C'}
-              </Typography>
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Profile Preview"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: '50%',
+                      objectFit: 'cover'
+                    }}
+                  />
+                ) : (
+                  <Typography variant="h3" className="avatar-text">
+                    {formData.firstName?.charAt(0)?.toUpperCase() || 'C'}
+                  </Typography>
+                )}
 
               {/*  Edit icon */}
               <Box className="edit-avatar-icon" onClick={handleEditClick} sx={{ cursor: 'pointer' }}>
@@ -204,7 +243,7 @@ const AddClient = () => {
 
           <Grid item xs={12} sm={6}>
             <CustomSelect
-              label="Country *"
+              label="Country "
               value={formData.country}
               onChange={(e) => handleInputChange('country', e.target.value as string)}
               options={countryOptions}
@@ -213,7 +252,7 @@ const AddClient = () => {
 
           <Grid item xs={12} sm={6}>
             <CustomSelect
-              label="State *"
+              label="State "
               value={formData.state}
               onChange={(e) => handleInputChange('state', e.target.value as string)}
               options={stateOptions}
@@ -222,7 +261,7 @@ const AddClient = () => {
 
           <Grid item xs={12} sm={6}>
             <CustomSelect
-              label="City *"
+              label="City   "
               value={formData.city}
               onChange={(e) => handleInputChange('city', e.target.value as string)}
               options={cityOptions}

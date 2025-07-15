@@ -37,7 +37,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error("API error:", {
-      message: error.message,
+      message: error.message, 
       status: error.response?.status,
       statusText: error.response?.statusText,
       data: error.response?.data,

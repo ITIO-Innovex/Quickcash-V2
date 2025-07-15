@@ -13,12 +13,12 @@ module.exports = {
             data: null
           })
         }
-
+        
         var Image1  = "";
         if(req.files.logo) {
           Image1 = req.files.logo[0].filename;
         }
-
+        
         const ObjectId = mongoose.Types.ObjectId;
         await InvoiceSetting.deleteMany({user: new ObjectId(user)});
         const invtempsetting = await InvoiceSetting.create({
@@ -43,7 +43,7 @@ module.exports = {
           })
         }
                  
-        return res.status(200).json({
+        return res.status(201).json({
           status: 201,
           message: "Data has been saved !!!",
           data:invtempsetting
