@@ -54,7 +54,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleColorMode, mode }) => {
         }}
       >
         <Box component="li"  >
-          <Button href="#" color="inherit">Blog</Button>
+          <Button color="inherit" component={Link} to="/">Blog</Button>
         </Box>
        <Box component="li" >
         <Button color="inherit" component={Link} to="/contact">
@@ -63,7 +63,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleColorMode, mode }) => {
       </Box>
         {/* Auth links */}
         <Box component="li" className="auth-links">
-            <Button href="#" color="inherit" onClick={login} >Login</Button>
+            <Button  color="inherit" onClick={login} >Login</Button>
           </Box>
           <Box component="li">
             <CustomButton  color="inherit" variant="contained" className="cta" onClick={signup}>
