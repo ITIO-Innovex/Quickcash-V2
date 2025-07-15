@@ -119,7 +119,19 @@ const EmailVerifyModal: React.FC<EmailVerifyModalProps> = ({ open, onClose, onPr
         <Box className="resend-section">
           <Typography className="resend-text">
             Didn't receive the email?{' '}
-            <span className="resend-button" onClick={handleResendCode}>
+            <span
+              className="resend-button"
+              style={{
+                color: isResendDisabled ? '#aaa' : '#1976d2',
+                cursor: isResendDisabled ? 'not-allowed' : 'pointer',
+                textDecoration: isResendDisabled ? 'none' : 'underline',
+                pointerEvents: isResendDisabled ? 'none' : 'auto',
+              }}
+              onClick={() => {
+                if (!isResendDisabled) handleResendCode();
+              }}
+              aria-disabled={isResendDisabled}
+            >
               Resend Code
             </span>
           </Typography>

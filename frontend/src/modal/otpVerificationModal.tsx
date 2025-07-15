@@ -28,6 +28,7 @@ const OTPVerificationModal: React.FC<OTPVerificationModalProps> = ({
   const [generatedOtp, setGeneratedOtp] = useState('');
   const [timeLeft, setTimeLeft] = useState(120);
   const [isOtpExpired, setIsOtpExpired] = useState(false);
+  const [isResendDisabled, setIsResendDisabled] = useState(true);
 
   useEffect(() => {
     if (open) {
@@ -36,9 +37,11 @@ const OTPVerificationModal: React.FC<OTPVerificationModalProps> = ({
       setOtp(['', '', '', '']);
       setTimeLeft(120);
       setIsOtpExpired(false);
+      setIsResendDisabled(true);
 
       const expireTimer = setTimeout(() => {
         setIsOtpExpired(true);
+        setIsResendDisabled(false);
         toast.error('OTP expired');
       }, 2 * 60 * 1000);
 
@@ -105,11 +108,13 @@ const OTPVerificationModal: React.FC<OTPVerificationModalProps> = ({
   };
 
   const handleResendOtp = () => {
+    if (isResendDisabled) return;
     const newOtp = generateOTP();
     setGeneratedOtp(newOtp);
     setOtp(['', '', '', '']);
     setTimeLeft(120);
     setIsOtpExpired(false);
+    setIsResendDisabled(true);
 
     toast.success('New OTP sent');
     toast.info(`[TEST OTP: ${newOtp}]`);
@@ -165,7 +170,17 @@ const OTPVerificationModal: React.FC<OTPVerificationModalProps> = ({
         <Box className="otp-resend-section">
           <Typography className="otp-resend-text">
             Didn't receive the code?{' '}
-            <span className="resend-button" onClick={handleResendOtp}>
+            <span
+              className="resend-button"
+              style={{
+                color: isResendDisabled ? '#aaa' : '#1976d2',
+                cursor: isResendDisabled ? 'not-allowed' : 'pointer',
+                textDecoration: isResendDisabled ? 'none' : 'underline',
+                pointerEvents: isResendDisabled ? 'none' : 'auto',
+              }}
+              onClick={handleResendOtp}
+              aria-disabled={isResendDisabled}
+            >
               Resend Code
             </span>
           </Typography>

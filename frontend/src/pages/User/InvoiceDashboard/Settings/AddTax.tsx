@@ -1,13 +1,18 @@
+import axios from 'axios';
+import {jwtDecode} from 'jwt-decode';
+import api from '@/helpers/apiHelper';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CustomButton from '@/components/CustomButton';
 import CustomInput from '@/components/CustomInputField';
 import PageHeader from '@/components/common/pageHeader';
+const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 import { Box, Typography, RadioGroup, FormControlLabel, Radio } from '@mui/material';
+import { useAppToast } from '@/utils/toast';
 
 const AddTax = () => {
   const navigate = useNavigate();
-
+  const toast = useAppToast();
   const [taxData, setTaxData] = useState({
     name: '',
     rate: '',
@@ -19,6 +24,43 @@ const AddTax = () => {
     rate: false,
   });
 
+  // Placeholder validate and alertnotify functions
+  const validate = (field: string, value: string) => {
+    if (!value || value.trim() === '') return `${field} is required`;
+    return '';
+  };
+  const HandleCreateTax = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate('name', taxData.name) && !validate('rate', taxData.rate)) {
+      try {
+        const decoded: any = jwtDecode(localStorage.getItem('token') as string);
+        const response = await api.post(`/${url}/v1/tax/add`, {
+          user: decoded?.data?.id,
+          name: taxData.name,
+          value: taxData.rate,
+          isDefault: taxData.isDefault
+        });
+        console.log('API response:', response);
+        if (response.data.status == 201) {
+          toast.success(response.data.message);
+          navigate('/settings');
+        }
+      } catch (error: any) {
+        console.log("error", error);
+        toast.error(error?.response?.data?.message);
+      }
+    } else {
+      if (validate('name', taxData.name)) {
+        const result = validate('name', taxData.name);
+        // console.log(result);
+      }
+      if (validate('rate', taxData.rate)) {
+        const result = validate('rate', taxData.rate);
+        // console.log(result);
+      }
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setTaxData(prev => ({ ...prev, [name]: value }));
@@ -28,23 +70,9 @@ const AddTax = () => {
     setTaxData(prev => ({ ...prev, isDefault: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setTouched({ name: true, rate: true });
-
-    if (!taxData.name.trim() || !taxData.rate.trim()) {
-      return;
-    }
-
-    console.log("Form Submitted:", taxData);
-    // Here you can POST data to backend
-    navigate('/invoices'); // back to listing after save
-  };
-
   return (
-      <Box component="form" onSubmit={handleSubmit} className="dashboard-container" >
+      <Box component="form" onSubmit={HandleCreateTax} className="dashboard-container" >
         <PageHeader title='Add-tax' />
-      <Typography variant="h5">Invoices/Add-Tax</Typography>
     <Box className="add-tax-form" >
       <CustomInput
         label="Name"
