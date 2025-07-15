@@ -3,12 +3,15 @@ import {
   Box,
   Typography,
 } from '@mui/material';
+import api from '@/helpers/apiHelper';
+import { useAppToast } from '@/utils/toast';
 import { useNavigate } from 'react-router-dom';
 import CustomButton from '@/components/CustomButton';
 import CustomInput from '@/components/CustomInputField';
-
+const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api'; 
 const ContactForm = () => {
   const navigate = useNavigate();
+  const toast = useAppToast();
   const [formData, setFormData] = useState({
     fullName: '',
     contactNumber: '',
@@ -22,16 +25,31 @@ const ContactForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Submitted Data:', formData);
-    navigate('/');
+    try {
+      const res = await api.post(`/${url}/v1/contact/send`, formData);
+      toast.success(res.data.message || 'Message sent successfully!');
+      setFormData({
+        fullName: '',
+        contactNumber: '',
+        companyName: '',
+        email: '',
+        description: '',
+      });
+      navigate('/');
+    } catch (error) {
+      console.error('Email Send Error:', error);
+      toast.error(
+        error?.response?.data?.message || 'Something went wrong while sending your message.'
+      );
+    }
   };
 
   return (
     <Box className="contact-form-wrapper">
       <Box className="contact-form-box">
-        <Typography variant="h4" className="form-heading">
+        <Typography variant="h6" className="form-heading">
           Contact Us
         </Typography>
 

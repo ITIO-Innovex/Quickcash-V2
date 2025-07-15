@@ -75,26 +75,27 @@ import SelectBeneficiary from '@/pages/User/dashboardInsideForms/sendMoney/selec
 
 // ===========Digital Signature Route ==================
 // import DigitalSignature from '@/pages/User/DigitalSignature'; //previous dashboard
-import SignYourSelf from '@/pages/User/DigitalSignature/SignYourSelf';
-import PlaceholderSign from '@/pages/User/DigitalSignature/PlaceHolderSign.jsx';
-import SignYourSelfForm from '@/pages/User/DigitalSignature/SignYourSelfForm';
-import RequestSignatureForm from '@/pages/User/DigitalSignature/RequestSignatureForm';
-import DigitalSignatureGuestLogin from '@/pages/User/DigitalSignature/GuestLogin';
-import DigitalSignaturePdfRequestFiles from '@/pages/User/DigitalSignature/PdfRequestFiles';
-import DigitalSignatureDocSuccessPage from '@/pages/User/DigitalSignature/DocSuccessPage';
-import InProgressDocumentsTable from '@/pages/User/DigitalSignature/InProgressDocumentsTable';
-import CompletedDocumentsTable from '@/pages/User/DigitalSignature/CompletedDocumentsTable';
-import DraftDocumentsTable from '@/pages/User/DigitalSignature/DraftDocumentsTable';
 import TemplatePage from '@/pages/User/DigitalSignature/TemplatePage';
+import SignYourSelf from '@/pages/User/DigitalSignature/SignYourSelf';
 import DigitalDashboard from '@/pages/User/DigitalSignature/DummyFile';
 import AnalyticsData from '@/pages/User/DigitalSignature/AnalyticsData.jsx';
+import SignYourSelfForm from '@/pages/User/DigitalSignature/SignYourSelfForm';
+import PlaceholderSign from '@/pages/User/DigitalSignature/PlaceHolderSign.jsx';
+import DigitalSignatureGuestLogin from '@/pages/User/DigitalSignature/GuestLogin';
+import DraftDocumentsTable from '@/pages/User/DigitalSignature/DraftDocumentsTable';
+import RequestSignatureForm from '@/pages/User/DigitalSignature/RequestSignatureForm';
+import DigitalSignatureDocSuccessPage from '@/pages/User/DigitalSignature/DocSuccessPage';
+import CompletedDocumentsTable from '@/pages/User/DigitalSignature/CompletedDocumentsTable';
+import DigitalSignaturePdfRequestFiles from '@/pages/User/DigitalSignature/PdfRequestFiles';
+import InProgressDocumentsTable from '@/pages/User/DigitalSignature/InProgressDocumentsTable';
 // ===========Digital Signature Route End ==============
 import { useAuth } from '@/contexts/authContext';
+import PrivacyPolicy from '@/pages/LandingPage/PrivacyPolicy';
 import ResetPassword from '@/pages/User/AccountSection/ResetPassword';
 import UserNotification from '@/pages/User/Notification/notification';
-import InvoiceEcommercePayment from '../pages/User/InvoiceDashboard/Invoices/InvoicePay';
 import QuotesView from '@/pages/User/InvoiceDashboard/InvoiceQuote/QuoteView';
 import ResponseInvoice from '@/pages/User/InvoiceDashboard/Invoices/InvoiceResponse';
+import InvoiceEcommercePayment from '../pages/User/InvoiceDashboard/Invoices/InvoicePay';
 
 // --- Auth Route Wrapper ---
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
@@ -151,14 +152,14 @@ const AdminProtectedRoute = ({ children }: { children: JSX.Element }) => {
 const guestRoutes = [
   { path: '/', element: <Home /> },
   { path: '*', element: <NotFound /> },
+  { path: '*', element: <NotFound /> },
   { path: '/login', element: <UserLogin /> },
   { path: '/contact', element: <Contact /> },
   { path: '/register', element: <UserSignup /> },
   { path: '/login-admin', element: <AdminLogin /> },
-  { path: '/forgot-password', element: <ForgotPasswordPage /> },
+  { path: '/privacy-policy', element: <PrivacyPolicy /> },
   { path: '/reset-password/*', element: <ResetPassword /> },
-  { path: '/contact', element: <Contact /> },
-  { path: '*', element: <NotFound /> },
+  { path: '/forgot-password', element: <ForgotPasswordPage /> },
   { path: '/invoice-pay', element: <InvoiceEcommercePayment /> },
 
 ];
