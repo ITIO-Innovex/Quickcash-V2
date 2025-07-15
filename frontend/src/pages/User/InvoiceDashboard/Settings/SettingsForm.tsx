@@ -55,11 +55,11 @@ const SettingsForm = () => {
               padding: '12px 24px',
               color: theme.palette.text.secondary,
               '&.Mui-selected': {
-                color: theme.palette.primary.main,
+                color: '#483594',
               },
             },
             '& .MuiTabs-indicator': {
-              backgroundColor: theme.palette.primary.main,
+              backgroundColor: '#483594',
             },
           }}
         >

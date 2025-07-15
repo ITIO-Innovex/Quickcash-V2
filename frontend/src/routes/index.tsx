@@ -44,8 +44,10 @@ import BuySellSwapForm from '@/pages/User/BuySellSwap/FormPage';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import ResponseStripe from '@/pages/User/Payment/ResponseStripe';
 import TransferReuest from '@/pages/Admin/Crypto/Transfers/main';
+import AddQr from '@/pages/User/InvoiceDashboard/Settings/AddQr';
 import AllAccounts from '@/pages/User/AccountSection/allAccounts';
 import BusinessRegister from '@/pages/User/BusinessRegister/main';
+import AddTax from '@/pages/User/InvoiceDashboard/Settings/AddTax';
 import Settings from '@/pages/User/InvoiceDashboard/Settings/main';
 import CardDetail from '@/pages/User/cards/card-details/cardDetail';
 import WalletRequest from '@/pages/Admin/Crypto/WalletRequests/main';
@@ -167,18 +169,20 @@ const authRoutes = [
   { path: '/refer-earn', element: <ReferEarn /> },
   { path: '/add-client', element: <AddClient /> },
   { path: '/statements', element: <Statements /> },
+  { path: '/new-invoice', element: <NewInvoice /> },
   { path: '/dashboard', element: <UserDashboard /> },
   { path: '/card-details', element: <CardDetail /> },
   { path: '/buysellswap', element: <BuySellSwap /> },
+  { path: '/settings/add-tax', element: <AddTax  /> },
   { path: '/user-profile', element: <UserProfile /> },
   { path: '/admin-dashboard', element: <Dashboard /> },
   { path: '/transactions', element: <Transactions /> },
+  { path: '/settings/add-qr-code', element: <AddQr  /> },
   { path: '/account-section', element: <AllAccounts /> },
   { path: '/invoice-quotes', element: <InvoiceQuotes /> },
   { path: '/manual-payment', element: <ManualPayment /> },
   { path: '/beneficiary', element: <SelectBeneficiary /> },
   { path: '/invoice-section', element: <InvoiceSection /> },
-  { path: '/new-invoice', element: <NewInvoice /> },
   { path: '/buysellswap/proceed', element: <ProceedPage /> },
   { path: '/invoice-products', element: <InvoiceProduct /> },
   { path: '/invoice-category', element: <InvoiceCategory /> },

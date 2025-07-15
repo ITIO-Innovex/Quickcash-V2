@@ -94,7 +94,7 @@ const HandleRequestWalletAddress = async () => {
 
   try {
   const response = await api.post(
-  "http://localhost:5000/api/v1/walletaddressrequest/add", 
+  `api/v1/walletaddressrequest/add`, 
   payload, {
       headers: {
         Authorization: `Bearer ${token}`,
