@@ -1,67 +1,102 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
   Grid,
   IconButton,
+  FormControl,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import CustomButton from '@/components/CustomButton';
 import CustomTextField from '@/components/CustomTextField';
 import CustomSelect from '@/components/CustomDropdown';
-
+import api from '@/helpers/apiHelper';
+import { useAppToast } from '@/utils/toast';
+import { jwtDecode } from 'jwt-decode';
+import ReactFlagsSelect from 'react-flags-select';
+interface JwtPayload {
+  sub: string;
+  role: string;
+  iat: number;
+  exp: number;
+  data: {
+    defaultcurr: string;
+    email: string;
+    id: string;
+    name: string;
+    type: string;
+  };
+}
 const AddBeneficiaryForm: React.FC = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    country: '',
-    accountNumber: '',
-    bankName: '',
-    swiftCode: '',
-  });
+  const toast = useAppToast();
+  const [name, setName] = React.useState<any>('');
+  const [iban, setIban] = React.useState<any>('');
+  const [email, setEmail] = React.useState<any>('');
+  const [mobile, setMobile] = React.useState<any>('');
+  const [country, setCountry] = React.useState<any>();
+  const [currency, setCurrency] = React.useState<any>();
+  const [bicCode, setBicCode] = React.useState<any>('');
+  const [address, setAddress] = React.useState<any>('');
+  const [bankName, setBankName] = React.useState<any>('');
+  const [currencyList, setCurrencyList] = React.useState<any>([]);
+  const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
+  const HandleCountryCurrency = (code: any) => {
+    setCountry(code);
+  }
 
-  const countries = [
-    { label: 'United States', value: 'US' },
-    { label: 'United Kingdom', value: 'GB' },
-    { label: 'Canada', value: 'CA' },
-    { label: 'Australia', value: 'AU' },
-    { label: 'India', value: 'IN' },
-    { label: 'Germany', value: 'DE' },
-  ];
+  useEffect(() => {
+    getListCurrencyData();
+  }, []);
+  const getListCurrencyData = async () => {
+    await api.get(`/${url}/v1/currency/currency-list`)
+      .then(result => {
+        if (result.data.status == 201) {
+          setCurrencyList(result?.data?.data);
+        }
+      })
+      .catch(error => {
+        console.log("error", error);
+      })
+  }
+  const HandleSaveIndividualData = async () => {
+    const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
+    await api.post(`/${url}/v1/receipient/add`, {
+      "name": name,
+      "rtype": "Individual",
+      "user": accountId?.data?.id,
+      "iban": iban,
+      "bic_code": bicCode,
+      "country": country,
+      "currency": currency,
+      "amount": 0,
+      "mobile": mobile,
+      "email": email,
+      "address": address,
+      "bankName": bankName,
+      "status": true
+    },)
+      .then(result => {
+        if (result.data.status == "201") {
+          setName(''); setCountry('');
+          setIban(''); setCurrency('');
+          setMobile(''); setAddress('');
+          setEmail(''); setBankName('');
+          toast.success(result.data.message);
+        }
+      })
+      .catch(error => {
+        console.log("error", error);
+        toast.error(error.response.data.message);
+      })
+  }
+
 
   const handleBack = () => {
     navigate('/beneficiary');
   };
-
-  const handleInputChange = (field: string) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: event.target.value
-    }));
-  };
-
-  const handleCountryChange = (event: any) => {
-    setFormData(prev => ({
-      ...prev,
-      country: event.target.value
-    }));
-  };
-
-  const handleSubmit = () => {
-    // Handle form submission
-    console.log('Beneficiary data:', formData);
-    navigate('/beneficiary');
-  };
-
-  const isFormValid = formData.firstName && formData.lastName && formData.email && 
-                     formData.country && formData.accountNumber && formData.bankName;
 
   return (
     <Box className="add-beneficiary-container" sx={{ p: 3 }}>
@@ -79,52 +114,28 @@ const AddBeneficiaryForm: React.FC = () => {
           <Grid item xs={12} sm={6}>
             <CustomTextField
               label="First Name"
-              value={formData.firstName}
-              onChange={handleInputChange('firstName')}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               fullWidth
               required
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <CustomTextField
-              label="Last Name"
-              value={formData.lastName}
-              onChange={handleInputChange('lastName')}
-              fullWidth
-              required
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <CustomTextField
-              label="Email Address"
+              label="Email"
               type="email"
-              value={formData.email}
-              onChange={handleInputChange('email')}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               fullWidth
               required
             />
           </Grid>
           <Grid item xs={12}>
             <CustomTextField
-              label="Phone Number"
-              value={formData.phone}
-              onChange={handleInputChange('phone')}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <CustomSelect
-              label="Country"
-              options={countries}
-              value={formData.country}
-              onChange={handleCountryChange}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <CustomTextField
-              label="Account Number"
-              value={formData.accountNumber}
-              onChange={handleInputChange('accountNumber')}
+              label="Mobile Number"
+              type="number"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
               fullWidth
               required
             />
@@ -132,18 +143,54 @@ const AddBeneficiaryForm: React.FC = () => {
           <Grid item xs={12}>
             <CustomTextField
               label="Bank Name"
-              value={formData.bankName}
-              onChange={handleInputChange('bankName')}
+              value={bankName}
+              onChange={(e) => setBankName(e.target.value)}
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <label>Country</label>
+            <FormControl
+              fullWidth
+            >
+              <ReactFlagsSelect
+                selected={country}
+                onSelect={HandleCountryCurrency}
+                searchable
+                showOptionLabel={true}
+                showSelectedLabel={true}
+              />
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <CustomSelect
+              label="Currency"
+              value={currency}
+              onSelect={(code) => setCurrency(code)}
+              options={currencyList?.map((item) => ({
+                label: item?.CurrencyName,
+                value: item?.CurrencyCode
+              }))}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <CustomTextField
+              label="IBAN / AC"
+              value={iban}
+              onChange={(e) => setIban(e.target.value)}
               fullWidth
               required
             />
           </Grid>
           <Grid item xs={12}>
             <CustomTextField
-              label="SWIFT/BIC Code"
-              value={formData.swiftCode}
-              onChange={handleInputChange('swiftCode')}
+              label="Routing/IFSC/BIC/SwiftCode"
+              value={bicCode}
+              onChange={(e) => setBicCode(e.target.value)}
               fullWidth
+              required
             />
           </Grid>
         </Grid>
@@ -162,8 +209,7 @@ const AddBeneficiaryForm: React.FC = () => {
             </Grid>
             <Grid item xs={6}>
               <CustomButton
-                onClick={handleSubmit}
-                disabled={!isFormValid}
+                onClick={HandleSaveIndividualData}
                 fullWidth
               >
                 Add Beneficiary
