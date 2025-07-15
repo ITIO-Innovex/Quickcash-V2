@@ -1,9 +1,10 @@
 import axios from 'axios';
 import {jwtDecode} from 'jwt-decode';
-import React, { useEffect, useState } from 'react';
+import api from '@/helpers/apiHelper';
 import { useAppToast } from '@/utils/toast';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/material.css';
+import React, { useEffect, useState } from 'react';
 import CustomButton from '@/components/CustomButton';
 import type { CountryData } from 'react-phone-input-2';
 import CustomSelect from '@/components/CustomDropdown';
@@ -15,7 +16,6 @@ const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 const GeneralSettings = ({ invoicesetting_id }: { invoicesetting_id?: string }) => {
   const theme = useTheme();
   const toast = useAppToast();
-  
   const [formData, setFormData] = useState({
     companyName: '',
     phone: '',
@@ -51,11 +51,7 @@ useEffect(() => {
       const decoded = jwtDecode<{ data: { id: string } }>(token);
       const userId = decoded.data.id;
 
-      const res = await axios.get(`/${url}/v1/invoicesetting/list/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const res = await api.get(`/${url}/v1/invoicesetting/list/${userId}`);
       console.log(res.data);
       
       if (res?.data?.status === 201) {

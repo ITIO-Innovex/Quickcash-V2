@@ -259,9 +259,8 @@ const handleEmailVerifySuccess = async () => {
       <Grid container spacing={3}>
         {/* Email */}
       <Grid item xs={12}>
-              <Box className="input-section">
+              <Box >
                 <Typography className="input-label">EMAIL</Typography>
-
                 <Box className="unified-phone-input"> 
                   <Box > 
                     <input
@@ -318,6 +317,7 @@ const handleEmailVerifySuccess = async () => {
               autoFocus: true,
               readOnly: isPrimaryPhoneVerified,
             }}
+            specialLabel=""
           />
 
             <span
@@ -363,6 +363,7 @@ const handleEmailVerifySuccess = async () => {
                   required: true,
                   readOnly: isAdditionalPhoneVerified,
                 }}
+                 specialLabel=""
               />
             <span
               className="verified-badge-inside"

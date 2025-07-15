@@ -194,7 +194,7 @@ module.exports = {
         
     try {
      // Find tax details by id
-     const taxDetails = await Tax.findById({id});
+     const taxDetails = await Tax.findOne({ _id: req.params.id })
      if(!taxDetails) {
       return res.status(500).json({
        status: 500,

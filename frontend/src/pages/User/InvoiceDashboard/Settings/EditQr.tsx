@@ -1,17 +1,77 @@
-import axios from 'axios';
+import { useEffect } from 'react';
 import { useState } from 'react';
+import api from '@/helpers/apiHelper'
 import { jwtDecode } from 'jwt-decode';
 import { useAppToast } from '@/utils/toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate ,useParams } from 'react-router-dom';
 import CustomButton from '@/components/CustomButton';
 import CustomInput from '@/components/CustomInputField';
 import PageHeader from '@/components/common/pageHeader';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 import { Box, Typography, Radio, RadioGroup, FormControlLabel, FormLabel,} from '@mui/material';
 
-const AddPaymentQr = () => {
+const EditPaymentQr = () => {
+  // Submit handler for updating QR code
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const decoded = jwtDecode(localStorage.getItem('token') as string);
+      const form = new FormData();
+      // Extract user id from decoded JWT payload
+      const userId = (decoded as any)?.data?.id || (decoded as any)?.id || '';
+      form.append('user', userId);
+      form.append('title', formData.title);
+      form.append('isDefault', formData.default);
+      if (imageFront3.raw) {
+        form.append('qrCodeImage', imageFront3.raw);
+      }
+      const result = await api.patch(`/${url}/v1/qrcode/update/${id}`, form);
+      
+      if (result.data.status == 201 || result.data.status == "201") {
+        toast.success(result.data.message || 'QR code updated successfully');
+        navigate('/settings?filter=Payment_Qr_Code');
+      } else {
+        toast.error(result.data.message || 'Update failed');
+      }
+    } catch (error: any) {
+      console.log("error", error);
+      toast.error(error?.response?.data?.message || 'Error updating QR code');
+    }
+  };
   const navigate = useNavigate();
+  const { id } = useParams();
   const toast = useAppToast();
+
+  // Fetch QR details by id
+  const getDetailsById = async (val: any) => {
+    try {
+      const result = await api.get(`/${url}/v1/qrcode/${val}`);
+      if (result.data.status == 201) {
+        setFormData((prev) => ({
+          ...prev,
+          title: result.data.data.title || '',
+          default: result.data.data.IsDefault === 'Yes' ? 'yes' : 'no',
+          qrImage: null,
+          qrPreview: result.data.data.image
+        }));
+        setImageFront3((prev) => ({
+          ...prev,
+          preview: result.data.data.image ? `${import.meta.env.VITE_PUBLIC_URL}/qrcode/${result.data.data.image}` : '',
+          raw: null
+        }));
+      }
+    } catch (error: any) {
+      console.log("error", error);
+      toast.error(error?.response?.data?.message || 'Failed to fetch QR details');
+    }
+  };
+
+
+  useEffect(() => {
+    if (id) {
+      getDetailsById(id);
+    }
+  }, [id]);
     const [formData, setFormData] = useState({
     title: '',
     default: 'no',
@@ -48,54 +108,10 @@ const AddPaymentQr = () => {
     }
   };
 
-  // Placeholder validate and alertnotify
-  const validate = (field, value) => {
-    if (!value || value === '') return `${field} is required`;
-    return '';
-  };
-  const alertnotify = (msg, type) => {
-    alert(`${type}: ${msg}`);
-  };
-
-  const HandleCreatePaymentQrCode = async (e) => {
-    e.preventDefault();
-    if (!validate('title', formData.title) && !validate('files[]', imageFront3.raw)) {
-      try {
-        const decoded: any = jwtDecode(localStorage.getItem('token') as string);
-        const form = new FormData();
-        form.append('user', decoded?.data?.id);
-        form.append('title', formData.title);
-        form.append('qrCodeImage', imageFront3.raw);
-        form.append('isDefault', formData.default);
-        const result = await axios.post(`/${url}/v1/qrcode/add`, form, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        if (result.data.status == 201 ) {
-          toast.success(result.data.message);
-          navigate('/settings');
-        }
-      } catch (error) {
-        console.log("error", error);
-        toast.error(error?.response?.data?.message );
-      }
-    } else {
-      if (validate('title', formData.title)) {
-        const result = validate('title', formData.title);
-        toast.error(result);
-      }
-      if (validate('files[]', imageFront3.raw)) {
-        const result = validate('files[]', imageFront3.raw);
-        toast.error(result);
-      }
-    }
-  };
 
   return (
-    <Box component="form" onSubmit={HandleCreatePaymentQrCode} className="dashboard-container" >
-      <PageHeader title='Add-tax' />
+    <Box component="form" className="dashboard-container" onSubmit={handleSubmit} >
+      <PageHeader title={`Edit-Qr-Code/${id}`} />
       <CustomInput
         label="Title"
         name="title"
@@ -141,10 +157,10 @@ const AddPaymentQr = () => {
       </Box>
 
       <Box className="form-button">
-        <CustomButton type="submit">Submit</CustomButton>
+        <CustomButton type="submit">Update</CustomButton>
       </Box>
     </Box>
   );
 };
 
-export default AddPaymentQr;
+export default EditPaymentQr;
