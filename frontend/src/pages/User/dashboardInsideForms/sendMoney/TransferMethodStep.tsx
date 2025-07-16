@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Box,
@@ -37,12 +36,13 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
 }) => {
   const theme = useTheme();
   // --- Static method selection logic ---
+  const currency = (formData.toCurrency || formData.selectedCurrency || '').split('-')[0];
   let staticMethod: 'sepa' | 'ach' | 'swift' | null = null;
-  if (formData.selectedCurrency === 'EUR') {
+  if (currency === 'EUR') {
     staticMethod = 'sepa';
-  } else if (formData.selectedCurrency === 'USD') {
+  } else if (currency === 'USD') {
     staticMethod = 'ach';
-  } else if (formData.selectedCurrency) {
+  } else if (currency) {
     staticMethod = 'swift';
   }
   // If staticMethod is set, override state
@@ -57,7 +57,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
     purpose: '',
     remittanceInfo: '',
     executionDate: '',
-    
+
     // SWIFT fields
     beneficiaryAddress: '',
     accountNumber: '',
@@ -67,7 +67,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
     currency: '',
     transferMessage: '',
     intermediaryBank: '',
-    
+
     // ACH fields
     routingNumber: '',
     achAccountNumber: '',
@@ -145,7 +145,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
   };
 
   const handleContinue = () => {
-    updateFormData({ 
+    updateFormData({
       transferMethod: selectedMethod,
       transferFormData: formFields,
       info: formFields.purpose || formFields.paymentDescription || '',
@@ -163,14 +163,14 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
 
   // SEPA Form Component
   const SEPAForm = () => (
-    <Box sx={{p:2}}>
-      <Typography variant="h6"  sx={{color:theme.palette.text.primary}}>
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h6" sx={{ color: theme.palette.text.primary }}>
         SEPA Transfer Details
       </Typography>
       <Typography variant="body2" className="form-subtitle">
         Single Euro Payments Area - EUR transfers within Europe
       </Typography>
-      
+
       <Grid container spacing={3} sx={{ mt: 1 }}>
         <Grid item xs={12}>
           <CustomTextField
@@ -179,10 +179,10 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             placeholder="DE89 3704 0044 0532 0130 00"
             value={formFields.iban}
             onChange={(e) => handleFieldChange('iban', e.target.value)}
-            // helperText="International Bank Account Number"
+          // helperText="International Bank Account Number"
           />
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <CustomTextField
             fullWidth
@@ -190,10 +190,10 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             placeholder="COBADEFFXXX"
             value={formFields.bicSwift}
             onChange={(e) => handleFieldChange('bicSwift', e.target.value)}
-            // helperText="Optional for SEPA transfers"
+          // helperText="Optional for SEPA transfers"
           />
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <CustomTextField
             fullWidth
@@ -203,7 +203,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('beneficiaryName', e.target.value)}
           />
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <CustomTextField
             fullWidth
@@ -214,7 +214,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             disabled
           />
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <CustomTextField
             fullWidth
@@ -225,7 +225,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('executionDate', e.target.value)}
           />
         </Grid>
-        
+
         <Grid item xs={12}>
           <CustomTextField
             fullWidth
@@ -235,7 +235,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('purpose', e.target.value)}
           />
         </Grid>
-        
+
         <Grid item xs={12}>
           <CustomTextField
             fullWidth
@@ -253,14 +253,14 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
 
   // SWIFT Form Component
   const SWIFTForm = () => (
-    <Box sx={{p:2}}>
+    <Box sx={{ p: 2 }}>
       <Typography variant="h6" >
         SWIFT Wire Transfer Details
       </Typography>
       <Typography variant="body2" className="form-subtitle">
         International wire transfer - Global reach, any currency
       </Typography>
-      
+
       <Grid container spacing={3} sx={{ mt: 1 }}>
         <Grid item xs={12} md={6}>
           <CustomTextField
@@ -271,7 +271,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('beneficiaryName', e.target.value)}
           />
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <CustomTextField
             fullWidth
@@ -281,8 +281,8 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('accountNumber', e.target.value)}
           />
         </Grid>
-        
-        <Grid item xs={12}>
+
+        <Grid item xs={12}>          
           <CustomTextField
             fullWidth
             multiline
@@ -293,7 +293,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('beneficiaryAddress', e.target.value)}
           />
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <CustomTextField
             fullWidth
@@ -303,7 +303,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('swiftCode', e.target.value)}
           />
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <CustomTextField
             fullWidth
@@ -313,7 +313,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('bankName', e.target.value)}
           />
         </Grid>
-        
+
         <Grid item xs={12}>
           <CustomTextField
             fullWidth
@@ -325,16 +325,17 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('bankAddress', e.target.value)}
           />
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <CustomTextField
             fullWidth
             label="Currency *"
-            value={formData.selectedCurrency || "N/A"}
+            value={formData.selectedCurrency || formData.toCurrency ||
+              beneficiary.currency || "N/A"}
             InputProps={{ readOnly: true, disabled: true }}
           />
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <CustomTextField
             fullWidth
@@ -345,7 +346,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             disabled
           />
         </Grid>
-        
+
         <Grid item xs={12}>
           <CustomTextField
             fullWidth
@@ -355,7 +356,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('intermediaryBank', e.target.value)}
           />
         </Grid>
-        
+
         <Grid item xs={12}>
           <CustomTextField
             fullWidth
@@ -373,14 +374,14 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
 
   // ACH Form Component
   const ACHForm = () => (
-    <Box sx={{p:2}} >
-      <Typography variant="h6" sx={{color:theme.palette.text.primary}}>
+    <Box sx={{ p: 2 }} >
+      <Typography variant="h6" sx={{ color: theme.palette.text.primary }}>
         ACH Transfer Details
       </Typography>
       <Typography variant="body2" className="form-subtitle">
         Automated Clearing House - USD transfers within the United States
       </Typography>
-      
+
       <Grid container spacing={3} sx={{ mt: 1 }}>
         <Grid item xs={12} md={6}>
           <CustomTextField
@@ -389,10 +390,10 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             placeholder="021000021"
             value={formFields.routingNumber}
             onChange={(e) => handleFieldChange('routingNumber', e.target.value)}
-            // helperText="9-digit bank routing number"
+          // helperText="9-digit bank routing number"
           />
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <CustomTextField
             fullWidth
@@ -402,10 +403,10 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('achAccountNumber', e.target.value)}
           />
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <FormControl fullWidth>
-            
+
             <Select
               value={formFields.accountType}
               onChange={(e) => handleFieldChange('accountType', e.target.value)}
@@ -415,7 +416,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             </Select>
           </FormControl>
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <CustomTextField
             fullWidth
@@ -425,7 +426,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('achBeneficiaryName', e.target.value)}
           />
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <CustomTextField
             fullWidth
@@ -436,7 +437,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             disabled
           />
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <FormControl fullWidth>
             <Select
@@ -448,7 +449,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             </Select>
           </FormControl>
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <FormControl fullWidth>
             <Select
@@ -461,7 +462,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             </Select>
           </FormControl>
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <CustomTextField
             fullWidth
@@ -474,6 +475,33 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
       </Grid>
     </Box>
   );
+
+  const beneficiary = formData.beneficiaryData || {};
+  console.log('Beneficiary Data:', beneficiary);
+  // Pre-fill form fields from beneficiary when beneficiary changes
+  React.useEffect(() => {
+    if (beneficiary && Object.keys(beneficiary).length > 0) {
+        console.log('Setting beneficiaryAddress from:', beneficiary.address);
+  
+      setFormFields(prev => ({
+        ...prev,
+        // SEPA
+        iban: beneficiary.iban || prev.iban,
+        bicSwift: beneficiary.bic_code || prev.bicSwift,
+        beneficiaryName: beneficiary.name || prev.beneficiaryName,
+        // SWIFT
+        accountNumber: beneficiary.iban || prev.accountNumber,
+        swiftCode: beneficiary.bic_code || prev.swiftCode,
+        bankName: beneficiary.bankName || prev.bankName,
+        beneficiaryAddress: beneficiary.address || prev.beneficiaryAddress,
+        // ACH
+        achAccountNumber: beneficiary.iban || prev.achAccountNumber,
+        achBeneficiaryName: beneficiary.name || prev.achBeneficiaryName,
+        // You can add more mappings as needed
+      }));
+    }
+    // eslint-disable-next-line
+  }, [beneficiary?._id]);
 
   return (
     <Box className="transfer-method-step">
@@ -509,7 +537,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
               >
                 <CardContent className="method-content" sx={{ p: 2, textAlign: 'center' }}>
                   <Box className="method-icon" sx={{ mb: 1 }}>
-                    <IconComponent size={24}  />
+                    <IconComponent size={24} />
                   </Box>
                   <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                     {method.title}
@@ -517,10 +545,10 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
                   <Typography variant="caption" sx={{ display: 'block', color: 'text.primary', mb: 1 }}>
                     {method.region}
                   </Typography>
-                  <Chip 
-                    label={`${method.fee} • ${method.time}`} 
-                    size="small" 
-                    sx={{ fontSize: '0.75rem' ,padding:'0.3rem'}} 
+                  <Chip
+                    label={`${method.fee} • ${method.time}`}
+                    size="small"
+                    sx={{ fontSize: '0.75rem', padding: '0.3rem' }}
                   />
                 </CardContent>
               </Card>
@@ -533,8 +561,8 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
 
       {/* Tab Navigation and Forms */}
       <Box className="transfer-forms-section">
-        <Tabs 
-          value={activeTab} 
+        <Tabs
+          value={activeTab}
           onChange={staticMethod ? undefined : handleTabChange}
           className="transfer-tabs"
           centered

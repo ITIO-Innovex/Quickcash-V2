@@ -28,7 +28,7 @@ import CustomButton from '@/components/CustomButton';
 import Flag from 'react-world-flags';
 import CommonTooltip from '@/components/common/toolTip';
 import api from '@/helpers/apiHelper';
-import { useAppToast } from '@/utils/toast'; 
+import { useAppToast } from '@/utils/toast';
 import getSymbolFromCurrency from 'currency-symbol-map';
 import { useFee } from '@/hooks/useFee';
 import axios from 'axios';
@@ -38,7 +38,7 @@ const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 interface Beneficiary {
   id: string;
   name: string;
-  accountNumber: string;
+  iban: string;
   country: string;
   currency: string;
 }
@@ -61,29 +61,29 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
   currencyList
 }) => {
   const theme = useTheme();
-  const toast = useAppToast(); 
-    useEffect(() => {
-      console.log("formData", formData);
-      HandleSendCurrency(formData.sendCurrencyData||'USD-1');
+  const toast = useAppToast();
+  useEffect(() => {
+    console.log("formData", formData);
+    HandleSendCurrency(formData.sendCurrencyData || 'USD-1');
   }, []);
-  const {feeCommision} = useFee("Debit");
+  const { feeCommision } = useFee("Debit");
   const [sendCurrencyCountry, setSendCurrencyCountry] = useState('');
   const [sendCurrency, setSendCurrency] = useState<any>('');
   const [toCurrency, setToCurrency] = useState<any>('');
   const [toCurrencyCountry, setToCurrencyCountry] = useState<any>('');
-  const [Rate,setRate] = useState<any>(0);
-  const [ExchangeError,setExchangeError] = useState<any>('');
-  const [convertedValue,setConvertedValue] = useState<any>(0);
+  const [Rate, setRate] = useState<any>(0);
+  const [ExchangeError, setExchangeError] = useState<any>('');
+  const [convertedValue, setConvertedValue] = useState<any>(0);
   const [sendSideVal, setSendSideVal] = useState('');
   const [sendCurrAccountId, setSendCurrAccountId] = useState('');
   const [recieveCurrency, setRecieveCurrency] = useState('');
-  const [currentBalance,setCurrentBalance] = useState<any>(0);
-  const [fromAmount,setFromAmount] = useState<any>(0);
-  const [feeCharge,setFeeCharge] = useState<any>(0);
+  const [currentBalance, setCurrentBalance] = useState<any>(0);
+  const [fromAmount, setFromAmount] = useState<any>(0);
+  const [feeCharge, setFeeCharge] = useState<any>(0);
   const [transferMethod, setTransferMethod] = useState('Bank transfer');
   const [editingTransferMethod, setEditingTransferMethod] = useState(false);
 
-    const HandleSendCurrency = (val:any) => {
+  const HandleSendCurrency = (val: any) => {
     var valChn = val.split('-');
     console.log("valChn", valChn);
     setSendSideVal(valChn[1]);
@@ -95,28 +95,28 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
     ValidateSendAmountToCurrentAccountBalance(valChn[1]);
   }
 
-  const ValidateSendAmountToCurrentAccountBalance = async (itemValue:any) => {
-    if(itemValue) {
+  const ValidateSendAmountToCurrentAccountBalance = async (itemValue: any) => {
+    if (itemValue) {
       console.log("itemValue", itemValue);
-      try{
-        const result =  await api.get(`/${url}/v1/account/accountbyid/${itemValue}`);
+      try {
+        const result = await api.get(`/${url}/v1/account/accountbyid/${itemValue}`);
         console.log("result", result);
-        if(result.data.status == 201) {
+        if (result.data.status == 201) {
           setCurrentBalance(result?.data?.data?.amount);
-          console.log("Current Balance",result?.data?.data?.amount);
+          console.log("Current Balance", result?.data?.data?.amount);
           var checkVal = parseFloat(fromAmount) + parseFloat(feeCharge);
-          if(checkVal > result?.data?.data?.amount) {
+          if (checkVal > result?.data?.data?.amount) {
             toast.error("User doesn't have enough balance to send money");
             setFromAmount(0);
-          } else if(fromAmount > result?.data?.data?.amount) {
+          } else if (fromAmount > result?.data?.data?.amount) {
             toast.error("User doesn't have enough balance to send money");
             setFromAmount(0);
           }
         }
-      }catch(error) {
+      } catch (error) {
         console.log("Error in ValidateSendAmountToCurrentAccountBalance", error);
       }
-      
+
     }
   }
 
@@ -131,7 +131,7 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
 
   const exchangeRate =
     fromCurrency === 'USD' && toCurrency === 'CAD' ? 1.25 : 1.25;
-    const fee = 550.62;
+  const fee = 550.62;
 
   // Set initial currencies from beneficiary when component mounts
 
@@ -152,14 +152,14 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
     setToCurrency(formData.toCurrency || '');
   }, [formData]);
 
-  const HandleFromAmount = (value:any) => {
+  const HandleFromAmount = (value: any) => {
     setFromAmount(value);
     var checkVal = parseFloat(value) + parseFloat(feeCharge);
-    if(sendCurrency && checkVal > currentBalance) { 
-       toast.error("User doesn't have enough balance to send money");
+    if (sendCurrency && checkVal > currentBalance) {
+      toast.error("User doesn't have enough balance to send money");
       setFromAmount(0);
-    } else if(sendCurrency && value > currentBalance) {
-       toast.error("User doesn't have enough balance to send money");
+    } else if (sendCurrency && value > currentBalance) {
+      toast.error("User doesn't have enough balance to send money");
       setFromAmount(0);
     }
   }
@@ -204,27 +204,27 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
       onNext();
     }
   };
-  const HandleToCurrency = (val:any) => {
+  const HandleToCurrency = (val: any) => {
     var valChn = val.split('-');
     setToCurrency(val);
     setToCurrencyCountry(valChn[2]);
   }
-    useEffect(() => {
+  useEffect(() => {
     calCulateExChangeCurrencyValue();
-  },[sendCurrency,toCurrency, fromAmount]);
+  }, [sendCurrency, toCurrency, fromAmount]);
 
   const calCulateExChangeCurrencyValue = async () => {
-    if(sendCurrency && toCurrency && fromAmount) {
+    if (sendCurrency && toCurrency && fromAmount) {
       var sendCurrencySplit = sendCurrency.split('-');
       var toCurrencySplit = toCurrency.split('-');
       sendCurrencySplit = sendCurrencySplit[0];
       toCurrencySplit = toCurrencySplit[0];
       var valCharge = 0;
-      
-      if(feeCommision?.commissionType == "percentage") {
-        console.log("minimumValue",feeCommision.minimumValue);
-        valCharge = fromAmount*feeCommision?.value/100;
-        if(valCharge < feeCommision.minimumValue) {
+
+      if (feeCommision?.commissionType == "percentage") {
+        console.log("minimumValue", feeCommision.minimumValue);
+        valCharge = fromAmount * feeCommision?.value / 100;
+        if (valCharge < feeCommision.minimumValue) {
           setFeeCharge(feeCommision.minimumValue);
         } else {
           setFeeCharge(valCharge);
@@ -235,11 +235,11 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
       }
 
       // @ts-ignore
-      var checkVal = parseFloat(fromAmount) + parseFloat(valCharge); 
-      if(checkVal > currentBalance) {
+      var checkVal = parseFloat(fromAmount) + parseFloat(valCharge);
+      if (checkVal > currentBalance) {
         toast.error("User doesn't have enough balance to send money");
         setFromAmount(0);
-      } else if(fromAmount > currentBalance) {
+      } else if (fromAmount > currentBalance) {
         toast.error("User doesn't have enough balance to send money");
         setFromAmount(0);
       }
@@ -253,17 +253,17 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
           amount: 1
         },
         headers: {
-         'X-RapidAPI-Key': import.meta.env.VITE_RAPID_API_KEY,
-         'X-RapidAPI-Host': import.meta.env.VITE_RAPID_API_HOST
+          'X-RapidAPI-Key': import.meta.env.VITE_RAPID_API_KEY,
+          'X-RapidAPI-Host': import.meta.env.VITE_RAPID_API_HOST
         }
       };
-       
+
       try {
         const response = await axios.request(options);
         console.log("response", response);
-        if(response.data.success) {
-          setConvertedValue(response.data.result.convertedAmount*fromAmount);
-          console.log("Converted Value", response.data.result.convertedAmount*fromAmount);
+        if (response.data.success) {
+          setConvertedValue(response.data.result.convertedAmount * fromAmount);
+          console.log("Converted Value", response.data.result.convertedAmount * fromAmount);
           setRate(parseFloat(response.data.result.convertedAmount).toFixed(2));
         } else {
           setExchangeError(response.data.validationMessage[0]);
@@ -288,7 +288,7 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
             <strong>{selectedBeneficiary.country}</strong>
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Account: {selectedBeneficiary.accountNumber}
+            Account: {selectedBeneficiary.iban}
           </Typography>
         </Box>
       )}
@@ -309,18 +309,18 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
           <Typography variant="body2" sx={{ fontWeight: 500 }}>
             Guaranteed for 24h
           </Typography>
-          <Box sx={{ ml: 'auto' }}>
+          {/* <Box sx={{ ml: 'auto' }}>
             <IconButton size="small" onClick={handleSwapCurrencies}>
               <ArrowUpDown size={16} />
             </IconButton>
-          </Box>
+          </Box> */}
         </Box>
 
         {/* You Send Section */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="body2" color="text.primary" sx={{ mb: 1 }}>
             You send exactly
-              {sendCurrency && <>{" (Avl. Bal = "}{getSymbolFromCurrency(sendCurrency)}{parseFloat(currentBalance).toFixed(2).length > 5 ? parseFloat(currentBalance).toFixed(2)?.substring(0,5)+'...' : parseFloat(currentBalance).toFixed(2) }{")"}</>}
+            {sendCurrency && <>{" (Avl. Bal = "}{getSymbolFromCurrency(sendCurrency)}{parseFloat(currentBalance).toFixed(2).length > 5 ? parseFloat(currentBalance).toFixed(2)?.substring(0, 5) + '...' : parseFloat(currentBalance).toFixed(2)}{")"}</>}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <Box
@@ -331,7 +331,7 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
                 minWidth: '120px',
               }}
             >
-              {sendCurrencyCountry&& (
+              {sendCurrencyCountry && (
                 <Flag
                   code={sendCurrencyCountry}
                   height="20"
@@ -358,6 +358,11 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
               type="number"
               value={fromAmount}
               onChange={(e) => HandleFromAmount(e.target.value)}
+              onFocus={(e) => {
+                if (fromAmount === 0 || fromAmount === "0") {
+                  HandleFromAmount('');
+                }
+              }}
               variant="outlined"
               size="small"
               sx={{
@@ -375,23 +380,37 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
 
         <Divider sx={{ my: 2 }} />
 
-        {/* Recipient Gets Section */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="body2" color="text.primary" sx={{ mb: 1 }}>
             Recipient gets
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mr: 2, minWidth: '120px' }}>
-              {formData.selectedCurrency && formData.selectedCurrencyCountry && (
-                <Flag
-                  code={formData.selectedCurrencyCountry}
-                  height="20"
-                  style={{ marginRight: 8 }}
-                />
-              )}
-              <Box sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
-                {getSymbolFromCurrency(formData.selectedCurrency)} {formData.selectedCurrency}
-              </Box>
+              {(() => {
+                const currencyCode = toCurrency?.split('-')[0] || '';
+                let countryCode = toCurrency?.split('-')[2];
+                if (!countryCode && currencyList && currencyCode) {
+                  const found = currencyList.find(
+                    c => c.currency === currencyCode || c.base_code === currencyCode
+                  );
+                  countryCode = found?.country || found?.countryCode || '';
+                }
+                return (
+                  <>
+                    {countryCode && (
+                      <Flag
+                        code={countryCode}
+                        height="20"
+                        style={{ marginRight: 8 }}
+                      />
+                    )}
+                    <Box sx={{ fontWeight: 600, fontSize: '1.1rem', display: 'flex', alignItems: 'center' }}>
+                      <span style={{ marginRight: 4 }}>{getSymbolFromCurrency(currencyCode)}</span>
+                      <span>{currencyCode}</span>
+                    </Box>
+                  </>
+                );
+              })()}
             </Box>
             <TextField
               type="number"
@@ -489,7 +508,7 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
           </Box>
         </Paper>
 
-        
+
       </Box>
 
       {/* Action Buttons */}

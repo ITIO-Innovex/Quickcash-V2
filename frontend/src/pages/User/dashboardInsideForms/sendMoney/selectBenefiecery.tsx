@@ -122,13 +122,7 @@ const BeneficiarySelectionForm: React.FC = () => {
       // Navigate back to send money with selected beneficiary and currency stored
       navigate("/send-money", {
         state: {
-          selectedBeneficiary: {
-            id: beneficiary.id,
-            name: beneficiary.name,
-            accountNumber: beneficiary.accountNumber,
-            country: beneficiary.country,
-            currency: beneficiary.currency
-          }
+         selectedBeneficiary: beneficiary 
         }
       });
     } else {
@@ -262,9 +256,9 @@ const BeneficiarySelectionForm: React.FC = () => {
 
       {/* Search Bar - Filter beneficiaries by name, account number, or IBAN */}
       <Box className="bene-search-bar" mb={2}>
-        <IconButton onClick={handleBack}>
+        {/* <IconButton onClick={handleBack}>
           <ArrowBackIcon />
-        </IconButton>
+        </IconButton> */}
         <TextField
           fullWidth
           variant="outlined"

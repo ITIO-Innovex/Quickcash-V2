@@ -39,7 +39,7 @@ const SendMoney = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+
   const [activeStep, setActiveStep] = useState(0);
   const [selectedBeneficiary, setSelectedBeneficiary] = useState<Beneficiary | null>(null);
   const [formData, setFormData] = useState({
@@ -57,7 +57,7 @@ const SendMoney = () => {
   const steps = ['Select Destination', 'Select Currencies', 'Transfer Method', 'Transfer Details'];
 
   // API integeration for sending money by Pawnesh Kumar
-  const {list} = useAccount(userId);
+  const { list } = useAccount(userId);
   const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
   const handleBack = () => {
     navigate("/dashboard");
@@ -77,25 +77,30 @@ const SendMoney = () => {
 
   // Navigate to separate beneficiary selection page
   const handleBeneficiaryTab = () => {
-    navigate("/beneficiary", { 
-      state: { 
-        returnToSendMoney: true 
-      } 
+    navigate("/beneficiary", {
+      state: {
+        returnToSendMoney: true
+      }
     });
   };
 
   // Handle beneficiary selection and move to currency step
-  const handleBeneficiarySelect = (beneficiary: Beneficiary) => {
-    setSelectedBeneficiary(beneficiary);
+  const handleBeneficiarySelect = (beneficiary: any) => {
+    // Ensure we always have all fields, and normalize id if needed
+    const fullBeneficiary = {
+      ...beneficiary,
+      id: beneficiary.id || beneficiary._id, // normalize id
+    };
+    setSelectedBeneficiary(fullBeneficiary);
     updateFormData({
-      toCurrency: beneficiary.currency,
-      selectedCountry: beneficiary.country,
-      beneficiaryData: beneficiary,
+      toCurrency: fullBeneficiary.currency,
+      selectedCountry: fullBeneficiary.country,
+      beneficiaryData: fullBeneficiary, // always full object
       user: userId,
       source_account: list?.[0]?._id,
-      recipient: beneficiary.id,
+      recipient: fullBeneficiary.id,
       addedBy: userId,
-      country: beneficiary.country,
+      country: fullBeneficiary.country,
     });
     setActiveStep(1); // Move to currency selection step
   };
@@ -155,6 +160,7 @@ const SendMoney = () => {
         );
       case 2:
         // Step 3: Transfer Method Component - Choose how to send money (bank, card, etc.)
+      
         return (
           <TransferMethodStep
             formData={{ ...formData, convertedAmount: formData.receiveAmount }}
@@ -183,15 +189,15 @@ const SendMoney = () => {
     <Box className="send-money-container">
       {/* Header Section */}
       <Box className="send-money-header">
-          {/* <Typography variant="subtitle1" className="header-subtitle" sx={{color:theme.palette.text.gray}}>
+        {/* <Typography variant="subtitle1" className="header-subtitle" sx={{color:theme.palette.text.gray}}>
             Fast, secure money transfers worldwide
           </Typography> */}
       </Box>
 
       {/* Stepper Navigation - Shows current step progress */}
       <Box className="stepper-container">
-        <Stepper 
-          activeStep={activeStep} 
+        <Stepper
+          activeStep={activeStep}
           className="send-money-stepper"
           orientation={isMobile ? 'vertical' : 'horizontal'}
           sx={{
@@ -210,16 +216,16 @@ const SendMoney = () => {
         >
           {steps.map((label, index) => (
             <Step key={label}>
-              <StepLabel 
+              <StepLabel
                 className={`step-label ${index <= activeStep ? 'active' : ''}`}
               >
-                <Typography className="step-text" sx={{color:theme.palette.text.gray}}>
+                <Typography className="step-text" sx={{ color: theme.palette.text.gray }}>
                   {label}
                 </Typography>
               </StepLabel>
             </Step>
           ))}
-        </Stepper>  
+        </Stepper>
       </Box>
 
       {/* Step Content - Renders the current step component */}
