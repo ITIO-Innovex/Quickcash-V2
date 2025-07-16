@@ -217,11 +217,10 @@ module.exports = {
       if (CurrencyWithSameAccount) {
         return res.status(401).json({
           status: 401,
-          message: "Same Currency Account is already added in our record",
+          message: "An account with the same currency already exists in our records.",
           data: null,
         });
       }
-
       const card = await Card.create({
         user,
         name,

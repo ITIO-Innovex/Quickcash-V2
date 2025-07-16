@@ -94,7 +94,7 @@ const Header: React.FC<HeaderProps> = ({ collapsed }) => {
               }}
             >
               {/* KYC Switch */}
-              <Box
+              {/* <Box
                 className="icon-group"
                 sx={{ display: 'flex', alignItems: 'center' }}
               >
@@ -139,7 +139,7 @@ const Header: React.FC<HeaderProps> = ({ collapsed }) => {
                   labelPlacement="start"
                   // sx={{ mr: 1 }}
                 />
-              </Box>
+              </Box> */}
 
               {/* Notifications */}
               <Box

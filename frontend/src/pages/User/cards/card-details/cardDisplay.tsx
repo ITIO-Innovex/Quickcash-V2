@@ -487,7 +487,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
                     >
                       <Box className="strip" />
 
-                      <Box className="magnetic-strip">123</Box>
+                      <Box className="magnetic-strip">{card.cvv}</Box>
                       <Button
                         className="custom-button"
                         sx={{ alignSelf: "center", mt: 2 }}

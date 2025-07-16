@@ -173,7 +173,7 @@ const CardDisplay: React.FC<{
 const GetCardForm: React.FC<GetCardFormProps> = ({ onClose, currencyOptions, onCardCreated, cardType }) => {
   const toast = useAppToast();
   const url: string = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
-  
+
   const [state, setState] = useState({
     number: '',
     expiry: '',
@@ -227,7 +227,7 @@ const GetCardForm: React.FC<GetCardFormProps> = ({ onClose, currencyOptions, onC
       .toString()
       .padStart(16, '0');
     const expiry = '12/30';
-    const cvc = '123';
+    const cvc = Math.floor(100 + Math.random() * 900).toString();
 
     setState((prev) => ({
       ...prev,
