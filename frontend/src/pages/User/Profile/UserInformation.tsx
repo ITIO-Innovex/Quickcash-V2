@@ -12,6 +12,7 @@ import CustomButton from '@/components/CustomButton';
 import api from '@/helpers/apiHelper';
 import {jwtDecode} from 'jwt-decode';
 import useValidation from '@/helpers/userValidation';
+import { useAppToast } from '@/utils/toast';
 const url = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
 
 interface JwtPayload {
@@ -41,12 +42,14 @@ interface User {
 const UserInformation: React.FC = () => {
   const theme = useTheme();
   const { errors, validate } = useValidation();
+  const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageName, setImageName] = useState<string>('');
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageProfile, setImageProfile] = useState<{ raw: File | null }>({ raw: null });
+  const toast = useAppToast();
 
   const [user, setUser] = useState<User>({
     firstName: '',
@@ -107,44 +110,50 @@ const UserInformation: React.FC = () => {
     fileInputRef.current?.click();
   };
 
-  // SaveUserProfilePic function integrated
   const SaveUserProfilePic = async () => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    console.error("User not authenticated");
-    return;
-  }
-  const decoded = jwtDecode<JwtPayload>(token);
-  if (imageProfile?.raw && !validate('file', imageProfile.raw)) {
-    const formData = new FormData();
-    formData.append('user_id', decoded?.data?.id);
-    formData.append('ownerProfile', imageProfile.raw);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error("User not authenticated");
+      return;
+    }
+    if (imageProfile?.raw && !validate('file', imageProfile.raw)) {
+      const formData = new FormData();
+      formData.append('ownerProfile', imageProfile.raw);
 
-    await api.patch(`/${url}/v1/user/update-profile`, formData, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data'
-      }
-    })
-      .then(result => {
-        if (result.data.status == "201") {
-          getUserDetails();
-          // Success: Profile photo updated
-          window.location.href = "/user-profile";
+      await api.patch(`/${url}/v1/user/update-profile`, formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         }
       })
-      .catch(error => {
-        console.error("error", error);
-        // Error: Upload failed
-      });
-  } else {
-    if (imageProfile?.raw && validate('file', imageProfile.raw)) {
-      validate('files[]', imageProfile.raw);
+        .then(result => {
+          if (result.data.status == 201) {
+            const updatedUser = result.data.data;
+            const newProfilePic = updatedUser.ownerProfile
+              ? `${updatedUser.ownerProfile}?t=${Date.now()}`
+              : '';
+            setUser(prev => ({
+              ...prev,
+              profilePic: newProfilePic
+            }));
+            getUserDetails();
+            setSelectedImage(newProfilePic || null);
+            setImageProfile({ raw: null });
+            setImageName('');
+            toast.success("Profile picture updated successfully");
+          }
+        })
+        .catch(error => {
+          console.error("error", error);
+        });
     } else {
-      console.error("Please select Image");
+      if (imageProfile?.raw && validate('file', imageProfile.raw)) {
+        validate('files[]', imageProfile.raw);
+      } else {
+        console.error("Please select Image");
+      }
     }
-  }
-};
+  };
 
   const handleUpdateClick = () => {
     SaveUserProfilePic();
@@ -187,7 +196,19 @@ const UserInformation: React.FC = () => {
           }}
         >
           <Avatar
-            src={selectedImage || user.profilePic || undefined}
+            src={(() => {
+              // If user.profilePic is a full URL, use it directly
+              if (user.profilePic && (user.profilePic.startsWith('http') || user.profilePic.startsWith('/'))) {
+                return user.profilePic;
+              }
+              // If user.profilePic is just a filename, build the path
+              if (user.profilePic && accountId?.data?.id) {
+                return `${import.meta.env.VITE_PUBLIC_URL || ''}/storage/profile/${accountId.data.id}/${user.profilePic}`;
+              }
+              // If a new image is selected, show preview
+              if (selectedImage) return selectedImage;
+              return undefined;
+            })()}
             sx={{
               width: 120,
               height: 120,

@@ -8,6 +8,8 @@ import { jwtDecode } from 'jwt-decode';
 import api from '@/helpers/apiHelper';
 import axios from 'axios';
 import { useAppToast } from '@/utils/toast';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
+
 interface JwtPayload {
   sub: string;
   role: string;
@@ -102,38 +104,38 @@ const UpdateDetails = () => {
     getUserDetails();
     getCountryList();
   }, []);
- const getUserDetails = async () => {
-  try {
-    const result = await axios.post(`/${url}/v1/user/auth`, {}, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-
-    if (result?.data?.status === 201) {
-      const data = result.data.data;
-
-      const countryId = typeof data.country === 'object' ? data.country.id : data.country;
-      const stateId = typeof data.state === 'object' ? data.state.id : data.state;
-      const cityId = typeof data.city === 'object' ? data.city.id : data.city;
-
-      setFormData({
-        name: data.name || '',
-        email: data.email || '',
-        mobile: "+" + (data.mobile || ''),
-        address: data.address || '',
-        country: countryId || '',
-        state: stateId || '',
-        city: cityId || '',
-        postalCode: data.postalcode || '',
-        title: data.ownerTitle || '',
+  const getUserDetails = async () => {
+    try {
+      const result = await axios.post(`/${url}/v1/user/auth`, {}, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
       });
-    }
 
-  } catch (error: any) {
-    console.error("User fetch error", error);
-  }
-};
+      if (result?.data?.status === 201) {
+        const data = result.data.data;
+
+        const countryId = typeof data.country === 'object' ? data.country.id : data.country;
+        const stateId = typeof data.state === 'object' ? data.state.id : data.state;
+        const cityId = typeof data.city === 'object' ? data.city.id : data.city;
+
+        setFormData({
+          name: data.name || '',
+          email: data.email || '',
+          mobile: "+" + (data.mobile || ''),
+          address: data.address || '',
+          country: countryId || '',
+          state: stateId || '',
+          city: cityId || '',
+          postalCode: data.postalcode || '',
+          title: data.ownerTitle || '',
+        });
+      }
+
+    } catch (error: any) {
+      console.error("User fetch error", error);
+    }
+  };
 
   const getCountryList = async () => {
     try {
@@ -198,6 +200,12 @@ const UpdateDetails = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const phoneNumber = parsePhoneNumberFromString(formData.mobile || '');
+      if (!phoneNumber || !phoneNumber.isValid()) {
+        toast.error('Please enter a valid mobile number in international format (e.g., +91 7756895428).');
+        // setLoading(false);
+        return;
+      }
       const token = localStorage.getItem('token');
       if (!token) throw new Error('Token not found');
       const decoded = jwtDecode<JwtPayload>(token);

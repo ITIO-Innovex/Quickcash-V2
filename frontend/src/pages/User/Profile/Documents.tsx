@@ -162,7 +162,7 @@ const Documents = () => {
         }
       });
 
-      console.log("User Details:", result.data);
+      // console.log("User Details:", result.data);
 
       if (result?.data?.status === 201) {
         const data = result.data.data;

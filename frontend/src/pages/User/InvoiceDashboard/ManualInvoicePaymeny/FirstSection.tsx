@@ -11,6 +11,7 @@ import { jwtDecode } from 'jwt-decode';
 import { JwtPayload } from '@/types/jwt';
 import api from '@/helpers/apiHelper';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import moment from 'moment';
 
 const FirstSection = () => {
   const theme = useTheme();
@@ -154,11 +155,14 @@ const FirstSection = () => {
         </>
       )
     },
-    {
-      field: 'paymentDate',
-      headerName: 'Payment Date',
-      renderCell: (params) => params.value?.slice(0, 10),
-    },
+      {
+           field: 'paymentDate',
+           headerName: 'Date',
+           render: (row: any) => {
+             const formattedDateTime = moment(row.paymentDate).format('DD MMM YYYY, hh:mm A');
+             return <span>{formattedDateTime}</span>;
+           }
+         },
     {
       field: 'amount',
       headerName: 'Amount',

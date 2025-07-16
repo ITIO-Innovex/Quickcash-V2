@@ -1,7 +1,7 @@
 import axios from 'axios';
 import api from '@/helpers/apiHelper';
 import { jwtDecode } from 'jwt-decode';
-import { useAppToast } from '@/utils/toast'; 
+import { useAppToast } from '@/utils/toast';
 import { useNavigate } from 'react-router-dom';
 import { ArrowBack } from '@mui/icons-material';
 import React, { useRef, useState } from 'react';
@@ -11,11 +11,12 @@ import CustomButton from '../../../components/CustomButton';
 import CustomSelect from '../../../components/CustomDropdown';
 import CustomInput from '../../../components/CustomInputField';
 import { Box, Typography, Grid, useTheme } from '@mui/material';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 
 const AddClient = () => {
   const theme = useTheme();
-  const toast = useAppToast(); 
+  const toast = useAppToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,49 +40,49 @@ const AddClient = () => {
   });
 
   React.useEffect(() => {
-  const countries = Country.getAllCountries().map((c) => ({
-    label: c.name,
-    value: c.isoCode,
-  }));
-  setCountryOptions(countries);
-}, []);
-
-// Update states when country changes
-React.useEffect(() => {
-  if (formData.country) {
-    const states = State.getStatesOfCountry(formData.country).map((s) => ({
-      label: s.name,
-      value: s.isoCode,
-    }));
-    setStateOptions(states);
-    setFormData((prev) => ({ ...prev, state: '', city: '' })); // reset state & city
-    setCityOptions([]); // clear cities
-  }
-}, [formData.country]);
-
-// Updtae cities when coutry changes
-React.useEffect(() => {
-  if (formData.country && formData.state) {
-    const cities = City.getCitiesOfState(formData.country, formData.state).map((c) => ({
+    const countries = Country.getAllCountries().map((c) => ({
       label: c.name,
-      value: c.name, // city doesn’t have isoCode
+      value: c.isoCode,
     }));
-    setCityOptions(cities);
-    setFormData((prev) => ({ ...prev, city: '' })); // reset city
-  }
-}, [formData.state]);
+    setCountryOptions(countries);
+  }, []);
+
+  // Update states when country changes
+  React.useEffect(() => {
+    if (formData.country) {
+      const states = State.getStatesOfCountry(formData.country).map((s) => ({
+        label: s.name,
+        value: s.isoCode,
+      }));
+      setStateOptions(states);
+      setFormData((prev) => ({ ...prev, state: '', city: '' })); // reset state & city
+      setCityOptions([]); // clear cities
+    }
+  }, [formData.country]);
+
+  // Updtae cities when coutry changes
+  React.useEffect(() => {
+    if (formData.country && formData.state) {
+      const cities = City.getCitiesOfState(formData.country, formData.state).map((c) => ({
+        label: c.name,
+        value: c.name, // city doesn’t have isoCode
+      }));
+      setCityOptions(cities);
+      setFormData((prev) => ({ ...prev, city: '' })); // reset city
+    }
+  }, [formData.state]);
 
 
-const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  const file = event.target.files?.[0];
-  if (file) {
-    setImageProfile(file);
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setImageProfile(file);
 
-    // Create preview URL
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
-  }
-};
+      // Create preview URL
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -93,6 +94,12 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      const phoneNumber = parsePhoneNumberFromString(formData.mobile || '');
+      if (!phoneNumber || !phoneNumber.isValid()) {
+        toast.error('Please enter a valid mobile number in international format (e.g., +49 1234567890).');
+        setLoading(false);
+        return;
+      }
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
       const accountId = jwtDecode<{ data: { id: string } }>(token);
@@ -101,7 +108,7 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       form.append('firstName', formData.firstName);
       form.append('lastName', formData.lastName);
       form.append('email', formData.email);
-      form.append('mobile', formData.mobile);
+      form.append('mobile', phoneNumber.number);
       form.append('postalCode', formData.postalCode);
       form.append('country', formData.country);
       form.append('city', formData.city);
@@ -115,14 +122,14 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         console.log("⛔ No image selected");
       }
       const response = await axios.post(
-      `${url}/v1/client/add`,
-      form,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+        `${url}/v1/client/add`,
+        form,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       console.log('👀 Full API response:', response.data);
       if (response.data.status === 201) {
         toast.success('Client added successfully!');
@@ -139,16 +146,16 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
   };
 
   const handleEditClick = () => {
-    fileInputRef.current?.click(); 
+    fileInputRef.current?.click();
   };
 
 
   return (
-    <Box 
+    <Box
       className="add-client-container dashboard-container"
-      sx={{ 
+      sx={{
         backgroundColor: theme.palette.background.default,
-        color: theme.palette.text.primary 
+        color: theme.palette.text.primary
       }}
     >
       <Typography variant="h5" component="h1" className='stats-heading'>
@@ -159,22 +166,22 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         <Box className="form-actions">
           <Box className="client-avatar-section">
             <Box className="avatar-placeholder">
-                {previewUrl ? (
-                  <img
-                    src={previewUrl}
-                    alt="Profile Preview"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      borderRadius: '50%',
-                      objectFit: 'cover'
-                    }}
-                  />
-                ) : (
-                  <Typography variant="h3" className="avatar-text">
-                    {formData.firstName?.charAt(0)?.toUpperCase() || 'C'}
-                  </Typography>
-                )}
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="Profile Preview"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '50%',
+                    objectFit: 'cover'
+                  }}
+                />
+              ) : (
+                <Typography variant="h3" className="avatar-text">
+                  {formData.firstName?.charAt(0)?.toUpperCase() || 'C'}
+                </Typography>
+              )}
 
               {/*  Edit icon */}
               <Box className="edit-avatar-icon" onClick={handleEditClick} sx={{ cursor: 'pointer' }}>
@@ -196,7 +203,7 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
             <CustomInput
-            required
+              required
               label="First Name *"
               value={formData.firstName}
               onChange={(e) => handleInputChange('firstName', e.target.value)}
@@ -297,7 +304,7 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
           >
             Save
           </CustomButton>
-          </Box>
+        </Box>
       </Box>
     </Box>
   );

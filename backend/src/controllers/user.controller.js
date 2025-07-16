@@ -457,7 +457,6 @@ module.exports = {
   },
   // This function is used for update User Info by their Id
   updateUserInfo: async (req, res) => {
-
     let Image1 = "";
     if (req.files?.ownerbrd) {
       Image1 = req.files.ownerbrd[0].filename;
@@ -471,7 +470,6 @@ module.exports = {
     try {
       const {
         name,
-        user_id,
         mobile,
         state,
         email,
@@ -487,7 +485,8 @@ module.exports = {
         status
       } = req.body;
 
-      const userId = user_id;
+      // Always use req.user._id for security
+      const userId = req.user._id;
 
       if (!userId) {
         return res.status(401).json({
@@ -500,7 +499,7 @@ module.exports = {
       if (Image1) {
         await User.findByIdAndUpdate(
           {
-            _id: req.user._id
+            _id: userId
           },
           {
             ownerbrd: Image1
@@ -513,7 +512,7 @@ module.exports = {
       if (Image2) {
         await User.findByIdAndUpdate(
           {
-            _id: req.user._id
+            _id: userId
           },
           {
             ownerProfile: Image2
@@ -523,26 +522,35 @@ module.exports = {
           })
       }
 
+      const updateFields = {
+        name,
+        mobile,
+        state,
+        city,
+        country,
+        gender,
+        address,
+        defaultCurrency,
+        email,
+        postalcode,
+        ownerTitle,
+        ownertaxid,
+        owneridofindividual,
+        status
+      };
+
+      // Remove undefined fields
+      Object.keys(updateFields).forEach(key => {
+        if (updateFields[key] === undefined) {
+          delete updateFields[key];
+        }
+      });
+
       const UpdateProfile = await User.findByIdAndUpdate(
         {
-          _id: req.user._id
+          _id: userId
         },
-        {
-          name,
-          mobile,
-          state,
-          city,
-          country,
-          gender,
-          address,
-          defaultCurrency,
-          email,
-          postalcode,
-          ownerTitle,
-          ownertaxid,
-          owneridofindividual,
-          status
-        },
+        updateFields,
         {
           new: true,
         })
@@ -555,49 +563,20 @@ module.exports = {
         })
       }
 
-      console.log("UpdateInfo", UpdateProfile);
-
-      //const getRates = await Currency.findOne({base_code:defaultCurrency});
-
-      // if(!getRates) {
-
-      //     const DefaultAccountCreated = await Account.create({
-      //       name: defaultCurrency+" "+"account",
-      //       email,
-      //       country,
-      //       iban: 'test'+user_id,
-      //       bic_code: 'test',
-      //       user:user_id,
-      //       defaultAccount: true,
-      //       status: true,
-      //       currency:defaultCurrency
-      //     })
-
-      //     const requestOptions = {
-      //       method: "GET",
-      //       redirect: "follow"
-      //     };
-
-      //     const addedCurrency = await fetch(`https://v6.exchangerate-api.com/v6/1f7c99d1918ed4703f0367a4/latest/${defaultCurrency}`, requestOptions)
-      //     const response = await addedCurrency.json();
-      //     const result = await JSON.stringify(response);
-      //     if(result) {
-      //       const val = JSON.parse(result);
-      //       const currency = await Currency.create({
-      //         base_code:val.base_code,
-      //         time_last_update_unix:val.time_last_update_unix,
-      //         result:val.result,
-      //         time_last_update_words:val.time_last_update_utc,
-      //         conversion_rates:val.conversion_rates,
-      //         status:true
-      //       })  
-      //     }
-      // }
+      // Construct full image URL if needed
+      let ownerProfileUrl = UpdateProfile.ownerProfile;
+      if (ownerProfileUrl && !ownerProfileUrl.startsWith('http')) {
+        ownerProfileUrl = `${process.env.BASE_URL || ''}/storage/profile/${userId}/${ownerProfileUrl}`;
+      }
+      const updatedUserObj = {
+        ...UpdateProfile.toObject(),
+        ownerProfile: ownerProfileUrl
+      };
 
       return res.status(201).json({
         status: 201,
         message: "User profile is updated successfully",
-        data: UpdateProfile
+        data: updatedUserObj
       })
     } catch (error) {
       console.log("Error", error);
@@ -607,7 +586,6 @@ module.exports = {
         data: null
       })
     }
-
   },
   // This function is used for change password by user id
   changePassword: async (req, res) => {

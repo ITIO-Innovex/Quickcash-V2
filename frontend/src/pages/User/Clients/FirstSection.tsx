@@ -15,6 +15,7 @@ import { Box, Button, Typography, useTheme } from '@mui/material';
 import GenericTable from '../../../components/common/genericTable';
 import { useAppToast } from '@/utils/toast';
 import 'react-toastify/dist/ReactToastify.css';
+import moment from 'moment';
 const url = import.meta.env.VITE_NODE_ENV == 'production' ? 'api' : 'api';
 
 const FirstSection = () => {
@@ -172,9 +173,13 @@ const FirstSection = () => {
 
   const columns = [
     {
-      field: 'createdAt',
-      headerName: 'Created Date',
-    },
+         field: 'createdAt',
+         headerName: 'Date',
+         render: (row: any) => {
+           const formattedDateTime = moment(row.createdAt).format('DD MMM YYYY, hh:mm A');
+           return <span>{formattedDateTime}</span>;
+         }
+       },
     {
       field: 'clientName',
       headerName: 'Client Name',
