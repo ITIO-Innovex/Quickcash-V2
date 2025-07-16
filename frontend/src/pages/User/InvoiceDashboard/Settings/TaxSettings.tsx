@@ -104,7 +104,17 @@ const TaxSettings = () => {
   };
 
   const columns = [
-    { field: 'date', headerName: 'Date' },
+    {
+      field: 'date',
+      headerName: 'Date',
+      minWidth: 180,
+      render: (row: any) => {
+        if (!row.date) return ''; 
+        const date = new Date(row.date);
+        if (isNaN(date.getTime())) return '';
+        return date.toLocaleDateString('en-GB'); // Output: "16/07/2025"
+      },
+    },
     { field: 'name', headerName: 'Name' },
     { field: 'value', headerName: 'Value' },
     {

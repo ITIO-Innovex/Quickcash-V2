@@ -46,8 +46,10 @@ const AddMoneyForm = ({ onClose, acctDetails,activeAccount }: AddMoneyFormProps)
     `${import.meta.env.VITE_STRIPE_PRIVATE_KEY}`
   );
   const theme = useTheme();
-  const [amount, setAmount] = useState<any>(0);
+  const [amount, setAmount] = useState<any>();
+  const [isCalculating, setIsCalculating] = useState(false);
   const [currencyType, setCurrencyType] = useState('USD');
+  const [conversionLoading, setConversionLoading] = useState(false);
   const [currencyList, setCurrencyList] = useState([]);
   const [transferType, setTransferType] = useState('stripe');
   const [depositFee, setDepositFee] = useState<any>(0);
@@ -63,6 +65,7 @@ const AddMoneyForm = ({ onClose, acctDetails,activeAccount }: AddMoneyFormProps)
   const finalAmount = amount ? parseFloat(amount) + depositFee : 0;
   const conversionAmount = finalAmount * 77.8;
   const DepositFeesd = useFee("Debit");
+
   useEffect(() => {
       const accountId = jwtDecode<JwtPayload>(
         localStorage.getItem("token") as string
@@ -80,37 +83,70 @@ const AddMoneyForm = ({ onClose, acctDetails,activeAccount }: AddMoneyFormProps)
       console.error('Error fetching currency list:', error);
     }
   };
+// const HandleAmount = async (amt_val: any) => {
+//     setAmount(amt_val);
+//     var feeVal = 0;
+//     var feeType = "";
+
+//     if (DepositFeesd?.feeCommision) {
+//       feeVal = DepositFeesd?.feeCommision?.value;
+//       feeType = DepositFeesd?.feeCommision?.commissionType;
+//     }
+
+//     if (feeType == "percentage") {
+//       // @ts-ignore
+//       var feeCharge: number = (parseFloat(amt_val) * parseFloat(feeVal)) / 100;
+//     } else {
+//       // @ts-ignore
+//       var feeCharge: number = parseFloat(feeVal);
+//     }
+
+//     var minFeecharge =
+//       feeCharge >= DepositFeesd?.feeCommision?.minimumValue
+//         ? feeCharge
+//         : DepositFeesd?.feeCommision?.minimumValue;
+
+//     if (acctDetails?.currency != currencyType) {
+//       setAmount(amt_val);
+//       setDepositFee(minFeecharge);
+//       calCulateExChangeCurrencyValue(parseFloat(amt_val), minFeecharge);
+//     } else {
+//       setDepositFee(minFeecharge);
+//     }
+//   };
 const HandleAmount = async (amt_val: any) => {
-    setAmount(amt_val);
-    var feeVal = 0;
-    var feeType = "";
+  setAmount(amt_val);
+  setIsCalculating(true);
 
-    if (DepositFeesd?.feeCommision) {
-      feeVal = DepositFeesd?.feeCommision?.value;
-      feeType = DepositFeesd?.feeCommision?.commissionType;
+  const feeVal = Number(DepositFeesd?.feeCommision?.value || 0);
+  const feeType = DepositFeesd?.feeCommision?.commissionType || '';
+  const minValue = Number(DepositFeesd?.feeCommision?.minimumValue || 0);
+
+  let feeCharge: number;
+
+  if (feeType === 'percentage') {
+    feeCharge = (parseFloat(amt_val) * feeVal) / 100;
+  } else {
+    feeCharge = feeVal;
+  }
+
+  const minFeecharge = feeCharge >= minValue ? feeCharge : minValue;
+  setDepositFee(minFeecharge);
+
+  if (acctDetails?.currency !== currencyType) {
+    setConversionLoading(true);
+    try {
+      await calCulateExChangeCurrencyValue(parseFloat(amt_val), minFeecharge);
+    } catch (err) {
+      console.error('Conversion error:', err);
+    } finally {
+      setConversionLoading(false);
     }
+  }
 
-    if (feeType == "percentage") {
-      // @ts-ignore
-      var feeCharge: number = (parseFloat(amt_val) * parseFloat(feeVal)) / 100;
-    } else {
-      // @ts-ignore
-      var feeCharge: number = parseFloat(feeVal);
-    }
+  setIsCalculating(false);
+};
 
-    var minFeecharge =
-      feeCharge >= DepositFeesd?.feeCommision?.minimumValue
-        ? feeCharge
-        : DepositFeesd?.feeCommision?.minimumValue;
-
-    if (acctDetails?.currency != currencyType) {
-      setAmount(amt_val);
-      setDepositFee(minFeecharge);
-      calCulateExChangeCurrencyValue(parseFloat(amt_val), minFeecharge);
-    } else {
-      setDepositFee(minFeecharge);
-    }
-  };
   const calCulateExChangeCurrencyValue = async (amt: any, valDeposit: any) => {
     console.log(valDeposit);
     const options = {
@@ -236,7 +272,7 @@ const HandleAmount = async (amt_val: any) => {
       </Box>
 
       <Box>
-        <Typography variant="body2" color="text.primary">
+        {/* <Typography variant="body2" color="text.primary">
           Deposit Fee: <strong>{getSymbolFromCurrency(currencyType)} {parseFloat(depositFee).toFixed(2)}</strong> &nbsp;
           Total: <strong>{getSymbolFromCurrency(currencyType)} {parseFloat(amount) + parseFloat(depositFee)}</strong> &nbsp;
           {acctDetails?.currency != currencyType && (
@@ -244,15 +280,44 @@ const HandleAmount = async (amt_val: any) => {
                Conversion: <strong>{getSymbolFromCurrency(acctDetails?.currency)} {parseFloat(convValue).toFixed(2)}</strong>
              </>
           )}
-        </Typography>
+        </Typography> */}
+       <Typography variant="body2" color="text.primary">
+        Deposit Fee:&nbsp;
+        <strong>
+          {isCalculating
+            ? 'Loading...'
+            : `${getSymbolFromCurrency(currencyType)} ${parseFloat(depositFee || 0).toFixed(2)}`}
+        </strong>&nbsp;&nbsp;
+
+       Total:&nbsp;
+        <strong>
+          {isCalculating || !amount || isNaN(parseFloat(amount))
+            ? 'Loading...'
+            : `${getSymbolFromCurrency(currencyType)} ${(parseFloat(amount) + parseFloat(depositFee)).toFixed(2)}`}
+        </strong>
+
+        {acctDetails?.currency !== currencyType && (
+          <>
+            Conversion:&nbsp;
+            <strong>
+              {conversionLoading
+                ? 'Loading...'
+                : `${getSymbolFromCurrency(acctDetails?.currency)} ${parseFloat(convValue || 0).toFixed(2)}`}
+            </strong>
+          </>
+        )}
+      </Typography>
+
       </Box>
 
-      <Button className='modal-button'
-        variant="contained"      
-        onClick={() => AddMoney()}
-      >
-        Add Money
-      </Button>
+     <Button
+      className='modal-button'
+      variant="contained"
+      disabled={isCalculating || conversionLoading}
+      onClick={() => AddMoney()}
+    >
+      Add Money
+    </Button>
       {/*  */}
       {displayRazorpay && (
         <AddMoneyRazorPay

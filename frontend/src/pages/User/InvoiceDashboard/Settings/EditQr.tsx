@@ -11,36 +11,46 @@ const url = import.meta.env.VITE_NODE_ENV == "production" ? 'api' : 'api';
 import { Box, Typography, Radio, RadioGroup, FormControlLabel, FormLabel,} from '@mui/material';
 
 const EditPaymentQr = () => {
-  // Submit handler for updating QR code
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const decoded = jwtDecode(localStorage.getItem('token') as string);
-      const form = new FormData();
-      // Extract user id from decoded JWT payload
-      const userId = (decoded as any)?.data?.id || (decoded as any)?.id || '';
-      form.append('user', userId);
-      form.append('title', formData.title);
-      form.append('isDefault', formData.default);
-      if (imageFront3.raw) {
-        form.append('qrCodeImage', imageFront3.raw);
-      }
-      const result = await api.patch(`/${url}/v1/qrcode/update/${id}`, form);
-      
-      if (result.data.status == 201 || result.data.status == "201") {
-        toast.success(result.data.message || 'QR code updated successfully');
-        navigate('/settings?tab=qr');
-      } else {
-        toast.error(result.data.message || 'Update failed');
-      }
-    } catch (error: any) {
-      console.log("error", error);
-      toast.error(error?.response?.data?.message || 'Error updating QR code');
-    }
-  };
+  
   const navigate = useNavigate();
   const { id } = useParams();
   const toast = useAppToast();
+  const [imageFront3, setImageFront3] = useState({ preview: '', raw: null });
+
+  // Submit handler for updating QR code
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  try {
+    const decoded = jwtDecode(localStorage.getItem('token') as string);
+    const form = new FormData();
+
+    const userId = (decoded as any)?.data?.id || (decoded as any)?.id || '';
+    form.append('user', userId);
+    form.append('title', formData.title);
+    form.append('isDefault', formData.default);
+
+    if (imageFront3.raw) {
+      form.append('qrCodeImage', imageFront3.raw); // Attach the file
+    }
+
+    // Ensure the API request is using FormData and sending the file
+    const result = await api.patch(`/${url}/v1/qrcode/update/${id}`, form, {
+      headers: {
+        'Content-Type': 'multipart/form-data', // Ensure this is set for file uploads
+      },
+    });
+
+    if (result.data.status === 201 || result.data.status === "201") {
+      toast.success(result.data.message || 'QR code updated successfully');
+      navigate('/settings?tab=qr');
+    } else {
+      toast.error(result.data.message || 'Update failed');
+    }
+  } catch (error: any) {
+    console.error("error", error);
+    toast.error(error?.response?.data?.message || 'Error updating QR code');
+  }
+};
 
   // Fetch QR details by id
   const getDetailsById = async (val: any) => {
@@ -78,7 +88,6 @@ const EditPaymentQr = () => {
     qrImage: null,
     qrPreview: '',
   });
-  const [imageFront3, setImageFront3] = useState({ preview: '', raw: null });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -86,27 +95,28 @@ const EditPaymentQr = () => {
   };
 
   // Image preview and state update
-  const handleChangeImageFront3 = (e) => {
-    if (e.target.files.length) {
-      setImageFront3({
-        preview: URL.createObjectURL(e.target.files[0]),
-        raw: e.target.files[0],
-      });
-      handleImageChange(e);
-    }
-  };
+   const handleChangeImageFront3 = (e) => {
+  console.log("Event Target:", e.target); // Debug log
+  const file = e.target.files[0];
+  if (file) {
+    setImageFront3({
+      preview: URL.createObjectURL(file),
+      raw: file,
+    });
+    handleImageChange(file);
+  }
+};
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = typeof reader.result === 'string' ? reader.result : '';
-        setFormData((prev) => ({ ...prev, qrImage: file, qrPreview: result }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+const handleImageChange = (file) => {
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      setFormData((prev) => ({ ...prev, qrImage: file, qrPreview: result }));
+    };
+    reader.readAsDataURL(file);
+  }
+};
 
 
   return (

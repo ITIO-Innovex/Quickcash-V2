@@ -34,6 +34,7 @@ const PaymentQrSettings = () => {
       const result = await api.get(`/${url}/v1/qrcode/list/${userId}`);
       if (result.data.status == 201 ) {
         const list = result.data.data;
+        console.log(list);
         const rows = list.map((item: any) =>
           createData(item._id, item.createdAt, item.title, item.image, item.IsDefault)
         ).sort((a: any, b: any) => (a.date < b.date ? -1 : 1));
@@ -91,7 +92,17 @@ const PaymentQrSettings = () => {
   };
 
   const columns = [
-    { field: 'date', headerName: 'Date' },
+    {
+      field: 'date',
+      headerName: 'Date',
+      minWidth: 180,
+      render: (row: any) => {
+        if (!row.date) return ''; 
+        const date = new Date(row.date);
+        if (isNaN(date.getTime())) return '';
+        return date.toLocaleDateString('en-GB'); // Output: "16/07/2025"
+      },
+    },
     { field: 'title', headerName: 'Title' },
     {
       field: 'image',
@@ -100,7 +111,7 @@ const PaymentQrSettings = () => {
       return (
         <img
           crossOrigin="anonymous"
-          src={`${import.meta.env.VITE_PUBLIC_URL}/qrcode/${encodeURIComponent(row?.image)}`}
+          src={`${import.meta.env.VITE_PUBLIC_URL}/qrcode/${row?.image}`}
           width="60"
           height="60"
           alt={`paymentqrcode${row?.title}`}
