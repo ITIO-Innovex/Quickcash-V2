@@ -6263,6 +6263,7 @@ color: var(--bs-primary);
 }
 .status-chip.partial,
 .status-chip.created,
+.status-chip.overdue,
 .status-chip.pending {
   background-color: #fef3c7;
   color: #d97706;
