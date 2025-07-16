@@ -529,7 +529,8 @@ const handleSwapCoinChange = async (
   // ✅ Set rate to state
   setConversionRate(rate); 
   setCoinsAdded(coinsAdded);  // make sure this is not missing
-
+  // ✅ Clear error message if any previous error was there
+  setErrorMessage(""); 
   // ✅ Save to localStorage
   localStorage.setItem("coinsAdded", coinsAdded);
   localStorage.setItem("coinsDeducted", coinsDeducted);
@@ -552,7 +553,7 @@ else {
     setConversionData(resData);
   } catch (error: any) {
   console.error("❌ Error fetching conversion rate:", error);
-
+    setCoinsAdded("0");
   if (error?.response?.status === 429) {
     setErrorMessage("⚠️ You've exceeded the Rate Limit. Please try again later or refresh the page.");
   } else {
@@ -1097,13 +1098,14 @@ const filteredSwapCoins = swapRawCoins.filter((coin) => coin.coin !== fromCoin);
                     />
 
                     </Box>
-                      <Typography variant="caption" className="crypto-fees-text">
-                      {fromCoin} → {swapCoin} Rate:{" "}
-                      {conversionRate !== null ? conversionRate.toFixed(8) : "—"}
-                       {errorMessage && (
-                        <p style={{ color: "red", marginTop: "20px" }}>{errorMessage}</p>
+                     <Typography variant="caption" className="crypto-fees-text">
+                      {errorMessage ? (
+                        <span style={{ color: "red" }}>{errorMessage}</span>
+                      ) : (
+                        `${fromCoin} → ${swapCoin} Rate: ${conversionRate !== null ? conversionRate.toFixed(8) : "—"}`
                       )}
                     </Typography>
+
                   </Box>
                 </Box>
                 

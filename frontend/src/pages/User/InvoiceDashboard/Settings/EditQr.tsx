@@ -29,7 +29,7 @@ const EditPaymentQr = () => {
       
       if (result.data.status == 201 || result.data.status == "201") {
         toast.success(result.data.message || 'QR code updated successfully');
-        navigate('/settings?filter=Payment_Qr_Code');
+        navigate('/settings?tab=qr');
       } else {
         toast.error(result.data.message || 'Update failed');
       }

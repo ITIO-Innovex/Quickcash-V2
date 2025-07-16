@@ -75,7 +75,7 @@ const AddPaymentQr = () => {
         });
         if (result.data.status == 201 ) {
           toast.success(result.data.message);
-          navigate('/settings');
+           navigate('/settings?tab=qr');
         }
       } catch (error) {
         console.log("error", error);

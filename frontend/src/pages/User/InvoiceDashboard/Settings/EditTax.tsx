@@ -68,7 +68,8 @@ const EditTax = () => {
       });
       if (result.data.status == 201) {
         toast.success(result.data.message);
-        navigate('/settings?filter=Tax');
+        navigate('/settings?tab=tax');
+
       } else {
         toast.error(result.data.message || 'Update failed');
       }
