@@ -27,7 +27,7 @@ interface SelectDestinationStepProps {
   onNext: () => void;
   onBeneficiaryTab: () => void;
   onSelectBeneficiary?: (beneficiary: Beneficiary) => void;
-  currencyList?:any[];
+  currencyList?: any[];
   userId: string;
   accountList: any[];
 }
@@ -43,7 +43,7 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
   userId,
   accountList,
 }) => {
-  const theme  = useTheme();
+  const theme = useTheme();
   const navigate = useNavigate();
   const [selectedCurrency, setSelectedCurrency] = useState(formData.selectedCurrency || '');
   const [activeTab, setActiveTab] = useState(0);
@@ -77,7 +77,7 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
     country => !featuredCurrencies.some(featured => featured.currency === country.currency)
   );
 
-  const handleCountrySelect = (currency: string, id:any, country:any) => {
+  const handleCountrySelect = (currency: string, id: any, country: any) => {
     const val = `${currency}-${id}-${country}`;
     setSelectedCurrencyVal(val);
     setSelectedCurrency(currency);
@@ -96,7 +96,7 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
-    
+
     // If user clicks on beneficiary tab, navigate to beneficiary page
     if (newValue === 1) {
       onBeneficiaryTab();
@@ -105,10 +105,10 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
 
   const handleContinue = () => {
     if (selectedCurrency) {
-      updateFormData({ 
+      updateFormData({
         selectedCurrency,
         toCurrency: selectedCurrency,
-        sendCurrencyData:selectedCurrencyVal,
+        sendCurrencyData: selectedCurrencyVal,
         user: userId,
         source_account: accountList?.[0]?._id,
         addedBy: userId,
@@ -132,23 +132,23 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
 
   return (
     <Box className="destination-step">
-      <Typography variant="h6" className="step-title" sx={{color:theme.palette.text.primary}}>
+      <Typography variant="h6" className="step-title" sx={{ color: theme.palette.text.primary }}>
         Where do you want to send money?
       </Typography>
-      <Typography variant="body2" className="step-description" sx={{color:theme.palette.text.gray}}>
+      <Typography variant="body2" className="step-description" sx={{ color: theme.palette.text.gray }}>
         Select your destination country or choose from existing beneficiaries
       </Typography>
 
       {/* Tab Navigation - Switch between currency selection and beneficiary selection */}
       <Box className="tab-navigation">
-        <Tabs 
-          value={activeTab} 
+        <Tabs
+          value={activeTab}
           onChange={handleTabChange}
           className="destination-tabs"
           centered
         >
           <Tab label="Select Currency" />
-          <Tab label="Select Beneficiary" sx={{color:theme.palette.text.primary}} />
+          <Tab label="Select Beneficiary" sx={{ color: theme.palette.text.primary }} />
         </Tabs>
       </Box>
 
@@ -158,39 +158,43 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
           <Grid container spacing={3} className="country-cards" >
             {featuredCurrencies.map((currency) => (
               <Grid item xs={12} sm={6} md={3} key={currency._id}  >
-                <CountryCard 
+                <CountryCard
                   countryCode={currency.country}
                   currencyCode={currency.currency}
                   id={currency._id}
                   selected={selectedCurrency === currency.currency}
-                  onClick={() => handleCountrySelect(currency.currency, currency._id,currency.country)}
+                  onClick={() => handleCountrySelect(currency.currency, currency._id, currency.country)}
                 />
               </Grid>
             ))}
           </Grid>
 
           {/* Other Countries Dropdown - All other available destinations */}
-          <Box className="other-countries" sx={{ mt: 3 }}>
-            <Typography variant="subtitle1" className="other-countries-label" sx={{ mb: 2 }}>
-              Select Other Currency
-            </Typography>
-           <CountryDropdown
-              label="Select other Currency"
-              countries={filteredOtherCountries}
-              value={!isFeaturedSelected ? selectedCurrency : ''}
-              onChange={(e) => {
-                const value = e.target.value as string;
-                setSelectedCurrency(value);
-                // Also update selectedCurrencyObj in formData
-                const selectedObj = mappedCurrencyList.find(c => c.currency === value);
-                updateFormData({
-                  selectedCurrency: value,
-                  toCurrency: value,
-                  selectedCurrencyObj: selectedObj,
-                });
-              }}
-            />
-          </Box>
+
+          {filteredOtherCountries.length > 0 && mappedCurrencyList.length > 4 && (
+            <Box className="other-countries" sx={{ mt: 3 }}>
+              <Typography variant="subtitle1" className="other-countries-label" sx={{ mb: 2 }}>
+                Select Other Currency
+              </Typography>
+              <CountryDropdown
+                label="Select other Currency"
+                countries={filteredOtherCountries}
+                value={!isFeaturedSelected ? selectedCurrency : ''}
+                onChange={(e) => {
+                  const value = e.target.value as string;
+                  setSelectedCurrency(value);
+                  // Also update selectedCurrencyObj in formData
+                  const selectedObj = mappedCurrencyList.find(c => c.currency === value);
+                  updateFormData({
+                    selectedCurrency: value,
+                    toCurrency: value,
+                    selectedCurrencyObj: selectedObj,
+                  });
+                }}
+              />
+            </Box>
+          )}
+
 
           {/* Continue Button - Proceed to next step */}
           <Box className="step-actions" sx={{ mt: 4 }}>
