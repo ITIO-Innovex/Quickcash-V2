@@ -1,10 +1,12 @@
 
 import { useState } from 'react';
+import api from '@/helpers/apiHelper';
 import { useAppToast } from '@/utils/toast'; 
 import { useNavigate } from 'react-router-dom';
 import CustomButton from '../../../components/CustomButton';
 import CustomInputField from '../../../components/CustomInputField';
 import PersonalInfoForm from '../../../components/forms/PersonalInfoForm';
+const url = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
 import BusinessDetailsForm from '../../../components/forms/BusinessDetailsForm';
 import BusinessAddressForm from '../../../components/forms/BusinessAddressForm';
 import BusinessRegisterHeader from '../../../components/forms/BusinessRegisterHeader';
@@ -90,20 +92,97 @@ const BusinessRegister = () => {
     }
   };
 
-  const handleNext = () => {
-    if (validateStep(currentStep)) {
-      if (currentStep < steps.length - 1) {
-        setCurrentStep(currentStep + 1);
-      } else {
-        // Final submission
-        console.log('Business registration completed:', formData);
-        toast.success('Business registered successfully!');
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 2000);
-      }
+  // const handleNext = () => {
+  //   if (validateStep(currentStep)) {
+  //     if (currentStep < steps.length - 1) {
+  //       setCurrentStep(currentStep + 1);
+  //     } else {
+  //       // Final submission
+  //       console.log('Business registration completed:', formData);
+  //       toast.success('Business registered successfully!');
+  //       setTimeout(() => {
+  //         navigate('/dashboard');
+  //       }, 2000);
+  //     }
+  //   }
+  // };
+const handleNext = async () => {
+  if (!validateStep(currentStep)) return;
+
+  try {
+    if (currentStep === 0) {
+      const res = await api.post(`/${url}/v1/business/user/register-info`, {
+        name: formData.fullName,
+        email: formData.email,
+        country: formData.country,
+      });
+
+      console.log('✅ Step 0 API success:', res.data);
+      toast.success('OTP sent to your email ✅');
+      setCurrentStep(1); // ⬅ Move to email verification step
+      return; // Exit early
     }
-  };
+    if (currentStep === 1) {
+        try {
+          const res = await api.post(`/${url}/v1/business/user/verify`, {
+            otp: formData.otp
+          });
+
+          console.log('✅ OTP verified:', res.data);
+          toast.success('OTP verified successfully ✅');
+          setCurrentStep(2); // proceed to Business Details
+        } catch (error: any) {
+          console.error('❌ OTP verification failed:', error);
+          if (error.response?.status === 410) {
+            toast.error('OTP expired. Please request a new one 🔁');
+          } else if (error.response?.status === 401) {
+            toast.error('Invalid OTP. Please try again ❌');
+          } else {
+            toast.error('Failed to verify OTP. Try again later ⚠️');
+          }
+        }
+        return;
+      }
+      if (currentStep === 2) {
+        try {
+          const res = await api.post(`/${url}/v1/business/user/details`, {
+            businessName: formData.businessName,
+            businessType: formData.businessType,
+            registrationNumber: formData.companyRegistrationNumber,
+            industry: formData.industryActivity,
+            incorporationCountry: formData.countryOfIncorporation,
+            website: formData.website,
+          });
+
+          console.log('✅ Step 2 API success:', res.data);
+          toast.success('Business details saved ✅');
+          setCurrentStep(3); // Move to address step
+        } catch (error: any) {
+          console.error('❌ Step 2 API error:', error);
+          toast.error('Failed to save business details ❌');
+        }
+        return; // Exit so it doesn't fall through
+      }
+
+
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      toast.success('Business registered successfully!');
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
+    }
+  } catch (error: any) {
+    console.error('❌ Step 0 API error:', error);
+    if (error.response?.status === 409) {
+      toast.error('You already have a business account ⚠️');
+    } else {
+      toast.error('Failed to send OTP ❌');
+    }
+  }
+};
+
 
   const handleBack = () => {
     if (currentStep > 0) {
@@ -137,7 +216,6 @@ const BusinessRegister = () => {
               name="otp"
               value={formData.otp}
               onChange={(e) => handleChange('otp', e.target.value)}
-              placeholder="251732"
               error={!!errors.otp}
               helperText={errors.otp}
               sx={{ maxWidth: 400, mx: 'auto' }}

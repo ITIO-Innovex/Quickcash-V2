@@ -1,4 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, {
+  useEffect,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+} from 'react';
 import {
   Box,
   Typography,
@@ -39,10 +45,11 @@ interface JwtPayload {
   };
 }
 
-const NotificationDropdown: React.FC = () => {
+const NotificationDropdown = forwardRef((_, ref) => {
   const theme = useTheme();
   const navigate = useNavigate();
-
+  const [popoverKey, setPopoverKey] = useState(0);
+  const iconButtonRef = useRef<HTMLButtonElement>(null);
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [status] = useState<any>(''); // adjust or remove if unnecessary
@@ -54,9 +61,10 @@ const NotificationDropdown: React.FC = () => {
   const open = Boolean(anchorEl);
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+const handleClick = (event?: React.MouseEvent<HTMLButtonElement>) => {
+  setAnchorEl(event?.currentTarget || iconButtonRef.current);
+  setPopoverKey((prev) => prev + 1); // 👈 force re-render
+};
 
   const handleClose = () => {
     setAnchorEl(null);
@@ -68,6 +76,11 @@ const NotificationDropdown: React.FC = () => {
     );
   };
 
+ useImperativeHandle(ref, () => ({
+  click: () => {
+    handleClick(); // Call handleClick directly, it will use iconButtonRef
+  },
+}));
   // const handleNotificationClick = (id: string) => {
   //   setNotifications((prev) =>
   //     prev.map((n) =>
@@ -158,7 +171,7 @@ const NotificationDropdown: React.FC = () => {
       }
     })
     .then(result => {
-      if(result?.data?.status == 201) {
+      if(result?.data?.status == 200) {
         getAllUnreadNotification();
       }
     })
@@ -189,7 +202,8 @@ const NotificationDropdown: React.FC = () => {
 
   return (
     <>
-      <IconButton
+     <IconButton
+        ref={iconButtonRef}
         onClick={handleClick}
         sx={{
           color: theme.palette.text.primary,
@@ -198,11 +212,11 @@ const NotificationDropdown: React.FC = () => {
           },
         }}
       >
-        <Badge badgeContent={isAdmin ? unreadCount : unReadNotification.length} color="error" variant={notifyBell && !isAdmin ? "dot" : "standard"}>
+              <Badge badgeContent={isAdmin ? unreadCount : unReadNotification.length} color="error" variant={notifyBell && !isAdmin ? "dot" : "standard"}>
           <NotificationsIcon />
         </Badge>
       </IconButton>
-
+      {open && (
       <Popover
         open={open}
         anchorEl={anchorEl}
@@ -259,14 +273,15 @@ const NotificationDropdown: React.FC = () => {
                 View All
               </Button>
               <Button
-                size="small"
-                onClick={() => {
-                  if (isAdmin) {
-                    handleMarkAllRead();
-                  } else {
-                    updateUnReadAllMessage();
-                  }
-                }}
+               size="small"
+                  onClick={() => {
+                    if (isAdmin) {
+                      handleMarkAllRead();
+                    } else {
+                      updateUnReadAllMessage();
+                    }
+                    setTimeout(() => handleClose(), 100); // 👈 this helps avoid popover freeze
+                  }}
                 sx={{
                   color: theme.palette.primary.main,
                   fontSize: '0.75rem',
@@ -321,8 +336,9 @@ const NotificationDropdown: React.FC = () => {
           </Box>
         </Box>
       </Popover>
+      )}
     </>
   );
-};
+});
 
 export default NotificationDropdown;

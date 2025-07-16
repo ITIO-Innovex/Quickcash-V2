@@ -23,7 +23,7 @@ const Header: React.FC<HeaderProps> = ({ collapsed }) => {
   const navigate = useNavigate();
   const toast = useAppToast(); 
   const theme = useTheme();
-  const notifRef = useRef(null);
+  const notifRef = useRef<{ click: () => void }>(null);
   const { themeMode, toggleTheme } = useSettings();
  
   const [isBusiness, setIsBusiness] = useState(false);
@@ -157,9 +157,7 @@ const Header: React.FC<HeaderProps> = ({ collapsed }) => {
                   },
                 }}
               >
-                <span ref={notifRef}>
-                  <NotificationDropdown />
-                </span>
+                <NotificationDropdown ref={notifRef} />
                 <Typography variant="body2">Notifications</Typography>
               </Box>
 

@@ -154,64 +154,71 @@ module.exports = {
      }
   },
   // This function is used for update data
-  updateRead: async(req,res) => {
-    const {user} = req.body;
-    const ObjectId = mongoose.Types.ObjectId;
-    try {
+updateRead: async (req, res) => {
+  const { user } = req.body;
+  const ObjectId = mongoose.Types.ObjectId;
 
-      if(user == "") {
-        return res.status(401).json({
-          status: 401,
-          message: "User Id missing",
-          data: null
-        })
-      }
-
-      const notifyData = await Notification.find({
-        "$or": [{
-          "notifyFrom": {'$in': ["admin","all"]},
-        }, 
-        {
-          "user": user
-        }]
+  try {
+    if (!user) {
+      return res.status(401).json({
+        status: 401,
+        message: "User ID is missing",
+        data: null
       });
+    }
 
-      if(notifyData) {
-        for (const element of notifyData) {
-          if(element?.read == true) {
-            if(!element?.readBy.includes(user)) {
-              element?.readBy.push(new ObjectId(user));
-              var updateRead = await Notification.findByIdAndUpdate({_id: element?._id},{readBy: element?.readBy},{new: true});
-            }
-          } else {
-            var updateRead = await Notification.findByIdAndUpdate({_id: element?._id},{readBy: new ObjectId(user),read: true},{new: true});
-          } 
+    const notifyData = await Notification.find({
+      "$or": [
+        { "notifyFrom": { "$in": ["admin", "all"] } },
+        { "user": user }
+      ]
+    });
+
+    let updates = [];
+
+    if (notifyData && notifyData.length > 0) {
+      for (const element of notifyData) {
+        if (element?.read === true) {
+          if (!element?.readBy.includes(user)) {
+            element.readBy.push(new ObjectId(user));
+            const updated = await Notification.findByIdAndUpdate(
+              { _id: element._id },
+              { readBy: element.readBy },
+              { new: true }
+            );
+            updates.push(updated);
+          }
+        } else {
+          const updated = await Notification.findByIdAndUpdate(
+            { _id: element._id },
+            {
+              readBy: [new ObjectId(user)],
+              read: true
+            },
+            { new: true }
+          );
+          updates.push(updated);
         }
-      }  
-    
-      if(!updateRead) {
-        return res.status(401).json({
-          status: 401,
-          message: "Error while updating notification read data",
-          data: null
-        })
       }
-                 
-      return res.status(200).json({
-        status: 201,
-        message: "Notification message data has been updated as read !!!",
-        data: updateRead
-      })
+    }
 
-      } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-          status: 500,
-          message: "Something went wrong with api",
-          data: error
-        })
-      }
-  }, 
+    return res.status(200).json({
+      status: 200,
+      message: "All notifications marked as read",
+      data: updates
+    });
+
+  } catch (error) {
+    console.error("Update Read Error: ", error);
+    if (!res.headersSent) {
+      return res.status(500).json({
+        status: 500,
+        message: "Something went wrong with API",
+        data: error
+      });
+    }
+  }
+}, 
   // This function is used for fetching data (for admin)
   adminUpdateRead: async(req,res) => {
     const {user} = req.body;
