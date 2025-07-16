@@ -43,7 +43,7 @@ const AddTax = () => {
         console.log('API response:', response);
         if (response.data.status == 201) {
           toast.success(response.data.message);
-          navigate('/settings');
+          navigate('/settings?tab=tax');
         }
       } catch (error: any) {
         console.log("error", error);

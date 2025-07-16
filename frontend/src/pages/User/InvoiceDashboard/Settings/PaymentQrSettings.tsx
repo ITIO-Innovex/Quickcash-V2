@@ -35,7 +35,7 @@ const PaymentQrSettings = () => {
       if (result.data.status == 201 ) {
         const list = result.data.data;
         const rows = list.map((item: any) =>
-          createData(item._id, item.createdAt, item.title, item.qrCodeImage, item.IsDefault)
+          createData(item._id, item.createdAt, item.title, item.image, item.IsDefault)
         ).sort((a: any, b: any) => (a.date < b.date ? -1 : 1));
         setQrList(rows);
       }
@@ -96,20 +96,21 @@ const PaymentQrSettings = () => {
     {
       field: 'image',
       headerName: 'Image',
-      render: (row: any) => (
-        row?.image && row?.image !== '' ? (
-          <img
-            crossOrigin="anonymous"
-            src={`${import.meta.env.VITE_PUBLIC_URL}/qrcode/${row?.image}`}
-            width="60"
-            height="60"
-            alt={`paymentqrcode${row?.title}`}
-            style={{ objectFit: 'contain', borderRadius: 4 }}
-          />
-        ) : (
-          <Typography>QR is not available</Typography>
-        )
-      ),
+      render: (row: any) => {
+      return (
+        <img
+          crossOrigin="anonymous"
+          src={`${import.meta.env.VITE_PUBLIC_URL}/qrcode/${encodeURIComponent(row?.image)}`}
+          width="60"
+          height="60"
+          alt={`paymentqrcode${row?.title}`}
+          style={{ objectFit: 'contain', borderRadius: 4 }}
+          onError={(e) => {
+            e.currentTarget.src = '/default-qr.png';
+          }}
+        />
+        );
+      },
     },
    {
       field: 'default',

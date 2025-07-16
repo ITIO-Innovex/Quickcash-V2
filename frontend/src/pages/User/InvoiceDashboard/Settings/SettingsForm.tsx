@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
-import { Box, Typography, useTheme, Tabs, Tab } from '@mui/material';
-import GeneralSettings from './GeneralSettings';
+import React, { useEffect, useState } from 'react';
 import TaxSettings from './TaxSettings';
+import GeneralSettings from './GeneralSettings';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import PaymentQrSettings from './PaymentQrSettings';
+import { Box, Typography, useTheme, Tabs, Tab } from '@mui/material';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -33,10 +34,21 @@ function TabPanel(props: TabPanelProps) {
 
 const SettingsForm = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const [value, setValue] = useState(0);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const defaultTab = searchParams.get('tab');
+    const initialTab = defaultTab === 'tax' ? 1 : defaultTab === 'qr' ? 2 : 0;
+    setValue(initialTab);
+    console.log("Navigated to tab index:", initialTab);
+  }, [searchParams]);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
+    const tabMap = ['general', 'tax', 'qr'];
+    navigate(`/settings?tab=${tabMap[newValue]}`);
   };
 
   return (

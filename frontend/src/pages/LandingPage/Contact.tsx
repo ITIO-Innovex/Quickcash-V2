@@ -39,10 +39,13 @@ const ContactForm = () => {
       if (res.status !== 200) {
         toast.success(res.data.message || 'Something went wrong!');
       }
-     toast.success('Thanks for reaching out! We’ve received your message and will get back to you soon.');
+
+     toast.success( 'Thanks for reaching out! We’ve received your message and will get back to you soon.');
+
       setFormData({
         fullName: '',
         contactNumber: '',
+
         companyName: '',
         email: '',
         description: '',
