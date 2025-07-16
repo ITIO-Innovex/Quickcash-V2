@@ -8,6 +8,7 @@ import CustomModal from '../../../components/CustomModal';
 import { Box, Button, Typography, useTheme } from '@mui/material';
 import GenericTable from '../../../components/common/genericTable';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import moment from 'moment';
 interface FirstSectionProps {
   refreshSignal: number;
 }
@@ -58,7 +59,14 @@ const FirstSection = forwardRef<any, FirstSectionProps>(({ refreshSignal }, ref)
   };
 
   const columns = [
-    { field: 'createdAt', headerName: 'Date' },
+    {
+      field: 'createdAt',
+      headerName: 'Date',
+      render: (row: any) => {
+        const formattedDateTime = moment(row.createdAt).format('DD MMM YYYY, hh:mm A');
+        return <span>{formattedDateTime}</span>;
+      }
+    },
     { field: 'ticketId', headerName: 'Ticket Id' },
     { field: 'subject', headerName: 'Subject' },
     { field: 'message', headerName: 'Message' },
