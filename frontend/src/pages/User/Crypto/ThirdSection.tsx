@@ -206,7 +206,7 @@ const ThirdSection = () => {
                       ) : (
                         <img
                           className="grid-icon"
-                          src={`https://assets.coincap.io/assets/icons/${wallet.coin.replace('_TEST', '').toLowerCase()}@2x.png`}
+                          src={`https://assets.coincap.io/assets/icons/${wallet.coin.split('_')[0].toLowerCase()}@2x.png`}
                           style={{ width: '35px', position: 'relative', top: '5px' }}
                           alt="coin"
                         />
