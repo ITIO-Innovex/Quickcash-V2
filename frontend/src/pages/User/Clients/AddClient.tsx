@@ -96,7 +96,7 @@ const AddClient = () => {
     try {
       const phoneNumber = parsePhoneNumberFromString(formData.mobile || '');
       if (!phoneNumber || !phoneNumber.isValid()) {
-        toast.error('Please enter a valid mobile number in international format (e.g., +49 1234567890).');
+        toast.error('Please enter a valid mobile number in international format (e.g., +91 7748963578).');
         setLoading(false);
         return;
       }
