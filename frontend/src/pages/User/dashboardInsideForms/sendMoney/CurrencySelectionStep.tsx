@@ -389,11 +389,20 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
               {(() => {
                 const currencyCode = toCurrency?.split('-')[0] || '';
                 let countryCode = toCurrency?.split('-')[2];
-                if (!countryCode && currencyList && currencyCode) {
+                if ((!countryCode || countryCode.length !== 2) && currencyList && currencyCode) {
                   const found = currencyList.find(
                     c => c.currency === currencyCode || c.base_code === currencyCode
                   );
                   countryCode = found?.country || found?.countryCode || '';
+                }
+                const currencyToCountryMap: Record<string, string> = {
+                  INR: 'IN',
+                  USD: 'US',
+                  EUR: 'EU',
+                  GBP: 'GB',
+                };
+                if ((!countryCode || countryCode.length !== 2) && currencyToCountryMap[currencyCode]) {
+                  countryCode = currencyToCountryMap[currencyCode];
                 }
                 return (
                   <>

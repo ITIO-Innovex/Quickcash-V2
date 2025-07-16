@@ -221,7 +221,7 @@ const AddBeneficiaryForm: React.FC = () => {
                                 onChange={(e) => setCurrency(e.target.value)}
                             >
                                 {currencyList?.map((item, index) => (
-                                    <MenuItem key={index} value={item?.CurrencyName}>
+                                    <MenuItem key={index} value={item?.CurrencyCode}>
                                         {item?.CurrencyName}
                                     </MenuItem>
                                 ))}
