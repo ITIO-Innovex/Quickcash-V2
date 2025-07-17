@@ -23,10 +23,10 @@ const IdentityVerificationForm: React.FC<IdentityVerificationFormProps> = ({
   const theme = useTheme();
 
   const documentTypeOptions = [
-    { label: 'Passport', value: 'passport' },
-    { label: 'Driver License', value: 'drivers_license' },
-    { label: 'National ID', value: 'national_id' },
-  ];
+  { label: 'Passport', value: 'passport' },
+  { label: 'License', value: 'license' },
+  { label: 'National ID', value: 'id' },
+];
 
   const acceptedFormats = '.jpg,.jpeg,.png,.pdf';
 
