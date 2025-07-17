@@ -451,6 +451,8 @@ const AdminPaymentSettingRoute    =   require('./routes/Admin/paymentsetting.rou
 const AdminTemplateSettingRoute   =   require('./routes/admintemplatesetting.route');
 const AdminRevenueRoute           =   require("./routes/revenue.route");
 const AdminNotificationRoute      =   require('./routes/notification.route');
+const AdminKycMode                =   require('./routes/kycMode.route.js');
+const AdminBusinessRoutes         =   require('./routes/Admin/bcKyc.routes.js');
 const { Client }                  =   require('./models/client.model');
 const { QrCode }                  =   require('./models/qrcode.model');
 const { addNotification }         =   require('./middlewares/notification.middleware');
@@ -471,6 +473,8 @@ app.use('/api/v1/admin/invoicesetting',AdminInvoiceSettingRoute);
 app.use('/api/v1/admin/templateSetting',AdminTemplateSettingRoute);
 app.use('/api/v1/admin/revenue',AdminRevenueRoute);
 app.use('/api/v1/admin/notification',AdminNotificationRoute);
+app.use('/api/v1/admin/kycmode',AdminKycMode);
+app.use('/api/v1/admin/business',AdminBusinessRoutes);
 
 
 if(process.env.NODE_ENV == "production") {
