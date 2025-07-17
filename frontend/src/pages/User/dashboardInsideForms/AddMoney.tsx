@@ -32,12 +32,12 @@ const TransferOptions = [
     value: 'stripe',
     img: 'stripe.png'
   },
-  {
-    label: 'UPI',
-    moreInfo: 'Supports only INR transactions',
-    value: 'upi',
-    img: 'upi.png'
-  },
+  // {
+  //   label: 'UPI',
+  //   moreInfo: 'Supports only INR transactions',
+  //   value: 'upi',
+  //   img: 'upi.png'
+  // },
 ];
 
 
