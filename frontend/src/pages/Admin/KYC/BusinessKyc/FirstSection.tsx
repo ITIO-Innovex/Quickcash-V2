@@ -7,6 +7,7 @@ import CustomModal from '../../../../components/CustomModal';
 import GenericTable from '../../../../components/common/genericTable';
 import CustomButton from '@/components/CustomButton';
 import admin from '@/helpers/adminApiHelper';
+import { getBusinessKycById } from '@/api/businessKyc.api';
 
 const statusOptions = [
   { value: 'pending', label: 'Pending' },
@@ -21,11 +22,24 @@ const FirstSection = () => {
   const [currentData, setCurrentData] = useState<any[]>([]);
   const [statusUpdate, setStatusUpdate] = useState('');
   const [updating, setUpdating] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
 
-  const handleOpen = (row: any) => {
-    setSelectedRow(row);
-    setStatusUpdate(row.status || 'pending');
+  const handleOpen = async (row: any) => {
+    setModalLoading(true);
     setOpen(true);
+    try {
+      const token = localStorage.getItem('admin');
+      const res = await getBusinessKycById(row.id, token);
+      if (res.status === 200 && res.data.data) {
+        setSelectedRow(res.data.data);
+        setStatusUpdate(res.data.data.status || 'pending');
+      }
+    } catch (error) {
+      // handle error, maybe show a toast
+      setSelectedRow(null);
+    } finally {
+      setModalLoading(false);
+    }
   };
 
   const handleClose = () => {
@@ -45,7 +59,7 @@ const FirstSection = () => {
           username: item.name || 'N/A',
           email: item.email || 'N/A',
           status: item.status || 'N/A',
-          frontImage: item.kycDocuments?.[0]?.path || null,
+          frontImage: (`${import.meta.env.VITE_PUBLIC_URL || ''}/${item.kycDocuments?.[0]?.path || null}`),
           backImage: item.kycDocuments?.[1]?.path || null,
         }));
         setCurrentData(mappedRows);
@@ -95,7 +109,7 @@ const FirstSection = () => {
       headerName: 'Action',
       render: (row: any) => (
         <VisibilityIcon
-          sx={{ cursor: 'pointer' }} 
+          sx={{ cursor: 'pointer' }}
           onClick={() => handleOpen(row)}
         />
       )
@@ -112,66 +126,108 @@ const FirstSection = () => {
         title=""
         sx={{ backgroundColor: theme.palette.background.default }}
       >
-        {selectedRow && (
+        {modalLoading ? (
+          <Typography>Loading...</Typography>
+        ) : selectedRow && (
           <>
+            <Typography className="section-title">Business Details</Typography>
+            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
+              <Typography><strong>Business Name:</strong></Typography>
+              <Typography>{selectedRow.businessDetails?.businessName || 'N/A'}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
+              <Typography><strong>Business Type:</strong></Typography>
+              <Typography>{selectedRow.businessDetails?.businessType || 'N/A'}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
+              <Typography><strong>Registration Number:</strong></Typography>
+              <Typography>{selectedRow.businessDetails?.registrationNumber || 'N/A'}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
+              <Typography><strong>Industry:</strong></Typography>
+              <Typography>{selectedRow.businessDetails?.industry || 'N/A'}</Typography>
+            </Box>
+            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
+              <Typography><strong>Incorporation Country:</strong></Typography>
+              <Typography>{selectedRow.businessDetails?.incorporationCountry || 'N/A'}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
+              <Typography><strong>Website:</strong></Typography>
+              <Typography>{selectedRow.businessDetails?.website || 'N/A'}</Typography>
+            </Box>
+
+            <Typography className="section-title">Address</Typography>
+            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
+              <Typography><strong>City:</strong></Typography>
+              <Typography>{selectedRow.address?.city || 'N/A'}</Typography>
+            </Box>
+            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
+              <Typography><strong>State:</strong></Typography>
+              <Typography>{selectedRow.address?.state || 'N/A'}</Typography>
+            </Box>
+            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
+              <Typography><strong>Postal Code:</strong></Typography>
+              <Typography>{selectedRow.address?.postalCode || 'N/A'}</Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
+              <Typography><strong>Country:</strong></Typography>
+              <Typography>{selectedRow.address?.country || 'N/A'}</Typography>
+            </Box>
+
+
+            <Typography className="section-title">Bank Details</Typography>
+            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
+              <Typography><strong>Bank Name:</strong></Typography>
+              <Typography>{selectedRow.bank?.bankName || 'N/A'}</Typography>
+            </Box>
+            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
+              <Typography><strong>Account Number:</strong></Typography>
+              <Typography>{selectedRow.bank?.accountNumber || 'N/A'}</Typography>
+            </Box>
+            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
+              <Typography><strong>SWIFT/BIC:</strong></Typography>
+              <Typography>{selectedRow.bank?.swiftBic || 'N/A'}</Typography>
+            </Box>
+            <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
+              <Typography><strong>Currency:</strong></Typography>
+              <Typography> {selectedRow.bank?.currency || 'N/A'}</Typography>
+            </Box>
             <Typography className="section-title">Contact Details</Typography>
             <Box display="flex" justifyContent="space-between" mb={2} mt={4}>
-              <Typography><strong>Contact NO:</strong></Typography>
-              <Typography>1234</Typography>
-            </Box>
-            <Box display="flex" justifyContent="space-between" mb={2}>
-              <Typography><strong>Secondary Phone:</strong></Typography>
-              <Typography>1234</Typography>
+              <Typography><strong>Name:</strong></Typography>
+              <Typography>{selectedRow.name || 'N/A'}</Typography>
             </Box>
             <Box display="flex" justifyContent="space-between" mb={2}>
               <Typography><strong>Email:</strong></Typography>
-              <Typography>{selectedRow.email}</Typography>
+              <Typography>{selectedRow.email || 'N/A'}</Typography>
             </Box>
             <Typography className="section-title">Document Details</Typography>
-            <Box display="flex" justifyContent="space-between" mb={2} gap={2}>
-              <CustomInput label="Type Of Document"/>
-              <CustomInput label="Selected Document No"/>
-            </Box>
-            <Box display="flex" justifyContent="space-between" mb={2} gap={2}>
-              <Box>
-                <Typography>Uploaded Document Front</Typography>
-                <div className="kyc-doc-image-preview">
-                  {selectedRow.frontImage ? (
-                    <img src={selectedRow.frontImage} alt="Document Front" />
-                  ) : (
-                    <div className="kyc-doc-image-placeholder">
-                      <img src={NoImage} alt="No Document" className="no-image-logo" />
+            <Box display="flex" flexDirection="column" gap={2} mb={2}>
+              {Array.isArray(selectedRow.kycDocuments) && selectedRow.kycDocuments.length > 0 ? (
+                selectedRow.kycDocuments.map((doc: any, idx: number) => (
+                  <Box key={doc._id || idx} display="flex" alignItems="center" gap={2}>
+                    <Typography><strong>Type:</strong> {doc.docType || 'N/A'}</Typography>
+
+                    <div className="kyc-doc-image-preview">
+                      {doc.path ? (
+                        <img src={`${import.meta.env.VITE_PUBLIC_URL || ''}/${doc.path}`} alt={doc.docType || 'Document'} style={{ maxWidth: 100, maxHeight: 100 }} />
+                      ) : (
+                        <div className="kyc-doc-image-placeholder">
+                          <img src={NoImage} alt="No Document" className="no-image-logo" />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </Box>
-              <Box>
-                <Typography>Uploaded Document Back</Typography>
-                <div className="kyc-doc-image-preview">
-                  {selectedRow.backImage ? (
-                    <img src={selectedRow.backImage} alt="Document Back" />
-                  ) : (
-                    <div className="kyc-doc-image-placeholder">
-                      <img src={NoImage} alt="No Document" className="no-image-logo" />
-                    </div>
-                  )}
-                </div>
-              </Box>
-            </Box>
-            <Typography className="section-title">Residential Address</Typography>
-            <Box display="flex" justifyContent="space-between" mb={2} gap={2}>
-              <CustomInput label="Type Of Document"/>
-            </Box>
-            <Typography>Uploaded Document</Typography>
-            <div className="kyc-doc-image-preview">
-              {selectedRow.backImage ? (
-                <img src={selectedRow.backImage} alt="Document Back" />
+                  </Box>
+                ))
               ) : (
-                <div className="kyc-doc-image-placeholder">
-                  <img src={NoImage} alt="No Document" className="no-image-logo" />
-                </div>
+                <Typography>No documents uploaded.</Typography>
               )}
-            </div>
+            </Box>
             {/* Status Update Section */}
             <Box display="flex" alignItems="center" gap={2} mt={2}>
               <FormControl size="small" fullWidth>
@@ -188,10 +244,9 @@ const FirstSection = () => {
                   ))}
                 </Select>
               </FormControl>
-            
             </Box>
             <Box display="flex" justifyContent="flex-end" gap={2} >
-            <CustomButton onClick={handleUpdateStatus} disabled={updating}>
+              <CustomButton onClick={handleUpdateStatus} disabled={updating}>
                 {updating ? 'Saving...' : 'Save'}
               </CustomButton>
               <CustomButton onClick={handleClose}>Close</CustomButton>
