@@ -3,6 +3,8 @@ import { TextField, TextFieldProps, useTheme } from '@mui/material';
 
 type CustomInputProps = TextFieldProps & {
   required?: boolean;
+  error?: boolean;
+  helperText?: string;
 };
 
 const CustomInput: React.FC<CustomInputProps> = ({
@@ -37,8 +39,10 @@ const CustomInput: React.FC<CustomInputProps> = ({
       value={value}
       onChange={onChange}
       onBlur={handleBlur}
-      error={isError}
-      helperText={isError ? `${label} must be filled` : ''}
+     error={isError || props.error} // ✅ Combine internal and external error
+      helperText={
+        props.helperText ? props.helperText : isError ? `${label} must be filled` : ''
+      }
       InputLabelProps={{
         shrink: true,
         sx: {

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
 import CustomDropdown from '../CustomDropdown';
@@ -22,34 +21,42 @@ const IdentityVerificationForm: React.FC<IdentityVerificationFormProps> = ({
   onChange
 }) => {
   const theme = useTheme();
-  
+
   const documentTypeOptions = [
     { label: 'Passport', value: 'passport' },
     { label: 'Driver License', value: 'drivers_license' },
     { label: 'National ID', value: 'national_id' },
   ];
 
+  const acceptedFormats = '.jpg,.jpeg,.png,.pdf';
+
   return (
     <Box sx={{ display: 'grid', gap: 3 }}>
       <Typography variant="h6" sx={{ color: theme.palette.text.primary, mb: 2 }}>
         Verify your identity
       </Typography>
+
       <CustomDropdown
         label="Document Type"
         name="documentType"
         value={values.documentType}
         onChange={(e) => onChange('documentType', e.target.value as string)}
         options={documentTypeOptions}
+        error={!!errors.documentType}
+        helperText={errors.documentType || ''}
       />
+
       <Box>
         <Typography variant="subtitle2" sx={{ mb: 1, color: theme.palette.text.primary }}>
           Attach Document
         </Typography>
+
         <FileUpload
-          onFileSelect={(file) => onChange('document', file)}
+          acceptedFormats={acceptedFormats}
           selectedFile={values.document}
-          acceptedFormats=".jpg,.jpeg,.png,.pdf"
+          onFileSelect={(file: File) => onChange('document', file)} // ✅ Only raw File object
         />
+
         {errors.document && (
           <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
             {errors.document}

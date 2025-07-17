@@ -1,8 +1,10 @@
 
-import React from 'react';
 import { Box } from '@mui/material';
-import CustomInputField from '../CustomInputField';
+import api from '@/helpers/apiHelper';
 import CustomDropdown from '../CustomDropdown';
+import React, { useEffect, useState } from 'react';
+import CustomInputField from '../CustomInputField';
+const url = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
 
 interface BusinessDetailsFormProps {
   values: {
@@ -27,18 +29,34 @@ const BusinessDetailsForm: React.FC<BusinessDetailsFormProps> = ({
   errors,
   onChange
 }) => {
+  const [countryOptions, setCountryOptions] = useState<{ label: string; value: string }[]>([]);
+  
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const res = await api.get(`/${url}/v1/user/getCountryList`);
+
+        const countryList = res.data?.data?.country || [];
+
+        const formatted = countryList.map((country: any) => ({
+          label: country.name,
+          value: country.name, 
+        }));
+
+        setCountryOptions(formatted);
+      } catch (error) {
+        console.error("❌ Error fetching country list:", error);
+      }
+    };
+
+    fetchCountries();
+  }, []);
+  
   const businessTypeOptions = [
     { label: 'Corporation', value: 'corporation' },
     { label: 'LLC', value: 'llc' },
     { label: 'Partnership', value: 'partnership' },
     { label: 'Sole Proprietorship', value: 'sole_proprietorship' },
-  ];
-
-  const countryOptions = [
-    { label: 'United States', value: 'US' },
-    { label: 'United Kingdom', value: 'UK' },
-    { label: 'Canada', value: 'CA' },
-    { label: 'Australia', value: 'AU' },
   ];
 
   return (
@@ -57,6 +75,8 @@ const BusinessDetailsForm: React.FC<BusinessDetailsFormProps> = ({
         value={values.businessType}
         onChange={(e) => onChange('businessType', e.target.value as string)}
         options={businessTypeOptions}
+        error={!!errors.businessType} // 👈 Error passed here
+        helperText={errors.businessType}
       />
       <CustomInputField
         label="Company Registration Number (optional)"
@@ -78,6 +98,8 @@ const BusinessDetailsForm: React.FC<BusinessDetailsFormProps> = ({
         value={values.countryOfIncorporation}
         onChange={(e) => onChange('countryOfIncorporation', e.target.value as string)}
         options={countryOptions}
+        error={!!errors.countryOfIncorporation}
+        helperText={errors.countryOfIncorporation}
       />
       <CustomInputField
         label="Website (optional)"
