@@ -124,6 +124,7 @@ const invoiceUserClientRoute =   require('./routes/client.route');
 const ManualPaymentRoute     =   require('./routes/manualPayment.route');
 const QuoteRoute             =   require('./routes/quote.route');
 const DigitalSignatureRoute  =   require('./routes/DigitalSignature/index.js');    //Digital Signature route Import 
+const BusinessRoutes         =   require('./routes/bsUser.routes.js');
 // const TransferMethodRoute    =   require('./routes/transferMethod.route');
 
 // const offerRoutes = require('./routes/p2poffer.route');
@@ -394,6 +395,7 @@ app.use('/api/v1/company',UserCompanyRoute);
 app.use('/api/v1/contact', contactRoute);
 app.use('/api/v1/receipient',ReceipientRoute);
 app.use('/api/v1/transaction',TransactionRoute);
+app.use('/api/v1/business/user' , BusinessRoutes)
 app.use('/api/v1/invoicesetting', invoiceSettingRoute);
 app.use('/api/v1/templateSetting',templateSettingRoute);
 app.use('/api/v1/walletaddressrequest',WalletAddressRequest);
@@ -449,6 +451,8 @@ const AdminPaymentSettingRoute    =   require('./routes/Admin/paymentsetting.rou
 const AdminTemplateSettingRoute   =   require('./routes/admintemplatesetting.route');
 const AdminRevenueRoute           =   require("./routes/revenue.route");
 const AdminNotificationRoute      =   require('./routes/notification.route');
+const AdminKycMode                =   require('./routes/kycMode.route.js');
+const AdminBusinessRoutes         =   require('./routes/Admin/bcKyc.routes.js');
 const { Client }                  =   require('./models/client.model');
 const { QrCode }                  =   require('./models/qrcode.model');
 const { addNotification }         =   require('./middlewares/notification.middleware');
@@ -469,6 +473,8 @@ app.use('/api/v1/admin/invoicesetting',AdminInvoiceSettingRoute);
 app.use('/api/v1/admin/templateSetting',AdminTemplateSettingRoute);
 app.use('/api/v1/admin/revenue',AdminRevenueRoute);
 app.use('/api/v1/admin/notification',AdminNotificationRoute);
+app.use('/api/v1/admin/kycmode',AdminKycMode);
+app.use('/api/v1/admin/business',AdminBusinessRoutes);
 
 
 if(process.env.NODE_ENV == "production") {

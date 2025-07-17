@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 import api from '@/helpers/apiHelper';
 import CustomDropdown from '../CustomDropdown';
+import React, { useEffect, useState } from 'react';
 import CustomInputField from '../CustomInputField';
 const url = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
 
@@ -25,7 +25,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   onChange,
 }) => {
   const [countryOptions, setCountryOptions] = useState<{ label: string; value: string }[]>([]);
-
+  
   useEffect(() => {
     const fetchCountries = async () => {
       try {
@@ -35,7 +35,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
 
         const formatted = countryList.map((country: any) => ({
           label: country.name,
-          value: country.id, 
+          value: country.name, 
         }));
 
         setCountryOptions(formatted);
@@ -47,7 +47,6 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
     fetchCountries();
   }, []);
   
-
   return (
     <Box sx={{ display: 'grid', gap: 3 }}>
       <CustomInputField
@@ -55,8 +54,8 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
         name="fullName"
         value={values.fullName}
         onChange={(e) => onChange('fullName', e.target.value)}
-        error={!!errors.fullName}
-        helperText={errors.fullName}
+        error={!!errors.fullName}             // ✅ Add this
+        helperText={errors.fullName || ''} 
       />
       <CustomInputField
         label="Email Address"
@@ -64,8 +63,8 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
         type="email"
         value={values.email}
         onChange={(e) => onChange('email', e.target.value)}
-        error={!!errors.email}
-        helperText={errors.email}
+        error={!!errors.email}               // ✅ Add this
+        helperText={errors.email || ''}   
       />
       <CustomDropdown
         label="Select a country"
@@ -73,6 +72,8 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
         value={values.country}
         onChange={(e) => onChange('country', e.target.value as string)}
         options={countryOptions}
+        error={!!errors.country}
+        helperText={errors.country || ''}    
       />
     </Box>
   );
