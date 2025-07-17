@@ -11,8 +11,8 @@ import { getBusinessKycById } from '@/api/businessKyc.api';
 
 const statusOptions = [
   { value: 'pending', label: 'Pending' },
-  { value: 'verified', label: 'Verified' },
-  { value: 'reject', label: 'Rejected' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'declined', label: 'Declined' },
 ];
 
 const FirstSection = () => {
@@ -81,7 +81,7 @@ const FirstSection = () => {
     if (!selectedRow) return;
     setUpdating(true);
     try {
-      await admin.put(`/api/v1/admin/business/status/${selectedRow.id}`, { status: statusUpdate });
+      await admin.put(`/api/v1/admin/business/status/${selectedRow._id}`, { status: statusUpdate });
       await fetchKycList();
       handleClose();
     } catch (error) {
@@ -215,7 +215,7 @@ const FirstSection = () => {
 
                     <div className="kyc-doc-image-preview">
                       {doc.path ? (
-                        <img src={`${import.meta.env.VITE_PUBLIC_URL || ''}/${doc.path}`} alt={doc.docType || 'Document'} style={{ maxWidth: 100, maxHeight: 100 }} />
+                        <img src={`${import.meta.env.VITE_PUBLIC_URL || ''}/${doc.path}`} alt={doc.docType || 'Document'} style={{ maxWidth: 500, maxHeight: 500 }} />
                       ) : (
                         <div className="kyc-doc-image-placeholder">
                           <img src={NoImage} alt="No Document" className="no-image-logo" />
