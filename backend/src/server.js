@@ -124,6 +124,7 @@ const invoiceUserClientRoute =   require('./routes/client.route');
 const ManualPaymentRoute     =   require('./routes/manualPayment.route');
 const QuoteRoute             =   require('./routes/quote.route');
 const DigitalSignatureRoute  =   require('./routes/DigitalSignature/index.js');    //Digital Signature route Import 
+const BusinessRoutes         =   require('./routes/bsUser.routes.js');
 // const TransferMethodRoute    =   require('./routes/transferMethod.route');
 
 // const offerRoutes = require('./routes/p2poffer.route');
@@ -394,6 +395,7 @@ app.use('/api/v1/company',UserCompanyRoute);
 app.use('/api/v1/contact', contactRoute);
 app.use('/api/v1/receipient',ReceipientRoute);
 app.use('/api/v1/transaction',TransactionRoute);
+app.use('/api/v1/business/user' , BusinessRoutes)
 app.use('/api/v1/invoicesetting', invoiceSettingRoute);
 app.use('/api/v1/templateSetting',templateSettingRoute);
 app.use('/api/v1/walletaddressrequest',WalletAddressRequest);
