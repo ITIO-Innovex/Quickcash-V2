@@ -4,6 +4,8 @@ import { Box, Typography, useTheme, Radio, RadioGroup, FormControlLabel, FormCon
 import CustomInput from '../../../../components/CustomInputField';
 import CustomButton from '../../../../components/CustomButton';
 import { useAppToast } from '@/utils/toast'; 
+import { saveSumsubKycConfig, getSumsubKycConfig, updateSumsubKycConfig } from '@/api/kycMode.api';
+import { useEffect } from 'react';
 
 const FirstSection = () => {
   const theme = useTheme();
@@ -18,6 +20,34 @@ const FirstSection = () => {
     otherJsonData: ''
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(false);
+  const [configExists, setConfigExists] = useState(false);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      const token = localStorage.getItem('admin');
+      if (!token) return;
+      try {
+        const res = await getSumsubKycConfig(token);
+        if (res.data && res.data.success && res.data.data) {
+          setKycMode('sumsub');
+          setConfigExists(true);
+          const details = res.data.data.details || {};
+          setFormData({
+            kycProvider: details.kycProvider || '',
+            kycStatus: details.kycStatus || '',
+            apiKey: details.apiKey || '',
+            otherKey: details.otherKey || '',
+            otherKey2: details.otherKey2 || '',
+            otherJsonData: details.otherJsonData || '',
+          });
+        }
+      } catch (err) {
+        setConfigExists(false);
+      }
+    };
+    fetchConfig();
+  }, []);
 
   const handleKycModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setKycMode(event.target.value);
@@ -67,16 +97,38 @@ const FirstSection = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    
+  
     if (kycMode === 'sumsub' && !validateForm()) {
       toast.error('Please fill in all required fields');
       return;
     }
-    
-    // Simulate API call
-    toast.success('KYC Mode configuration saved successfully!');
+  
+    if (kycMode === 'sumsub') {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('admin');
+        if (!token) {
+          toast.error('Not authenticated');
+          setLoading(false);
+          return;
+        }
+        if (configExists) {
+          await updateSumsubKycConfig(formData, token);
+        } else {
+          await saveSumsubKycConfig(formData, token);
+        }
+        toast.success('KYC Mode configuration saved successfully!');
+        setConfigExists(true);
+      } catch (error: any) {
+        toast.error(error?.response?.data?.message || 'Failed to save configuration');
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      toast.success('KYC Mode configuration saved successfully!');
+    }
     console.log('KYC Mode:', kycMode);
     console.log('Form Data:', formData);
   };
@@ -180,8 +232,8 @@ const FirstSection = () => {
             </Box>
             
             <Box className="kyc-form-actions">
-              <CustomButton type="submit" className="kyc-submit-btn">
-                Save Configuration
+              <CustomButton type="submit" className="kyc-submit-btn" disabled={loading}>
+                {loading ? 'Saving...' : 'Save Configuration'}
               </CustomButton>
             </Box>
           </Box>

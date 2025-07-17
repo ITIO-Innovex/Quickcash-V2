@@ -72,6 +72,7 @@ const FirstSection = () => {
     formData.append('fname', fname);
     formData.append('lname', lname);
     formData.append('email', email);
+    formData.append('mobile', mobile);
     formData.append('password', password);
     formData.append('user_id', accountId?.data?.id);
     if (imageFront1) {
@@ -91,34 +92,35 @@ const FirstSection = () => {
     }
   };
 
-  // const getProfileDetails = async () => {
-  //   try {
-  //     const result = await admin.get(`/${url}/v1/admin/auth`);
-  //     console.log("Fetched profile data:", result.data.data);
+  // Fetch admin profile details and pre-fill fields
+  const getProfileDetails = async () => {
+    const token = localStorage.getItem('admin');
+    if (!token) return;
+    const accountId = jwtDecode<JwtPayload>(token);
+    try {
+      const result = await admin.get(`/${url}/v1/admin/getbyId/${accountId?.data?.id}`);
+      if (result.data.status === 201) {
+        const data = result.data.data?.[0];
+        setFname(data?.fname || '');
+        setLname(data?.lname || '');
+        setEmail(data?.email || '');
+        setMobile(data?.mobile || '');
+        setPassword('');
+        if (data?.profileAvatar) {
+          // Use the provided VITE_PUBLIC_URL for the image base URL
+          setSelectedImage(`${import.meta.env.VITE_PUBLIC_URL || ''}/${data.profileAvatar}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching profile details:', error);
+      toast.error('Failed to fetch profile details');
+    }
+  };
 
-  //     if (result.data.status === 201) {
-  //       const data = result.data.data;
-
-  //       setFname(data?.fname || '');
-  //       setLname(data?.lname || '');
-  //       setEmail(data?.email || '');
-  //       setMobile(data?.mobile || '');
-  //       setPassword('');
-  //       if (data?.profileAvatar) {
-  //         setSelectedImage(data.profileAvatar);
-  //       }
-  //     }
-
-  //   } catch (error) {
-  //     console.error('Error fetching profile details:', error);
-  //       console.log('email state:', email);
-  // console.log('password state:', password);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   getProfileDetails();
-  // }, []);
+  useEffect(() => {
+    getProfileDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
 
 
@@ -233,9 +235,9 @@ const FirstSection = () => {
             <TextField
               fullWidth
               label="Email"
-              // value={email}
+              value={email}
               onChange={(e) => setEmail(e.target.value)}
-                autoComplete="off"
+              autoComplete="off"
             />
             <TextField
               fullWidth
@@ -247,9 +249,9 @@ const FirstSection = () => {
               fullWidth
               label="Password"
               type="password"
-              // value={password}
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
-                autoComplete="off"
+              autoComplete="off"
             />
           </Box>
 

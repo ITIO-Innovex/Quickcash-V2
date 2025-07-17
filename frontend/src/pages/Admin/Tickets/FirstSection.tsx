@@ -136,13 +136,17 @@ const FirstSection = () => {
     {
       field: 'status',
       headerName: 'Status',
-      render: (row: any) => (
-        <span
-          className={`status-chip ${row.status === 'Open' ? 'success' : 'pending'}`}
-        >
-          {row.status}
-        </span>
-      ),
+      render: (row: any) => {
+        const rawStatus = row.status?.toLowerCase?.();
+        const normalizedStatus = rawStatus === 'closed' ? 'close' : rawStatus;
+        const displayStatus = rawStatus === 'closed' ? 'Close' : row.status;
+
+        return (
+          <span className={`status-chip ${normalizedStatus}`}>
+            {displayStatus}
+          </span>
+        );
+      }
     },
     {
       field: 'action',

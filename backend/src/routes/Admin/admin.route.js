@@ -35,7 +35,8 @@ const {
   accountsList,
   accountsListByID,
   removeprofileImage,
-  dashboardData
+  dashboardData,
+  registerAdmin
  } = require('../../controllers/Admin/admin.controller');
 const { verifyToken } = require('../../middlewares/admin.middleware');
 
@@ -45,6 +46,7 @@ router.route('/login').post(loginUser);
 router.route('/logout').post(verifyToken,logoutUser);
 router.route('/dashboarddetails').get(verifyToken,dashboardData);
 // router.route('/auth').get(verifyToken,auth);
+router.route('/register').post(registerAdmin);
 router.route('/forget-password').post(forgetPassword);
 router.route('/reset-password').post(resetPassword);
 router.route('/adminsList').get(verifyToken,adminsList);
