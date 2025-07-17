@@ -6,6 +6,7 @@ const admin = axios.create(); // No baseURL
 // Attach token to every request
 admin.interceptors.request.use((config) => {
   const token = localStorage.getItem("admin");
+  console.log("Token:", token);
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

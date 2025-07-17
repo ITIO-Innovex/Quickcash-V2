@@ -6257,6 +6257,7 @@ color: var(--bs-primary);
 .status-chip.active,
 .status-chip.success,
 .status-chip.close,
+.status-chip.verified,
 .status-chip.paid {
   background-color: #dcfce7;
   color: #483594;

@@ -32,106 +32,106 @@ const generateRefreshToken = (user) => {
   );
 };
 module.exports = {
-  // registerAdmin: async(req,res) => {
-  //   const {fname,lname,email,password,mobile,autoResetTime,status} = req.body;
-  //   try {
+  registerAdmin: async(req,res) => {
+    const {fname,lname,email,password,mobile,autoResetTime,status} = req.body;
+    try {
 
-  //     if(fname == "" || email == "" || password == "") {
-  //       return res.status(401).json({
-  //        status: 401,
-  //        message: "Name,Email,Password are mandatory",
-  //        data: null
-  //       })
-  //     }
+      if(fname == "" || email == "" || password == "") {
+        return res.status(401).json({
+         status: 401,
+         message: "Name,Email,Password are mandatory",
+         data: null
+        })
+      }
 
-  //     const AdminExists = await Admin.findOne({email});
+      const AdminExists = await Admin.findOne({email});
     
-  //     if(AdminExists) {
-  //        return res.status(401).json({
-  //         status: 401,
-  //         message: "Admin with this email id is already registered with Us",
-  //         data: null
-  //       })
-  //     }
+      if(AdminExists) {
+         return res.status(401).json({
+          status: 401,
+          message: "Admin with this email id is already registered with Us",
+          data: null
+        })
+      }
 
-  //     const startdate = new Date();
-  //     var new_date = moment(startdate, "YYYY-MM-DD");
+      const startdate = new Date();
+      var new_date = moment(startdate, "YYYY-MM-DD");
 
-  //     const admin = await Admin.create({
-  //       fname,
-  //       lname,
-  //       email,
-  //       password,
-  //       mobile,
-  //       status: status ? status : false,
-  //       autoresettime: autoResetTime ? new_date.add(autoResetTime, 'days').format('YYYY-MM-DD') : new_date.add(7, 'days').format('YYYY-MM-DD')
-  //     });
+      const admin = await Admin.create({
+        fname,
+        lname,
+        email,
+        password,
+        mobile,
+        status: status ? status : false,
+        autoresettime: autoResetTime ? new_date.add(autoResetTime, 'days').format('YYYY-MM-DD') : new_date.add(7, 'days').format('YYYY-MM-DD')
+      });
     
-  //     if(!admin) {
-  //       return  res.status(401).json({
-  //        status: 401,
-  //        message: "Error while inserting or creating data",
-  //        data: null
-  //       })
-  //     }
+      if(!admin) {
+        return  res.status(401).json({
+         status: 401,
+         message: "Error while inserting or creating data",
+         data: null
+        })
+      }
 
-  //     const rell = __dirname.replace("\controllers","");
-  //     const rell2 = rell.replace("\Admin","");
-  //     const htmlBody = await ejs.renderFile(rell2 + "/views/AdminDetails.ejs", { name:fname, email, password,urlLink: `${process.env.BASE_URL2}/admin` });
+      const rell = __dirname.replace("\controllers","");
+      const rell2 = rell.replace("\Admin","");
+      const htmlBody = await ejs.renderFile(rell2 + "/views/AdminDetails.ejs", { name:fname, email, password,urlLink: `${process.env.BASE_URL2}/admin` });
        
-  //     const createdAdmin = await Admin.findById({_id: admin._id}).select("-password");
+      const createdAdmin = await Admin.findById({_id: admin._id}).select("-password");
     
-  //     if(!createdAdmin) {
-  //       return res.status(401).json({
-  //        status: 401,
-  //        message: "User with this email id is already registered with Us",
-  //        data: null
-  //       })
-  //     }
+      if(!createdAdmin) {
+        return res.status(401).json({
+         status: 401,
+         message: "User with this email id is already registered with Us",
+         data: null
+        })
+      }
 
-  //     if(htmlBody) {
-  //       const subject = "Admin Login Credentials!!!"
-  //       sendMail(email,subject,htmlBody);
-  //     }
+      if(htmlBody) {
+        const subject = "Admin Login Credentials!!!"
+        sendMail(email,subject,htmlBody);
+      }
 
-  //     return res.status(200).json({
-  //       status: 201,
-  //       message: "Admin is registered Successfully!!!",
-  //       data:createdAdmin,
-  //     })
+      return res.status(200).json({
+        status: 201,
+        message: "Admin is registered Successfully!!!",
+        data:createdAdmin,
+      })
 
-  //     } catch (error) {
-  //          console.log(error);
-  //          return res.status(500).json({
-  //           status: 500,
-  //           message: "Something went wrong with api",
-  //           data: error
-  //          })
-  //       }
-  // },
-  // auth: async(req,res) => {
-  //     try {
-  //       if(!req.user) {
-  //         return res.status(401).json({
-  //           status:401,
-  //           message: "Admin is not authorized to access page",
-  //           data: null
-  //         })
-  //       }
+      } catch (error) {
+           console.log(error);
+           return res.status(500).json({
+            status: 500,
+            message: "Something went wrong with api",
+            data: error
+           })
+        }
+  },
+  auth: async(req,res) => {
+      try {
+        if(!req.user) {
+          return res.status(401).json({
+            status:401,
+            message: "Admin is not authorized to access page",
+            data: null
+          })
+        }
   
-  //        return res.status(201).json({
-  //         status:201,
-  //         message: "Admin is Successfully authenticated",
-  //         data: req.user
-  //       })
-  //     } catch (error) {
-  //       return res.status(500).json({
-  //         status:500,
-  //         message: "Something went wrong",
-  //         data: null
-  //       })
-  //     }
-  // },
+         return res.status(201).json({
+          status:201,
+          message: "Admin is Successfully authenticated",
+          data: req.user
+        })
+      } catch (error) {
+        return res.status(500).json({
+          status:500,
+          message: "Something went wrong",
+          data: null
+        })
+      }
+  },
   getbyId: async(req,res) => {
     const ObjectId = mongoose.Types.ObjectId;
     try {
