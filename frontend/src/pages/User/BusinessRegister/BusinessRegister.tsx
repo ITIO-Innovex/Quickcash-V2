@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useAppToast } from '@/utils/toast'; 
 import { useNavigate } from 'react-router-dom';
 import CustomButton from '../../../components/CustomButton';
+import BankInfoForm from '@/components/forms/BankAccountDetails';
 import CustomInputField from '../../../components/CustomInputField';
 import PersonalInfoForm from '../../../components/forms/PersonalInfoForm';
 const url = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
@@ -22,7 +23,7 @@ const BusinessRegister = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const steps = ['Personal Info', 'Verify Email', 'Business Details', 'Business Address', 'Identity Verification', 'Setup Complete'];
+  const steps = ['Personal Info', 'Verify Email', 'Business Details', 'Business Address', 'Identity Verification','Bank Information', 'Setup Complete'];
 
   const [formData, setFormData] = useState({
     // Personal Info
@@ -34,7 +35,9 @@ const BusinessRegister = () => {
     // Business Address
     streetAddress: '', city: '', state: '', zipCode: '', addressCountry: '',
     // Identity Verification
-    documentType: '', document: null as File | null,});
+    documentType: '', document: null as File | null,
+    // Bank Details  
+    bankName: '', accountNumber: '', swiftBic: '', currency: ''});
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -75,6 +78,7 @@ const BusinessRegister = () => {
   //     }
   //   }
   // };
+
 const handleNext = async () => {
   setLoading(true);
   try {
@@ -238,7 +242,38 @@ const handleNext = async () => {
       }
         return;
       }
+      if (currentStep === 5) {
+        const bankErrors: Record<string, string> = {};
 
+        if (!formData.bankName) bankErrors.bankName = 'Bank name is required';
+        if (!formData.accountNumber) bankErrors.accountNumber = 'Account number is required';
+        if (!formData.swiftBic) bankErrors.swiftBic = 'SWIFT/BIC is required';
+        if (!formData.currency) bankErrors.currency = 'Currency is required';
+
+        if (Object.keys(bankErrors).length > 0) {
+          setErrors(bankErrors);
+          toast.error('Please fix the errors before continuing.');
+          return;
+        }
+
+        try {
+          const res = await api.post(`/${url}/v1/business/user/bank-info`, {
+            bankName: formData.bankName,
+            accountNumber: formData.accountNumber,
+            swiftBic: formData.swiftBic,
+            currency: formData.currency,
+          });
+
+          console.log('✅ Bank info submitted:', res.data);
+          toast.success('Bank information saved ✅');
+          setCurrentStep(currentStep + 1); // Go to final step
+        } catch (error: any) {
+          console.error('❌ Bank info error:', error);
+          toast.error('Failed to save bank info ❌');
+        }
+
+        return;
+      }
         if (currentStep < steps.length - 1) {
           setCurrentStep(currentStep + 1);
         } else {
@@ -345,7 +380,21 @@ const handleNext = async () => {
           />
         );
 
-      case 5:
+        case 5:
+          return (
+            <BankInfoForm
+              values={{
+                bankName: formData.bankName,
+                accountNumber: formData.accountNumber,
+                swiftBic: formData.swiftBic,
+                currency: formData.currency
+              }}
+              errors={errors}
+              onChange={handleChange}
+            />
+          );
+
+      case 6:
         return (
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="h6" sx={{ color: theme.palette.text.primary, mb: 3 }}>

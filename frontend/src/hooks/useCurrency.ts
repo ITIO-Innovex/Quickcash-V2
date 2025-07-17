@@ -1,5 +1,5 @@
-import api from '@/helpers/apiHelper';
 import axios from 'axios';
+import api from '@/helpers/apiHelper';
 import {useState,useEffect} from 'react';
 
 export const useCurrency = () => {
@@ -14,7 +14,7 @@ export const useCurrency = () => {
 
         if (result.data.status === 201) {
           setCurrencyList(result?.data?.data);
-          // console.log('[✅ Currency List Set]', result?.data?.data);
+          console.log('[✅ Currency List Set]', result?.data?.data);
         } else {
           console.warn('[⚠️ Currency List Unexpected Status]', result.data.status);
         }

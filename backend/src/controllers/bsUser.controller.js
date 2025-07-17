@@ -337,7 +337,7 @@ uploadKycDocument: async (req, res) => {
 
     const file = req.file;
     console.log('📥 req.file:', req.file);
-console.log('📥 req.body:', req.body);
+    console.log('📥 req.body:', req.body);
 
     if (!file) return res.status(400).json({ error: 'No file uploaded' });
 
