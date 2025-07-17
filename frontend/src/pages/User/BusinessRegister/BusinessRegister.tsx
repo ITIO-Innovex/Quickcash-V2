@@ -1,11 +1,9 @@
 
-import axios from 'axios';
+import { useState, useEffect } from 'react';
 import api from '@/helpers/apiHelper';
-import { useEffect, useState } from 'react';
-import { useAppToast } from '@/utils/toast'; 
+import { useAppToast } from '@/utils/toast';
 import { useNavigate } from 'react-router-dom';
 import CustomButton from '../../../components/CustomButton';
-import BankInfoForm from '@/components/forms/BankAccountDetails';
 import CustomInputField from '../../../components/CustomInputField';
 import PersonalInfoForm from '../../../components/forms/PersonalInfoForm';
 const url = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
@@ -14,17 +12,19 @@ import BusinessAddressForm from '../../../components/forms/BusinessAddressForm';
 import BusinessRegisterHeader from '../../../components/forms/BusinessRegisterHeader';
 import IdentityVerificationForm from '../../../components/forms/IdentityVerificationForm';
 import { Box, Card, CardContent, Typography, Stepper, Step, StepLabel, useTheme, useMediaQuery } from '@mui/material';
+import axios from 'axios';
+import BankInfoForm from '@/components/forms/BankAccountDetails';
 
 const BusinessRegister = () => {
   const theme = useTheme();
-  const toast = useAppToast(); 
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  const toast = useAppToast();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCompleted, setIsCompleted] = useState(false);
 
-  const steps = ['Personal Info', 'Verify Email', 'Business Details', 'Business Address', 'Identity Verification','Bank Information', 'Setup Complete'];
-
+  const steps = ['Personal Info', 'Verify Email', 'Business Details', 'Business Address', 'Identity Verification', 'Setup Complete'];
   const [formData, setFormData] = useState({
     // Personal Info
     fullName: '', email: '', country: '',
@@ -37,25 +37,68 @@ const BusinessRegister = () => {
     // Identity Verification
     documentType: '', document: null as File | null,
     // Bank Details  
-    bankName: '', accountNumber: '', swiftBic: '', currency: ''});
+    bankName: '', accountNumber: '', swiftBic: '', currency: ''
+  });
+
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Fetch registration progress on mount
   useEffect(() => {
-  const savedFormData = localStorage.getItem('businessFormData');
-  const savedStep = localStorage.getItem('businessCurrentStep');
-
-  if (savedFormData) setFormData(JSON.parse(savedFormData));
-  if (savedStep) setCurrentStep(Number(savedStep));
+    const fetchProgress = async () => {
+      setIsLoading(true);
+      try {
+        const res = await api.get(`/${url}/v1/business/user/progress`);
+        const progress = res.data;
+        if (progress) {
+          setCurrentStep(progress.currentStep || 0);
+          setIsCompleted(progress.isCompleted || false);
+          setFormData((prev) => ({ ...prev, ...progress.formData }));
+        }
+      } catch (err) {
+        console.error('Failed to fetch registration progress', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProgress();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('businessFormData', JSON.stringify(formData));
-  }, [formData]);
+  const validateStep = (step: number): boolean => {
+    const newErrors: Record<string, string> = {};
 
-  useEffect(() => {
-    localStorage.setItem('businessCurrentStep', currentStep.toString());
-  }, [currentStep]);
+    switch (step) {
+      case 0: // Personal Info
+        if (!formData.fullName) newErrors.fullName = 'Full name is required';
+        if (!formData.email) newErrors.email = 'Email is required';
+        else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Invalid email format';
+        if (!formData.country) newErrors.country = 'Country is required';
+        break;
+      case 1: // Email verification
+        if (!formData.otp) newErrors.otp = 'OTP is required';
+        break;
+      case 2: // Business Details
+        if (!formData.businessName) newErrors.businessName = 'Business name is required';
+        if (!formData.businessType) newErrors.businessType = 'Business type is required';
+        if (!formData.industryActivity) newErrors.industryActivity = 'Industry/Business activity is required';
+        if (!formData.countryOfIncorporation) newErrors.countryOfIncorporation = 'Country of incorporation is required';
+        break;
+      case 3: // Business Address
+        if (!formData.streetAddress) newErrors.streetAddress = 'Street address is required';
+        if (!formData.city) newErrors.city = 'City is required';
+        if (!formData.state) newErrors.state = 'State is required';
+        if (!formData.zipCode) newErrors.zipCode = 'ZIP/Postal code is required';
+        if (!formData.addressCountry) newErrors.addressCountry = 'Country is required';
+        break;
+      case 4: // Identity Verification
+        if (!formData.documentType) newErrors.documentType = 'Document type is required';
+        if (!formData.document) newErrors.document = 'Document is required';
+        break;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (name: string, value: string | File | null) => {
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -78,38 +121,24 @@ const BusinessRegister = () => {
   //     }
   //   }
   // };
+  const handleNext = async () => {
+    if (!validateStep(currentStep)) return;
 
-const handleNext = async () => {
-  setLoading(true);
-  try {
-    if (currentStep === 0) {
-      const newErrors: any = {};
-      if (!formData.fullName) newErrors.fullName = 'Full name is required';
-      if (!formData.email) newErrors.email = 'Email is required';
-      else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Invalid email format';
-      if (!formData.country) newErrors.country = 'Country is required';
+    try {
+      if (currentStep === 0) {
+        const res = await api.post(`/${url}/v1/business/user/register-info`, {
+          name: formData.fullName,
+          email: formData.email,
+          country: formData.country,
+        });
 
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors); // ✅ Show errors in UI
-        return; // ⛔️ Stop here
+        console.log('✅ Step 0 API success:', res.data);
+        toast.success('OTP sent to your email ✅');
+        setCurrentStep(1); // ⬅ Move to email verification step
+        return; // Exit early
       }
-      const res = await api.post(`/${url}/v1/business/user/register-info`, {
-        name: formData.fullName,
-        email: formData.email,
-        country: formData.country,
-      });
-
-      console.log('✅ Step 0 API success:', res.data);
-      toast.success('OTP sent to your email ✅');
-      setCurrentStep(1); // ⬅ Move to email verification step
-      return; // Exit early
-    }
-    if (currentStep === 1) {
+      if (currentStep === 1) {
         try {
-          if (!formData.otp || formData.otp.trim() === '') {
-            setErrors({ otp: 'OTP is required' }); // 👈 set error
-            return;
-          }
           const res = await api.post(`/${url}/v1/business/user/verify`, {
             otp: formData.otp
           });
@@ -131,25 +160,6 @@ const handleNext = async () => {
       }
       if (currentStep === 2) {
         try {
-          const newErrors: Record<string, string> = {};
-
-        if (!formData.businessName?.trim()) {
-          newErrors.businessName = 'Business Name is required';
-        }
-        if (!formData.businessType?.trim()) {
-          newErrors.businessType = 'Business Type is required';
-        }
-        if (!formData.industryActivity?.trim()) {
-          newErrors.industryActivity = 'Industry / Business Activity is required';
-        }
-        if (!formData.countryOfIncorporation?.trim()) {
-          newErrors.countryOfIncorporation = 'Country of Incorporation is required';
-        }
-
-        if (Object.keys(newErrors).length > 0) {
-          setErrors(newErrors); // ⛔️ Stop if any validation fails
-          return;
-        }
           const res = await api.post(`/${url}/v1/business/user/details`, {
             businessName: formData.businessName,
             businessType: formData.businessType,
@@ -161,7 +171,6 @@ const handleNext = async () => {
 
           console.log('✅ Step 2 API success:', res.data);
           toast.success('Business details saved ✅');
-          setErrors({}); 
           setCurrentStep(3); // Move to address step
         } catch (error: any) {
           console.error('❌ Step 2 API error:', error);
@@ -169,9 +178,10 @@ const handleNext = async () => {
         }
         return; // Exit so it doesn't fall through
       }
+
       if (currentStep === 3) {
         try {
-           const step3Errors: any = {};
+          const step3Errors: any = {};
 
           if (!formData.streetAddress) step3Errors.streetAddress = "Street address is required";
           if (!formData.city) step3Errors.city = "City is required";
@@ -200,7 +210,7 @@ const handleNext = async () => {
         }
         return;
       }
-      if(currentStep== 4){
+      if (currentStep == 4) {
         const newErrors: Record<string, string> = {};
 
         if (!formData.documentType) {
@@ -219,27 +229,27 @@ const handleNext = async () => {
 
         // If all good:
         setErrors({});
-      try {
-       const payload = new FormData();
-        payload.append('document', formData.document); // the actual file
-        payload.append('docType', formData.documentType);
-        console.log('🧾 Uploading document:', formData.document);
-        console.log('📤 FormData has:', [...payload.entries()]);
+        try {
+          const payload = new FormData();
+          payload.append('document', formData.document); // the actual file
+          payload.append('docType', formData.documentType);
+          console.log('🧾 Uploading document:', formData.document);
+          console.log('📤 FormData has:', [...payload.entries()]);
 
-        const token = localStorage.getItem('token');
-        const res = await axios.post(`/${url}/v1/business/user/upload-kyc`, payload, {
-          headers: {
-             Authorization: `Bearer ${token}`  
-          }
-        });
-        console.log('✅ Step 5 API success:', res.data);
-        toast.success('Document uploaded successfully ✅');
-        setCurrentStep(currentStep + 1);
+          const token = localStorage.getItem('token');
+          const res = await axios.post(`/${url}/v1/business/user/upload-kyc`, payload, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          console.log('✅ Step 5 API success:', res.data);
+          toast.success('Document uploaded successfully ✅');
+          setCurrentStep(currentStep + 1);
 
-      } catch (error: any) {
-        console.error('❌ Step 5 API error:', error);
-        toast.error('Failed to upload document ❌');
-      }
+        } catch (error: any) {
+          console.error('❌ Step 5 API error:', error);
+          toast.error('Failed to upload document ❌');
+        }
         return;
       }
       if (currentStep === 5) {
@@ -274,29 +284,30 @@ const handleNext = async () => {
 
         return;
       }
-        if (currentStep < steps.length - 1) {
-          setCurrentStep(currentStep + 1);
-        } else {
-          toast.success('Business registered successfully!');
-          localStorage.removeItem('businessFormData');
-          localStorage.removeItem('businessCurrentStep');
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        toast.success('Business registered successfully!');
+        localStorage.removeItem('businessFormData');
+        localStorage.removeItem('businessCurrentStep');
 
-          toast.success('Business registered successfully!');
-          setTimeout(() => {
-            navigate('/dashboard');
-          }, 2000);
-        }
-      } catch (error: any) {
-        console.error('❌ Step 0 API error:', error);
-        if (error.response?.status === 409) {
-          toast.error('You already have a business account ⚠️');
-        } else {
-          toast.error('Failed to send OTP ❌');
-        }
-      } finally {
-    setLoading(false); // 🔵 End loading
-  }
-    };
+        toast.success('Business registered successfully!');
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+      }
+    } catch (error: any) {
+      console.error('❌ Step 0 API error:', error);
+      if (error.response?.status === 409) {
+        toast.error('You already have a business account ⚠️');
+      } else {
+        toast.error('Failed to send OTP ❌');
+      }
+    } finally {
+      setIsLoading(false); // 🔵 End loading
+    }
+  };
+
 
   const handleBack = () => {
     if (currentStep > 0) {
@@ -379,20 +390,19 @@ const handleNext = async () => {
             onChange={handleChange}
           />
         );
-
-        case 5:
-          return (
-            <BankInfoForm
-              values={{
-                bankName: formData.bankName,
-                accountNumber: formData.accountNumber,
-                swiftBic: formData.swiftBic,
-                currency: formData.currency
-              }}
-              errors={errors}
-              onChange={handleChange}
-            />
-          );
+      case 5:
+        return (
+          <BankInfoForm
+            values={{
+              bankName: formData.bankName,
+              accountNumber: formData.accountNumber,
+              swiftBic: formData.swiftBic,
+              currency: formData.currency
+            }}
+            errors={errors}
+            onChange={handleChange}
+          />
+        );
 
       case 6:
         return (
@@ -408,8 +418,22 @@ const handleNext = async () => {
     }
   };
 
+  // Show loading or completion message
+  if (isLoading) {
+    return <Box sx={{ textAlign: 'center', mt: 8 }}><Typography>Loading...</Typography></Box>;
+  }
+  if (isCompleted) {
+    return (
+      <Box sx={{ textAlign: 'center', mt: 8 }}>
+        <Typography variant="h5" color="primary">
+          We are currently reviewing your documents. You will be notified once the verification is complete.
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
-    <Box sx={{ 
+    <Box sx={{
       minHeight: '100vh',
       py: { xs: 2, md: 4 },
       px: { xs: 1, md: 2 }
@@ -417,40 +441,41 @@ const handleNext = async () => {
       <Box sx={{ maxWidth: 900, mx: 'auto' }}>
         <BusinessRegisterHeader />
 
-        <Card sx={{ 
+        <Card sx={{
           backgroundColor: theme.palette.background.default,
           boxShadow: 3,
           borderRadius: 2
         }}>
           <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-            <Stepper 
-              activeStep={currentStep} 
+            <Stepper
+              activeStep={currentStep}
               orientation={isMobile ? 'vertical' : 'horizontal'}
-            sx={{
-              mb: 4,
+              sx={{
+                mb: 4,
 
-              //  Common label styling
-              '& .MuiStepLabel-label': {
-                fontSize: { xs: '0.75rem', md: '0.875rem' },
-                color: '#888', // 🔘 Inactive label color
-              },
+                //  Common label styling
+                '& .MuiStepLabel-label': {
+                  fontSize: { xs: '0.75rem', md: '0.875rem' },
+                  color: '#888', // 🔘 Inactive label color
+                },
 
-              // ✅ Active label
-              '& .MuiStepLabel-label.Mui-active': {
-                color: '#483594', // 🟣 Active step label color
-                fontWeight: 600,
-              },
+                // ✅ Active label
+                '& .MuiStepLabel-label.Mui-active': {
+                  color: '#483594', // 🟣 Active step label color
+                  fontWeight: 600,
+                },
 
-              // ✅ Completed label
-              '& .MuiStepLabel-label.Mui-completed': {
-                color: '#4caf50', // ✅ Completed step label color
-                fontWeight: 600,
-              },
-            }}
+                // ✅ Completed label
+                '& .MuiStepLabel-label.Mui-completed': {
+                  color: '#4caf50', // ✅ Completed step label color
+                  fontWeight: 600,
+                },
+              }}
             >
               {steps.map((label, index) => (
                 <Step key={label}>
-                  <StepLabel sx={{ color:theme.palette.text.primary,
+                  <StepLabel sx={{
+                    color: theme.palette.text.primary,
                     fontSize: { xs: '0.75rem', md: '0.875rem' },
                     '& .MuiStepLabel-label': {
                       fontSize: { xs: '0.75rem', md: '0.875rem' }
@@ -461,13 +486,13 @@ const handleNext = async () => {
                 </Step>
               ))}
             </Stepper>
-           
-            <Box sx={{ mb: 4 , color:theme.palette.text.gray}}>
+
+            <Box sx={{ mb: 4, color: theme.palette.text.gray }}>
               {renderStepContent()}
             </Box>
 
-            <Box sx={{ 
-              display: 'flex', 
+            <Box sx={{
+              display: 'flex',
               flexDirection: { xs: 'column', sm: 'row' },
               gap: 2,
               justifyContent: 'space-between'
@@ -490,22 +515,20 @@ const handleNext = async () => {
               )}
 
               <CustomButton
-              onClick={handleNext}
-              disabled={loading} 
-              sx={{
-                backgroundColor: '#483594',
-                '&:hover': {
-                  backgroundColor: '#3d2a7a'
-                },
-                order: { xs: 1, sm: 2 },
-                ml: { sm: 'auto' }
-              }}
-            >
-              {loading ? 'Processing...' :
-              currentStep === 1 ? 'VERIFY' : 
-              currentStep === 4 ? 'UPLOAD DOCUMENT' : 
-              currentStep === 5 ? 'FINISH' : 'CONTINUE'}
-            </CustomButton>
+                onClick={handleNext}
+                sx={{
+                  backgroundColor: '#483594',
+                  '&:hover': {
+                    backgroundColor: '#3d2a7a'
+                  },
+                  order: { xs: 1, sm: 2 },
+                  ml: { sm: 'auto' }
+                }}
+              >
+                {currentStep === 1 ? 'VERIFY' :
+                  currentStep === 4 ? 'UPLOAD DOCUMENT' :
+                    currentStep === 5 ? 'FINISH' : 'CONTINUE'}
+              </CustomButton>
             </Box>
           </CardContent>
         </Card>
