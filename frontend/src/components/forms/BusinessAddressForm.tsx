@@ -1,8 +1,10 @@
 
-import React from 'react';
-import { Box, Typography, useTheme } from '@mui/material';
-import CustomInputField from '../CustomInputField';
+import api from '@/helpers/apiHelper';
+import React, { useEffect, useState } from 'react';
 import CustomDropdown from '../CustomDropdown';
+import CustomInputField from '../CustomInputField';
+import { Box, Typography, useTheme } from '@mui/material';
+const url = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
 
 interface BusinessAddressFormProps {
   values: {
@@ -28,14 +30,35 @@ const BusinessAddressForm: React.FC<BusinessAddressFormProps> = ({
   onChange
 }) => {
   const theme = useTheme();
-  
-  const countryOptions = [
-    { label: 'United States', value: 'US' },
-    { label: 'United Kingdom', value: 'UK' },
-    { label: 'Canada', value: 'CA' },
-    { label: 'Australia', value: 'AU' },
-  ];
+  const [countryOptions, setCountryOptions] = useState<{ label: string; value: string }[]>([]);
+  // const countryOptions = [
+  //   { label: 'United States', value: 'US' },
+  //   { label: 'United Kingdom', value: 'UK' },
+  //   { label: 'Canada', value: 'CA' },
+  //   { label: 'Australia', value: 'AU' },
+  // ];
 
+  useEffect(() => {
+      const fetchCountries = async () => {
+        try {
+          const res = await api.get(`/${url}/v1/user/getCountryList`);
+  
+          const countryList = res.data?.data?.country || [];
+  
+          const formatted = countryList.map((country: any) => ({
+            label: country.name,
+            value: country.name, 
+          }));
+  
+          setCountryOptions(formatted);
+        } catch (error) {
+          console.error("❌ Error fetching country list:", error);
+        }
+      };
+  
+      fetchCountries();
+    }, []);
+    
   return (
     <Box sx={{ display: 'grid', gap: 3 }}>
       <Typography variant="h6" sx={{ color: theme.palette.text.primary, mb: 2 }}>
@@ -73,13 +96,15 @@ const BusinessAddressForm: React.FC<BusinessAddressFormProps> = ({
         error={!!errors.zipCode}
         helperText={errors.zipCode}
       />
-      <CustomDropdown
-        label="Country"
-        name="addressCountry"
-        value={values.addressCountry}
-        onChange={(e) => onChange('addressCountry', e.target.value as string)}
-        options={countryOptions}
-      />
+       <CustomDropdown
+              label="Select a country"
+              name="addressCountry"
+              value={values.addressCountry}
+              onChange={(e) => onChange('addressCountry', e.target.value as string)}
+              options={countryOptions}
+               error={!!errors.addressCountry }
+              helperText={errors.addressCountry }
+            />
     </Box>
   );
 };

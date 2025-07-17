@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { FormHelperText } from '@mui/material';
 import {
   FormControl,
   InputLabel,
@@ -25,12 +26,15 @@ interface CustomSelectProps extends Omit<MuiSelectProps, 'variant'> {
   img?: string; 
   showFlag?: boolean;
   moreInfo?: string;
+  helperText?: string;         // ✅ Add this
+  error?: boolean; 
 }
 
 const CustomSelect: React.FC<CustomSelectProps> = ({ 
   label, 
   options, 
   variant = 'outlined',
+  helperText = '',
   ...props 
 }) => {
   const theme = useTheme();
@@ -110,6 +114,10 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         </MenuItem>
       ))}
       </Select>
+       {/* ✅ Show helper text below the Select */}
+      {helperText && (
+        <FormHelperText sx={{color:'red'}}>{helperText}</FormHelperText>
+      )}
     </FormControl>
   );
 };
