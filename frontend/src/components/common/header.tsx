@@ -7,9 +7,9 @@ import Brightness7Icon from '@mui/icons-material/Brightness7';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import { Grid, Box, Typography, IconButton } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import NotificationDropdown from '../NotificationDropdown';
+import NotificationDropdown, { NotificationBell } from '../NotificationDropdown';
 import { useRef, useState } from 'react';
-import { useAppToast } from '@/utils/toast'; 
+import { useAppToast } from '@/utils/toast';
 import axios from 'axios';
 import { useAuth } from '@/contexts/authContext';
 
@@ -21,11 +21,19 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ collapsed }) => {
   const navigate = useNavigate();
-  const toast = useAppToast(); 
+  const toast = useAppToast();
   const theme = useTheme();
   const notifRef = useRef<{ click: () => void }>(null);
   const { themeMode, toggleTheme } = useSettings();
- 
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const anchorRef = useRef(null);
+
+  const toggleNotification = () => {
+    setIsNotifOpen((prev) => !prev);
+  };
+  const closeNotification = () => {
+    setIsNotifOpen(false);
+  };
   const [isBusiness, setIsBusiness] = useState(false);
 
   const handleToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({ collapsed }) => {
       });
   };
   const { logout, adminLogout, isAuthenticated, isAdminAuthenticated } = useAuth();
- 
+
   const handleLogout = () => {
     updateLoginSession();
     if (isAdminAuthenticated) {
@@ -142,11 +150,11 @@ const Header: React.FC<HeaderProps> = ({ collapsed }) => {
               </Box> */}
 
               {/* Notifications */}
+
               <Box
                 className="icon-group"
-                onClick={() => {
-                  notifRef.current?.click();
-                }}
+                ref={anchorRef}
+                onClick={toggleNotification}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
@@ -157,10 +165,12 @@ const Header: React.FC<HeaderProps> = ({ collapsed }) => {
                   },
                 }}
               >
-                <NotificationDropdown ref={notifRef} />
+                <NotificationBell count={4} />
                 <Typography variant="body2">Notifications</Typography>
               </Box>
-
+              <NotificationDropdown open={isNotifOpen}
+                anchorRef={anchorRef}
+                onClose={closeNotification} />
               {/* Support */}
               <Box
                 className="icon-group"

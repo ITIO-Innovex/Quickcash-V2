@@ -25,6 +25,85 @@ const fileFilter = (req, file, cb) => {
   }
 };
 const upload = multer({ storage, fileFilter });
+
+
+
+// New: Get business registration progress for the current user
+const getBusinessRegistrationProgress = async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(400).json({ message: 'User Id not found, Token is missing' });
+    }
+    const bsUser = await BsUser.findOne({ userId });
+    if (!bsUser) {
+      return res.status(200).json({
+        currentStep: 0,
+        isCompleted: false,
+        formData: {},
+        message: 'No business registration started yet.'
+      });
+    }
+
+    // Determine progress based on which fields are filled
+    let currentStep = 0;
+    let isCompleted = false;
+    const formData = {};
+
+    // Step 0: Personal Info
+    if (bsUser.name && bsUser.email && bsUser.country) {
+      formData.fullName = bsUser.name;
+      formData.email = bsUser.email;
+      formData.country = bsUser.country;
+      currentStep = 1;
+    }
+    // Step 1: Email Verification
+    if (bsUser.isEmailVerified) {
+      currentStep = 2;
+    }
+    // Step 2: Business Details
+    if (bsUser.businessDetails && bsUser.businessDetails.businessName) {
+      formData.businessName = bsUser.businessDetails.businessName;
+      formData.businessType = bsUser.businessDetails.businessType;
+      formData.companyRegistrationNumber = bsUser.businessDetails.registrationNumber;
+      formData.industryActivity = bsUser.businessDetails.industry;
+      formData.countryOfIncorporation = bsUser.businessDetails.incorporationCountry;
+      formData.website = bsUser.businessDetails.website;
+      currentStep = 3;
+    }
+    // Step 3: Business Address
+    if (bsUser.address && bsUser.address.streetAddress1) {
+      formData.streetAddress = bsUser.address.streetAddress1;
+      formData.city = bsUser.address.city;
+      formData.state = bsUser.address.state;
+      formData.zipCode = bsUser.address.postalCode;
+      formData.addressCountry = bsUser.address.country;
+      currentStep = 4;
+    }
+    // Step 4: Identity Verification (KYC docs)
+    if (bsUser.kycDocuments && bsUser.kycDocuments.length > 0) {
+      // Just mark as completed, you can expand this as needed
+      formData.documentType = bsUser.kycDocuments[0].docType;
+      formData.document = bsUser.kycDocuments[0].fileName;
+      currentStep = 5;
+    }
+    // Step 5: Setup Complete (bank info)
+    if (bsUser.isSetupComplete) {
+      isCompleted = true;
+      currentStep = 6;
+    }
+
+    res.status(200).json({
+      currentStep,
+      isCompleted,
+      formData
+    });
+  } catch (err) {
+    console.error('Error fetching business registration progress:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 module.exports = {
 createUser: async (req, res) => {
     try {
@@ -330,15 +409,21 @@ getBusinessUser : async (req, res) => {
     });
   }
 },
+listBusinessKyc: async (req, res) => {
+  try {
+    const users = await BsUser.find({}).sort({ createdAt: -1 });
+    res.status(200).json({ data: users });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+},
 uploadKycDocument: async (req, res) => {
 
   try {
     const userId = req.userId;
 
     const file = req.file;
-    console.log('📥 req.file:', req.file);
-    console.log('📥 req.body:', req.body);
-
+// console.log(req.file, "file")
     if (!file) return res.status(400).json({ error: 'No file uploaded' });
 
     const updatedUser = await BsUser.findOneAndUpdate(
@@ -401,4 +486,5 @@ getBusinessProfile : async (req, res) => {
   }
 },
 upload,
+  getBusinessRegistrationProgress,
 };

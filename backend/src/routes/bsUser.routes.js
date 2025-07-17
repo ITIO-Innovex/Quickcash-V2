@@ -1,5 +1,5 @@
 const express = require('express');
-const { createUser, checkBusinessUserExists, addBusinessDetails, addBusinessAddress, addRepresentativeInfo,addBankInfo,getBusinessUser, upload, uploadKycDocument,getBusinessProfile,verifyOtp} = require('../controllers/bsUser.controller');
+const { createUser, checkBusinessUserExists, addBusinessDetails, addBusinessAddress, addRepresentativeInfo,addBankInfo,getBusinessUser, upload, uploadKycDocument,getBusinessProfile,verifyOtp, listBusinessKyc, getBusinessRegistrationProgress} = require('../controllers/bsUser.controller');
 const { verifyToken } = require('../middlewares/auth.middleware');
 const router = express.Router();
 
@@ -23,4 +23,6 @@ router.route('/fetch-details').get(verifyToken, getBusinessUser);
 router.route('/upload-kyc').post(verifyToken, upload.single('document'), uploadKycDocument);
 // Route to get business details
 router.route('/fetch-profile').get(verifyToken, getBusinessProfile);
+// Route to get business registration progress
+router.route('/progress').get(verifyToken, getBusinessRegistrationProgress);
 module.exports = router;
