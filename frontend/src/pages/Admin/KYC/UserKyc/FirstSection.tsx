@@ -66,11 +66,7 @@ const FirstSection = () => {
   await admin.patch(`/${url}/v1/kyc/updateStatus/${id}`, {
     comment: comment,
     status: status,
-  }, {
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('admintoken')}`
-    }
-  })
+  },)
   .then(result => {
     if (result.data.status == 201) {
       toast.success(result.data.message || "KYC Status Updated Successfully !!!" );
