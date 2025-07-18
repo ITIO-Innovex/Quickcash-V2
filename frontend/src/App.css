@@ -5294,7 +5294,7 @@ color: var(--bs-primary);
 
 .invoice-id {
   font-size: 14px;
-  color: #666;
+  color: #b6b5b5;
   margin: 0;
 }
 
@@ -5324,7 +5324,7 @@ color: var(--bs-primary);
 .company-name {
   font-size: 18px;
   font-weight: 600;
-  color: #000;
+  color: #fff;
 }
 
 .qr-code-section {

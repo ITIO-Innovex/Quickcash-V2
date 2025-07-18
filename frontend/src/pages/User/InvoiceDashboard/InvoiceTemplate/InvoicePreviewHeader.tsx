@@ -2,12 +2,12 @@
 import { Box } from '@mui/material';
 import React from 'react';
 
-const InvoicePreviewHeader = () => {
+const InvoicePreviewHeader = ({ color }: { color: string }) => {
   return (
     <Box className="invoice-header">
       <Box className="invoice-header-content">
         <Box className="invoice-title-section">
-          <h2 className="invoice-title">INVOICE</h2>
+          <h2 className="invoice-title" style={{ color }}>{/* Use color here */}INVOICE</h2>
           <p className="invoice-id">Invoice ID #PDC83X7</p>
         </Box>
         
