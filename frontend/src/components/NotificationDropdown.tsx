@@ -33,6 +33,7 @@ interface NotificationDropdownProps {
   open: boolean;
   anchorRef: React.RefObject<HTMLElement>;
   onClose: () => void;
+  onUnreadCountChange?: (count: number) => void;
 }
 
 interface JwtPayload {
@@ -66,7 +67,7 @@ export const NotificationBell = ({
   </Box>
 );
 const NotificationDropdown = forwardRef<unknown, NotificationDropdownProps>(
-  ({ open, anchorRef, onClose }, ref) => {
+  ({ open, anchorRef, onClose, onUnreadCountChange }, ref) => {
     const theme = useTheme();
     const navigate = useNavigate();
     const [popoverKey, setPopoverKey] = useState(0);
@@ -220,6 +221,17 @@ const NotificationDropdown = forwardRef<unknown, NotificationDropdownProps>(
         setNotifyBell(false);
       }
     }, [status]);
+
+    useEffect(() => {
+      if (isAdmin && onUnreadCountChange) {
+        onUnreadCountChange(unreadCount);
+      }
+    }, [unreadCount, isAdmin, onUnreadCountChange]);
+    useEffect(() => {
+      if (!isAdmin && onUnreadCountChange) {
+        onUnreadCountChange(unReadNotification.length);
+      }
+    }, [unReadNotification.length, isAdmin, onUnreadCountChange]);
 
     return (
       <>

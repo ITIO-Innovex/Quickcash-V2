@@ -8,7 +8,7 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import { Grid, Box, Typography, IconButton } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import NotificationDropdown, { NotificationBell } from '../NotificationDropdown';
-import { useRef, useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAppToast } from '@/utils/toast';
 import axios from 'axios';
 import { useAuth } from '@/contexts/authContext';
@@ -26,6 +26,7 @@ const Header: React.FC<HeaderProps> = ({ collapsed }) => {
   const notifRef = useRef<{ click: () => void }>(null);
   const { themeMode, toggleTheme } = useSettings();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const anchorRef = useRef(null);
 
   const toggleNotification = () => {
@@ -165,12 +166,15 @@ const Header: React.FC<HeaderProps> = ({ collapsed }) => {
                   },
                 }}
               >
-                <NotificationBell count={4} />
+                <NotificationBell count={unreadCount} />
                 <Typography variant="body2">Notifications</Typography>
               </Box>
-              <NotificationDropdown open={isNotifOpen}
+              <NotificationDropdown
+                open={isNotifOpen}
                 anchorRef={anchorRef}
-                onClose={closeNotification} />
+                onClose={closeNotification}
+                onUnreadCountChange={setUnreadCount}
+              />
               {/* Support */}
               <Box
                 className="icon-group"
