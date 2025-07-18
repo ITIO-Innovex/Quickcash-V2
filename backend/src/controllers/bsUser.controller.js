@@ -278,7 +278,7 @@ addBankInfo : async (req, res) => {
 
     // Step 2: Check if KYC entry exists
     const existingKyc = await BsKyc.findOne({ userId: req.userId });
-    console.log(' Existing KYC:', existingKyc ? 'Found' : 'Not Found');
+    // console.log(' Existing KYC:', existingKyc ? 'Found' : 'Not Found');
 
     // Step 3: Create if not exists
     if (!existingKyc) {
@@ -336,8 +336,8 @@ uploadKycDocument: async (req, res) => {
     const userId = req.userId;
 
     const file = req.file;
-    console.log('📥 req.file:', req.file);
-    console.log('📥 req.body:', req.body);
+    // console.log('📥 req.file:', req.file);
+    // console.log('📥 req.body:', req.body);
 
     if (!file) return res.status(400).json({ error: 'No file uploaded' });
 
