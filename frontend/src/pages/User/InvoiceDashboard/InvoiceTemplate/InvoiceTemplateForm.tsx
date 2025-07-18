@@ -22,11 +22,15 @@ interface JwtPayload {
   };
 }
 
-const InvoiceTemplateForm = () => {
+interface InvoiceTemplateFormProps {
+  color: string;
+  setColor: (color: string) => void;
+}
+
+const InvoiceTemplateForm: React.FC<InvoiceTemplateFormProps> = ({ color, setColor }) => {
   const toast = useAppToast();
 
   const [template, setTemplate] = useState('Default');
-  const [color, setColor] = useState('#483594');
   const [country, setCountry] = useState('Default');
   const [loading, setLoading] = useState(false);
 
