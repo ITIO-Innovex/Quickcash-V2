@@ -424,11 +424,31 @@ const BusinessRegister = () => {
   }
   if (isCompleted) {
     return (
-      <Box sx={{ textAlign: 'center', mt: 8 }}>
-        <Typography variant="h5" color="primary">
-          We are currently reviewing your documents. You will be notified once the verification is complete.
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: 4,
+          backgroundColor: theme.palette.background.paper,
+          borderRadius: 2,
+          boxShadow: 3,
+          textAlign: 'center',
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            color: theme.palette.text.primary,
+            mb: 2,
+            maxWidth: 500,
+          }}
+        >
+          Your business account is currently under review. We’ll notify you as soon as it's ready to go!
         </Typography>
       </Box>
+
     );
   }
 
