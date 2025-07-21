@@ -6,7 +6,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { downloadExcel } from '../../../utils/downloadExcel';
 import { Filter, FileSpreadsheet, FileText } from 'lucide-react';
 import GenericTable from '../../../components/common/genericTable';
-import { Box, Button, Typography, useTheme } from '@mui/material';
+import { Box, Button, Typography, useTheme, MenuItem, Select, FormControl, InputLabel, TextField} from '@mui/material';
 import { jwtDecode } from 'jwt-decode';
 import api from '@/helpers/apiHelper';
 import getSymbolFromCurrency from 'currency-symbol-map';
@@ -35,18 +35,21 @@ const FirstSection = () => {
   const [filterText, setFilterText] = useState('');
   const [statementData, setStatementData] = useState<any[]>([]);
   const [currentData, setCurrentData] = useState<any[]>([]);
+  // Date filter state
+  const [dateFilter, setDateFilter] = useState("Today");
+  const [customStartDate, setCustomStartDate] = useState<string | null>(null);
+  const [customEndDate, setCustomEndDate] = useState<string | null>(null);
 
   const url = import.meta.env.VITE_NODE_ENV === 'production' ? 'api' : 'api';
 
-  const getTransactionsList = async () => {
+  const getTransactionsList = async (filter: string, fromDate?: string, toDate?: string) => {
     try {
       const accountId = jwtDecode<JwtPayload>(localStorage.getItem('token') as string);
-      const response = await api.get(`/${url}/v1/transaction/list/${accountId?.data?.id}?status=Suc&page=1&size=1000`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
+      let query = `/${url}/v1/transaction/list/${accountId?.data?.id}?status=Suc&page=1&size=1000&filter=${filter}`;
+      if (filter === 'Custom' && fromDate && toDate) {
+        query += `&from=${fromDate}&to=${toDate}`;
+      }
+      const response = await api.get(query);
       if (response.status === 201) {
         const data = response.data.data.map((item: any) => ({
           ...item,
@@ -63,8 +66,9 @@ const FirstSection = () => {
   };
 
   useEffect(() => {
-    getTransactionsList();
+    getTransactionsList(dateFilter);
   }, []);
+
   const getListById = async (id: any) => {
     await api.get(`/${url}/v1/transaction/${id}`
     )
@@ -106,6 +110,20 @@ const FirstSection = () => {
   const handleClose = () => {
     setOpen(false);
     setSelectedRow(null);
+  };
+  const handleDateFilterChange = (e: any) => {
+    const value = e.target.value;
+    setDateFilter(value);
+
+    if (value !== 'Custom') {
+      getTransactionsList(value);
+    }
+  };
+
+  const handleCustomDateChange = (start: string, end: string) => {
+    if (start && end) {
+      getTransactionsList('Custom', start, end);
+    }
   };
 
   const handleExcelDownload = () => {
@@ -267,29 +285,82 @@ const FirstSection = () => {
         : "--";
   return (
     <Box>
-      <Box display="flex" gap={2} mb={3} flexWrap="wrap" alignItems="center">
+      {/* Action buttons */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* Filters */}
+        <FormControl sx={{ minWidth: 160 }}>
+          <InputLabel>Date Filter</InputLabel>
+          <Select value={dateFilter} label="Date Filter" onChange={handleDateFilterChange}>
+            <MenuItem value="Today">Today</MenuItem>
+            <MenuItem value="Last-7-Days">Last 7 Days</MenuItem>
+            <MenuItem value="Last-15-Days">Last 15 Days</MenuItem>
+            <MenuItem value="Last-30-Days">Last 30 Days</MenuItem>
+            <MenuItem value="Custom">Custom</MenuItem>
+          </Select>
+        </FormControl>
+        {/* Filters End */}
+        {/* Custome Filter */}
+        {dateFilter === 'Custom' && (
+          <>
+            <TextField
+              label="From"
+              type="date"
+              InputLabelProps={{ shrink: true }}
+              value={customStartDate || ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCustomStartDate(val);
+                if (val && customEndDate) handleCustomDateChange(val, customEndDate);
+              }}
+            />
+            <TextField
+              label="To"
+              type="date"
+              InputLabelProps={{ shrink: true }}
+              value={customEndDate || ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCustomEndDate(val);
+                if (customStartDate && val) handleCustomDateChange(customStartDate, val);
+              }}
+            />
+          </>
+        )}
+        {/* Custome Filter Ended */}
+        <FormControl sx={{ minWidth: 160 }}>
+          <InputLabel>Export</InputLabel>
+          <Select value={"Filter"} label="Export" onChange={handleDateFilterChange}>
+            <MenuItem value="Filter">
+              Select Export Type
+            </MenuItem>
+            <MenuItem value="Excel">
+              <Button
+                startIcon={<FileSpreadsheet size={20} />}
+                sx={{ color: theme.palette.navbar.text }}
+                onClick={handleExcelDownload}
+                disabled={currentData.length === 0}
+              >
+                Download Excel
+              </Button>
+            </MenuItem>
+            <MenuItem value="PDF">
+              <Button
+                  startIcon={<FileText size={20} />}
+                  sx={{ color: theme.palette.navbar.text }}
+                  onClick={handleDownloadPDF}
+                  disabled={currentData.length === 0}
+                >
+                  Download PDF
+                </Button>
+            </MenuItem>
+          </Select>
+        </FormControl>
         <Button
-          startIcon={<FileSpreadsheet size={20} />}
-          sx={{ color: theme.palette.navbar.text }}
-          onClick={handleExcelDownload}
-          disabled={currentData.length === 0}
-        >
-          Download Excel
-        </Button>
-        <Button
-          startIcon={<FileText size={20} />}
-          sx={{ color: theme.palette.navbar.text }}
-          onClick={handleDownloadPDF}
-          disabled={currentData.length === 0}
-        >
-          Download PDF
-        </Button>
-        <Button
-          startIcon={<Filter size={20} />}
-          sx={{ color: theme.palette.navbar.text }}
-          onClick={handleFilter}
-        >
-          Filter
+            startIcon={<Filter size={20} />}
+            sx={{ color: theme.palette.navbar.text }}
+            onClick={handleFilter}
+          >
+            Filter
         </Button>
       </Box>
 
