@@ -288,12 +288,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
         {
           dailyLimit: data?.dailyLimit || 0,
           monthlyLimit: data?.monthlyLimit || 0,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        },       
       );
 
       if (response.data.status) {
@@ -304,7 +299,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           monthlyLimit: response.data.data.monthlyLimit,
         }));
 
-        toast.error("Card limits updated successfully");
+        toast.success("Card limits updated successfully");
         getCardsList();
       }
     } catch (error) {
