@@ -72,6 +72,12 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
   return (
     <Box className="load-card-modal"  >
+      {transactionCardDetails?.cardNumber && (
+        <Box className="form-group" sx={{ mb: 2 }}>
+          <label style={{ fontWeight: 500, fontSize: '14px' }}>Card ({transactionCardDetails.cardNumber.replace(/(.{4})/g, '$1 ').trim()})</label>
+
+        </Box>
+      )}
       <Box className="form-row-column">
         <Box className="form-group full-width">
           <label>Daily Transaction Limit</label>
@@ -85,7 +91,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             inputProps={{ min: 0, step: 0.01 }}
             InputProps={{
               startAdornment: (
-                <InputAdornment position="start" sx={{color: "black", padding: "0 8px" }}>
+                <InputAdornment position="start" sx={{ color: "black", padding: "0 8px" }}>
                   {currency}
                 </InputAdornment>
               ),
@@ -105,7 +111,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             inputProps={{ min: 0, step: 0.01 }}
             InputProps={{
               startAdornment: (
-                <InputAdornment position="start" sx={{color: "black",  padding: "0 8px" }}>
+                <InputAdornment position="start" sx={{ color: "black", padding: "0 8px" }}>
                   {currency}
                 </InputAdornment>
               ),

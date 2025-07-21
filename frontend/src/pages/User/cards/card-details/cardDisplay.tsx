@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Box, Button, Card, IconButton, useTheme } from "@mui/material";
+import { Box, Button, Card, IconButton, Typography, useTheme } from "@mui/material";
 import CustomModal from "@/components/CustomModal";
 import LoadCardForm from "./loadCardForm";
 import TransactionForm from "./transactionForm";
@@ -242,6 +242,8 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
   const [isLoadCardModalOpen, setIsLoadCardModalOpen] = useState(false);
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const [isSetPinModalOpen, setIsSetPinModalOpen] = useState(false);
+  const [isFreezeConfirmOpen, setIsFreezeConfirmOpen] = useState(false);
+
   const [loadCardDetails, setLoadCardDetails] =
     React.useState<CardDetails | null>(null);
 
@@ -289,11 +291,6 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           dailyLimit: data?.dailyLimit || 0,
           monthlyLimit: data?.monthlyLimit || 0,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
       );
 
       if (response.data.status) {
@@ -304,7 +301,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           monthlyLimit: response.data.data.monthlyLimit,
         }));
 
-        toast.error("Card limits updated successfully");
+        toast.success("Card limits updated successfully");
         getCardsList();
       }
     } catch (error) {
@@ -331,7 +328,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           pin,
           cardId: cardId,
         },
-      
+
       );
 
       if (response.data.status === 201) {
@@ -496,7 +493,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
                           handleClickOpenPin(card._id);
                         }} disabled={isFrozen}
                       >
-                        SET PIN
+                        Set Pin
                       </Button>
                     </Card>
                   </Box>
@@ -521,33 +518,22 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
         </Box>
 
         <Box className="card-action-buttons">
-          <Button className="action-button" onClick={handleLoadCardClick} disabled={isFrozen}>
+          <Button className="action-button" onClick={handleLoadCardClick} sx={{textTransform: 'none'}} disabled={isFrozen}>
             Load Card
           </Button>
-          <Button
-            // className="action-button"
+          <Button sx={{textTransform: 'none'}}
             onClick={() => {
               const cardId = cardsDetails[currentCardIndex]?._id;
               if (!cardId) return;
 
               if (isCardFrozen(cardId)) {
-                handleUnfreezeCard();
+                handleUnfreezeCard(); // Unfreeze directly
               } else {
-                handleFreezeCard();
+                setIsFreezeConfirmOpen(true); // Ask confirmation before freezing
               }
             }}
-            sx={{
-              fontSize: "12px",
-              backgroundColor: isCardFrozen(cardsDetails[currentCardIndex]?._id || '')
-                ? "#585858"
-                : "#483594",
-              color: "#ffffff",
-              "&:hover": {
-                backgroundColor: isCardFrozen(cardsDetails[currentCardIndex]?._id || '')
-                  ? "#777777"
-                  : "#705eb9",
-              },
-            }}
+            className={`freeze-button ${isCardFrozen(cardsDetails[currentCardIndex]?._id || '') ? 'frozen' : 'active'
+              }`}
           >
             {isCardFrozen(cardsDetails[currentCardIndex]?._id || '')
               ? "Unfreeze Card"
@@ -555,17 +541,18 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           </Button>
 
 
-          <Button className="action-button" onClick={handleTransactionLimitClick} disabled={isFrozen}>
+
+          <Button className="action-button" onClick={handleTransactionLimitClick} sx={{textTransform: 'none'}} disabled={isFrozen}>
             Transaction Limit
           </Button>
-          <Button className="action-button" disabled={isFrozen}>Manage Card</Button>
+          <Button className="action-button" disabled={isFrozen} sx={{textTransform: 'none'}}>Manage Card</Button>
         </Box>
       </Box>
 
       <CustomModal
         open={isLoadCardModalOpen}
         onClose={handleCloseLoadCard}
-        title="Add Wallet Balance"
+        title="Add Card Balance"
         maxWidth="sm"
         sx={{ backgroundColor: theme.palette.background.default }}
       >
@@ -609,6 +596,39 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
           }}
         />
       </CustomModal>
+      <CustomModal
+        open={isFreezeConfirmOpen}
+        onClose={() => setIsFreezeConfirmOpen(false)}
+        title="Freeze Card?"
+        maxWidth="xs"
+      >
+        <Box display="flex" flexDirection="column" gap={2}>
+          <Typography>
+            Are you sure you want to freeze this card? You won’t be able to use it until it’s unfrozen.
+          </Typography>
+
+          <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
+            <Button
+              onClick={() => setIsFreezeConfirmOpen(false)}
+              variant="outlined"
+              color="primary"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                handleFreezeCard();
+                setIsFreezeConfirmOpen(false);
+              }}
+              className="action-button"
+            >
+              Yes, Freeze
+            </Button>
+          </Box>
+        </Box>
+      </CustomModal>
+
+
     </>
   );
 };

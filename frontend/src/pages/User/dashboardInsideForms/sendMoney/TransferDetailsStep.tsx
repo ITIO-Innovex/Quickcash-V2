@@ -10,6 +10,7 @@ import CustomButton from '@/components/CustomButton';
 import { useAppToast } from '@/utils/toast';
 import { jwtDecode } from 'jwt-decode';
 import { JwtPayload } from '@/types/jwt';
+import { useNavigate } from 'react-router-dom';
 
 interface TransferDetailsStepProps {
   formData: any;
@@ -25,6 +26,7 @@ const TransferDetailsStep: React.FC<TransferDetailsStepProps> = ({
   const [isPending, setIsPending] = React.useState(false);
   const [pendingMessage, setPendingMessage] = React.useState('');
   const url = import.meta.env.VITE_NODE_ENV === 'production' ? 'api' : 'api';
+  const navigate = useNavigate();
   const toast = useAppToast();
   const token = localStorage.getItem('token');
   const decoded = token ? jwtDecode<JwtPayload>(token) : null;
@@ -79,7 +81,9 @@ const TransferDetailsStep: React.FC<TransferDetailsStepProps> = ({
       if (response.ok) {
         setPendingMessage('Your transaction is pending admin approval.');
         toast.success('Transaction submitted successfully!');
-        // Optionally, reset form or redirect here
+        setTimeout(() => {
+          navigate('/dashboard'); // Navigate after 1.5 seconds
+        }, 1500);
       } else if (response.status === 403) {
         setIsPending(false);
         setPendingMessage('You are not authorized to perform this action (403).');
@@ -99,13 +103,13 @@ const TransferDetailsStep: React.FC<TransferDetailsStepProps> = ({
 
   return (
     <Box className="transfer-details-step">
-           <Typography variant="h6" className="summary-title">
-            Transaction Summary
-          </Typography>
-          <Typography variant="body2" className="step-description">
+      <Typography variant="h6" className="summary-title">
+        Transaction Summary
+      </Typography>
+      <Typography variant="body2" className="step-description">
         Review your transfer details before confirming
       </Typography>
-          
+
       {/* Transfer Method Display */}
       {formData.transferMethod && (
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, p: 1.5, bgcolor: '#e3f2fd', borderRadius: 2 }}>
@@ -251,12 +255,12 @@ const TransferDetailsStep: React.FC<TransferDetailsStepProps> = ({
         </Box>
       )}
 
-          <Box className="security-note" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, p: 2, bgcolor: '#f8f9fa', borderRadius: 1 }}>
-            <CheckCircle size={20} color="#4caf50" />
-            <Typography className="security-text" sx={{ color: '#4caf50', fontSize: '0.875rem' }}>
-              Your transfer is secured with bank-level encryption
-            </Typography>
-          </Box>
+      <Box className="security-note" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, p: 2, bgcolor: '#f8f9fa', borderRadius: 1 }}>
+        <CheckCircle size={20} color="#4caf50" />
+        <Typography className="security-text" sx={{ color: '#4caf50', fontSize: '0.875rem' }}>
+          Your transfer is secured with bank-level encryption
+        </Typography>
+      </Box>
 
       {/* Pending Transaction Message */}
       {isPending && (

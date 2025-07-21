@@ -35,10 +35,13 @@ interface ActiveAccDetails {
     status: Boolean;
 }
 
+
 //Set the API URL based on the environment
 const url = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
 const FiatCrypto = () => {
     const [fiatAccounts, setfiatAccounts] = useState([]);
+
+    const [hoveredCard, setHoveredCard] = useState<number | null>(null);
     const [DefaultAccountItem, setDefaultAccountItem] = React.useState<any>();
     const [ActiveAccountDetails, setActiveAccountDetails] = React.useState<ActiveAccDetails>();
     const [activeAccountBal, setActiveAccountBal] = React.useState<any>();
@@ -154,6 +157,7 @@ const FiatCrypto = () => {
             setActiveAccountBal(bal);
             localStorage.setItem("currency", itm?.currency);
             localStorage.setItem("activeCurr", itm?._id);
+            localStorage.setItem("activeCurrName", itm?.name);
             setTimeout(() => {
             }, 500);
             navigate(`/dashboard?currency=${itm?.currency}`);
@@ -180,9 +184,9 @@ const FiatCrypto = () => {
             navigate('/account-section'); // navigate to fiat account section
         }
     };
-const handleAccount = () =>{
-    navigate('/account-section'); // navigate to fiat account section
-}
+    const handleAccount = () => {
+        navigate('/account-section'); // navigate to fiat account section
+    }
     const [displayCryptoItem, setDisplayCryptoItem] = React.useState<any>("");
 
     const HandleDisplayCryptoItemData = (id: any) => {
@@ -291,7 +295,7 @@ const handleAccount = () =>{
                                         <CommonTooltip title="Easily add funds to your wallet using your debit card or linked bank account for instant access.">
                                             <Button className="custom-button" onClick={handleAddMoneyOpen}>
                                                 <AddIcon className='icon-size' />
-                                                <span className="button-text">Add money</span>
+                                                <span className="button-text">Add Money</span>
                                             </Button>
                                         </CommonTooltip>
 
@@ -335,12 +339,14 @@ const handleAccount = () =>{
                                             <SwiperSlide key={index}>
                                                 <Card
                                                     className={`crypto-card ${isActive ? 'active' : 'inactive'}`}
+                                                    onMouseEnter={() => setHoveredCard(index)}
+                                                    onMouseLeave={() => setHoveredCard(null)}
+                                                    sx={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
                                                     onClick={() => {
                                                         HandleAccountChange(account, account.name, account.amount, account.transDetails);
                                                     }}
-                                                    sx={{ cursor: 'pointer' }}
                                                 >
-                                                    <CardContent className='card-content-custom'>
+                                                    <CardContent className='card-content-custom' >
                                                         <Box className='main-content-section' sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                             {/* ReactCountryFalg */}
                                                             <ReactCountryFlag
@@ -376,6 +382,32 @@ const handleAccount = () =>{
                                                             </Typography>
                                                         </Box>
                                                     </CardContent>
+                                                    {hoveredCard === index && (
+                                                        <Box sx={{
+                                                            position: 'absolute',
+                                                            top: 0,
+                                                            left: 0,
+                                                            width: '100%',
+                                                            height: '100%',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            // background: 'rgba(255,255,255,0.4)',
+                                                            // backdropFilter: 'blur(4px)',
+                                                            // zIndex: 2,
+                                                            // transition: 'background 0.3s',
+                                                        }}>
+                                                            <button
+                                                                className="blur-button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    navigate('/account-section');
+                                                                }}
+                                                            >
+                                                                View Detail
+                                                            </button>
+                                                        </Box>
+                                                    )}
                                                 </Card>
                                             </SwiperSlide>
                                         );

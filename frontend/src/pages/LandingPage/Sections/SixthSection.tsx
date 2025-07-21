@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
 
 const SixthSection = () => {
   const theme = useTheme();
-
+const navigate = useNavigate();
   // Intersection Observer state & ref
   const rightBoxRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
-
+ const login = () => {
+    navigate('/login');
+  }
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -68,7 +71,7 @@ const SixthSection = () => {
             deliver reliable and secure FinTech solutions
           </Typography>
 
-          <Typography variant="body1" className="cta-link1">
+          <Typography variant="body1" className="cta-link1" onClick={login}>
             Start with Quick Cash →
           </Typography>
         </Box>

@@ -41,6 +41,7 @@ const CardList = ({ cardList = [], onRefresh, loading }) => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
   // Remove cardData state and fetching logic
   // Use cardList prop directly
@@ -172,16 +173,26 @@ const CardList = ({ cardList = [], onRefresh, loading }) => {
     return map[currency] || 'primary';
   };
 
-  const formatCardNumber = (cardNumber) =>
-    cardNumber.replace(/(.{4})/g, '$1 ').trim();
+  const formatCardNumber = (cardNumber, showFull = false) => {
+    if (!cardNumber) return '';
+    if (showFull) {
+      return cardNumber.replace(/(.{4})/g, '$1 ').trim();
+    }
+    // Mask all but last 4 digits
+    const digitsOnly = cardNumber.replace(/\D/g, '');
+    const maskedSection = '*'.repeat(digitsOnly.length - 4);
+    const visibleSection = digitsOnly.slice(-4);
+    const combined = maskedSection + visibleSection;
+    return combined.replace(/(.{4})/g, '$1 ').trim();
+  };
 
   const columns = [
     { id: 'createdDate', label: 'Created Date' },
     { id: 'name', label: 'Name' },
     { id: 'cardNumber', label: 'Card Number' },
     { id: 'currency', label: 'Currency' },
-    { id: 'cvv', label: 'CVV' },
-    { id: 'expiryDate', label: 'Expiry Date' },
+    // { id: 'cvv', label: 'CVV' },
+    // { id: 'expiryDate', label: 'Expiry Date' },
     { id: 'status', label: 'Status' },
     { id: 'action', label: 'Action', align: 'center' as 'center' }
   ];
@@ -225,13 +236,18 @@ const CardList = ({ cardList = [], onRefresh, loading }) => {
   });
 
 
-  const rows = cardList.map(card => ({
+  const rows = cardList.map((card, idx) => ({
     id: card._id || card.card_id || card.id, // support all possible ids
     createdDate: new Date(card.createdAt).toLocaleDateString(),
     name: card.name,
     cardNumber: (
-      <Typography fontFamily="monospace">
-        {formatCardNumber(card.cardNumber || card.cardnumber)}
+      <Typography
+        fontFamily="monospace"
+        onMouseEnter={() => setHoveredRow(idx)}
+        onMouseLeave={() => setHoveredRow(null)}
+        sx={{ cursor: 'pointer', userSelect: 'none' }}
+      >
+        {formatCardNumber(card.cardNumber || card.cardnumber, hoveredRow === idx)}
       </Typography>
     ),
     currency: (

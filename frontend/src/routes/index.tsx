@@ -161,6 +161,9 @@ const guestRoutes = [
   { path: '/reset-password/*', element: <ResetPassword /> },
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
   { path: '/invoice-pay', element: <InvoiceEcommercePayment /> },
+  { path: '/inv-response/:id', element: <ResponseInvoice /> },
+  { path: '/quote/:id/:type', element: <QuotesView /> },
+
 
 ];
 // --- Authenticated User Routes ---
@@ -185,7 +188,6 @@ const authRoutes = [
   { path: '/user-profile', element: <UserProfile /> },
   { path: '/admin-dashboard', element: <Dashboard /> },
   { path: '/transactions', element: <Transactions /> },
-  { path: '/quote/:id/:type', element: <QuotesView /> },
   { path: '/settings/add-qr-code', element: <AddQr  /> },
   { path: '/account-section', element: <AllAccounts /> },
   { path: '/invoice-quotes', element: <InvoiceQuotes /> },
@@ -199,7 +201,6 @@ const authRoutes = [
   { path: '/invoice-products', element: <InvoiceProduct /> },
   { path: '/invoice-category', element: <InvoiceCategory /> },
   { path: '/crypto-dashboard', element: <CryptoDashboard /> },
-  { path: '/inv-response/:id', element: <ResponseInvoice /> },
   { path: '/template-settings', element: <InvoiceTemplate /> },
   { path: '/settings/edit-qr-code/:id', element: <EditQr  /> },
   { path: '/help-center/history', element: <TicketsHistory /> },

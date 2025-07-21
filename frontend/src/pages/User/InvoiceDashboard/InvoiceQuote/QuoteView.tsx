@@ -94,9 +94,9 @@ export default function QuotesView() {
                 <div className="header"> 
                 <div className="content">
                   <span className="title">Your response has been saved</span> 
-                  </div> 
+                  </div>
                   <div className="actions">
-                    <a href='/' className="history" style={{ textDecoration: 'none' }}>Quick Cash</a> 
+                    <a href='/' className="history" style={{ textDecoration: 'none', cursor: 'pointer', marginLeft: '20px' }}>Quick Cash</a> 
                   </div> 
                 </div> 
               </div>

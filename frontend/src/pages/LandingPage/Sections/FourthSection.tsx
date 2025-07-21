@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useNavigate } from "react-router-dom";
 
 const FourthSection = () => {
   const theme = useTheme();
-
+  const navigate = useNavigate();
   // Intersection Observer state & ref
   const rightBoxRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
-
+  const login = () => {
+    navigate('/login');
+  }
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -94,7 +97,7 @@ const FourthSection = () => {
             </Typography>
           </Box>
 
-          <Typography variant="body1" className="cta-link">
+          <Typography variant="body1" className="cta-link" onClick={login}>
             Start with Quick Cash →
           </Typography>
         </Box>
