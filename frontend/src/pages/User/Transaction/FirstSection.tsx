@@ -6,7 +6,7 @@ import CustomModal from '../../../components/CustomModal';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { downloadExcel } from '../../../utils/downloadExcel';
 import { FileSpreadsheet, FileText, Filter } from 'lucide-react';
-import { Box, Button, Typography, useTheme, MenuItem, Select, FormControl, InputLabel, TextField} from '@mui/material';
+import { Box, Button, Typography, useTheme, MenuItem, Select, FormControl, InputLabel, TextField } from '@mui/material';
 import GenericTable from '../../../components/common/genericTable';
 import api from '@/helpers/apiHelper';
 import { jwtDecode } from 'jwt-decode';
@@ -367,25 +367,25 @@ const FirstSection = () => {
             </MenuItem>
             <MenuItem value="PDF">
               <Button
-                  startIcon={<FileText size={20} />}
-                  sx={{ color: theme.palette.navbar.text }}
-                  onClick={handleDownloadPDF}
-                  disabled={currentData.length === 0}
-                >
-                  Download PDF
-                </Button>
+                startIcon={<FileText size={20} />}
+                sx={{ color: theme.palette.navbar.text }}
+                onClick={handleDownloadPDF}
+                disabled={currentData.length === 0}
+              >
+                Download PDF
+              </Button>
             </MenuItem>
           </Select>
         </FormControl>
         <Button
-            startIcon={<Filter size={20} />}
-            sx={{ color: theme.palette.navbar.text }}
-            onClick={handleFilter}
-          >
-            Filter
+          startIcon={<Filter size={20} />}
+          sx={{ color: theme.palette.navbar.text }}
+          onClick={handleFilter}
+        >
+          Filter
         </Button>
 
-        
+
       </Box>
 
       {showFilter && (
@@ -434,7 +434,9 @@ const FirstSection = () => {
                     : `${getSymbolFromCurrency(selectedRow?.from_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`,
             "Transaction Type": selectedRow?.receipient
               ? "Transfer Money"
-              : `${selectedRow?.extraType} - ${selectedRow?.trans_type}`,
+              : selectedRow?.extraType
+                ? `${selectedRow.extraType} - ${selectedRow.trans_type}`
+                : selectedRow?.trans_type,
             "Conversion Info": selectedRow?.receipient && selectedRow?.conversionAmount
               ? `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount})`
               : !selectedRow?.receipient && selectedRow?.conversionAmount
@@ -453,7 +455,7 @@ const FirstSection = () => {
             "Transaction Status":
               ["succeeded", "success", "Success", "Complete", "Completed"].includes(selectedRow?.status)
                 ? "Success"
-                : selectedRow?.status,
+                : selectedRow?.status?.charAt(0).toUpperCase() + selectedRow?.status?.slice(1).toLowerCase(),
 
             "Settlement Date":
               selectedRow?.status &&

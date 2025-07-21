@@ -136,14 +136,14 @@ const CardBalance: React.FC<CardBalanceProps> = ({ card, onRefreshCards }) => {
           >
             Virtual Card
           </CustomButton>
-          <Button
+          <CustomButton
             fullWidth
             variant={cardType === 'physical' ? 'contained' : 'outlined'}
             onClick={() => setCardType('physical')}
             className={`card-toggle-btn ${cardType === 'physical' ? 'active physical' : ''}`}
           >
             Physical Card
-          </Button>
+          </CustomButton>
         </Box>
 
         <Card className={`card-info ${cardType}`} sx={{ p: 3 }} style={{ backgroundColor: theme.palette.background.default }}>
@@ -164,7 +164,7 @@ const CardBalance: React.FC<CardBalanceProps> = ({ card, onRefreshCards }) => {
                 className={`get-card-btn ${cardType}`}
                 onClick={handleGetCardClick}
               >
-                GET CARD
+                Get Card
               </CustomButton>
             </Stack>
           </Stack>

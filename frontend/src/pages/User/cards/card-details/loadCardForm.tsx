@@ -104,7 +104,7 @@ const LoadCardForm = ({
   };
 
   const calCulateExChangeCurrencyValue = async (amt: any, valDeposit: any) => {
-   if (!acctDetails || !loadCardDetails?.currency) return;
+    if (!acctDetails || !loadCardDetails?.currency) return;
 
     const options = {
       method: "GET",
@@ -209,6 +209,11 @@ const LoadCardForm = ({
   console.log("Render: acctDetails", acctDetails, "card currency", loadCardDetails?.currency, "amount", amount, "convValue", convValue);
   return (
     <Box className="load-card-modal">
+      {loadCardDetails?.cardNumber && (
+        <Box className="form-group" sx={{ mb: 2 }}>
+          <label style={{ fontWeight: 500, fontSize: '14px' }}>Card ({loadCardDetails.cardNumber.replace(/(.{4})/g, '$1 ').trim()})</label>
+        </Box>
+      )}
       <Box className="form-row">
         <Box className="form-group">
           <CustomTextField
@@ -270,7 +275,7 @@ const LoadCardForm = ({
       </Box>
 
       <CustomButton fullWidth onClick={handleGetLoadCard}>
-        ADD BALANCE
+        Add Balance
       </CustomButton>
     </Box>
   );

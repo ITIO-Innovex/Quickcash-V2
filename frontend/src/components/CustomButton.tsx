@@ -19,6 +19,7 @@ const CustomButton = React.forwardRef<HTMLButtonElement, CustomButtonProps>(
           backgroundColor: 'rgb(72, 53, 148)',
           color: '#fff',
           transform: 'scale(1)',
+           textTransform: 'none', 
           transition:
             'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
           '&:hover': {
