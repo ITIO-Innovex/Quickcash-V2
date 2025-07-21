@@ -433,73 +433,87 @@ module.exports = {
       })
     }
   },
-  // This function is used to transaction list
-  transactionList: async(req,res) => {
-    const user_id = req.params.id; 
+  transactionList: async (req, res) => {
+    const user_id = req.params.id;
     const title = req.query.title || '';
-    const transactionType = req?.query?.transType || '';
-    const statusFilter = req?.query?.status || '';
-    const accountFilter = req?.query?.account || '';
-    const startDateFilter = req?.query?.startDate || '';
-    const endDateFilter = req?.query?.endDate || '';
+    const transactionType = req.query.transType || '';
+    const statusFilter = req.query.status || '';
+    const accountFilter = req.query.account || '';
+    const filter = req.query.filter || '';
+    const from = req.query.from || '';
+    const to = req.query.to || '';
+
+    if (!user_id) {
+      return res.status(402).json({
+        status: 402,
+        message: "User ID is missing",
+        data: null,
+      });
+    }
 
     try {
-      if(!user_id) {
-        return res.status(402).json({
-          status: 402,
-          message: "User Id is missing",
-          data: null
-        })
-      }
+      //Build dynamic MongoDB query
+      const query = {
+        user: user_id,
+        info: { $regex: title, $options: 'i' },
+        trans_type: { $regex: transactionType, $options: 'i' },
+        status: { $regex: statusFilter, $options: 'i' },
+      };
 
-      var details = await Transaction.find({
-        user:user_id,
-        info: {'$regex': title, '$options' : 'i'},
-        trans_type: {'$regex': transactionType, '$options' : 'i'},
-        status: {'$regex': statusFilter, '$options' : 'i'}
-      }).sort({"createdAt": -1});
-
-      if(startDateFilter && endDateFilter) {
-        var details = await Transaction.find({
-          user:user_id,
-          info: {'$regex': title, '$options' : 'i'},
-          trans_type: {'$regex': transactionType, '$options' : 'i'},
-          status: {'$regex': statusFilter, '$options' : 'i'},
-          createdAt: {
-            $gte: new Date(startDateFilter),
-            $lte: moment.utc(endDateFilter).endOf('day').toDate()
+      //Date filtering
+      let fromDate, toDate;
+      switch (filter) {
+        case 'Today':
+          fromDate = moment().startOf('day').toDate();
+          toDate = moment().endOf('day').toDate();
+          break;
+        case 'Last-7-Days':
+          fromDate = moment().subtract(7, 'days').startOf('day').toDate();
+          toDate = moment().endOf('day').toDate();
+          break;
+        case 'Last-15-Days':
+          fromDate = moment().subtract(15, 'days').startOf('day').toDate();
+          toDate = moment().endOf('day').toDate();
+          break;
+        case 'Last-30-Days':
+          fromDate = moment().subtract(30, 'days').startOf('day').toDate();
+          toDate = moment().endOf('day').toDate();
+          break;
+        case 'Custom':
+          if (from && to) {
+            fromDate = new Date(from);
+            toDate = moment.utc(to).endOf('day').toDate();
           }
-        }).sort({"createdAt": -1});
+          break;
       }
 
-      if(accountFilter) {
-        const accountResult = details?.filter(value => value?.source_account == accountFilter);
-        details = accountResult;
+      if (fromDate && toDate) {
+        query.createdAt = { $gte: fromDate, $lte: toDate };
       }
- 
-      if(!details) {
-        console.log(details);
-        return res.status(402).json({
-          status: 402,
-          message: "Error while fetching transaction list!!!",
-          data: null
-        })
+
+      if (accountFilter) {
+        query.source_account = accountFilter;
       }
- 
+
+      // 🧾 Final DB call
+      const details = await Transaction.find(query).sort({ createdAt: -1 });
+
       return res.status(201).json({
-        status:201,
-        message: "Transaction list is Successfully fetched",
-        data: details
-     })
+        status: 201,
+        message: "Transaction list successfully fetched",
+        data: details,
+      });
+
     } catch (error) {
-      console.log(error);
+      console.error("Transaction list error:", error);
       return res.status(500).json({
         status: 500,
-        message: "Error while fetching transaction list!!!",
-        data: error
-      })
+        message: "Error while fetching transaction list",
+        data: error,
+      });
     }
   },
+
   // This function admin transation list (Admin API)
   admintransaction_all: async(req,res) => {
 
