@@ -6,11 +6,11 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { downloadExcel } from '../../../utils/downloadExcel';
 import { Filter, FileSpreadsheet, FileText } from 'lucide-react';
 import GenericTable from '../../../components/common/genericTable';
-import { Box, Button, Typography, useTheme, MenuItem, Select, FormControl, InputLabel, TextField} from '@mui/material';
+import { Box, Button, Typography, useTheme, MenuItem, Select, FormControl, InputLabel, TextField } from '@mui/material';
 import { jwtDecode } from 'jwt-decode';
 import api from '@/helpers/apiHelper';
 import getSymbolFromCurrency from 'currency-symbol-map';
-import TransactionDetailModal from '@/components/common/transactionDetailModal';
+import TransactionDetailModalContainer from '@/components/common/TransactionDetailModalContainer';
 import moment from 'moment';
 
 interface JwtPayload {
@@ -30,7 +30,7 @@ interface JwtPayload {
 const FirstSection = () => {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<any | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showFilter, setShowFilter] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [statementData, setStatementData] = useState<any[]>([]);
@@ -74,7 +74,7 @@ const FirstSection = () => {
     )
       .then(result => {
         if (result.data.status == 201) {
-          setSelectedRow(result.data.data[0]);
+          setSelectedId(result.data.data[0]);
           setOpen(true);
         }
       })
@@ -83,8 +83,8 @@ const FirstSection = () => {
       })
   }
   useEffect(() => {
-    console.log("SelectedRow in modal:", selectedRow);
-  }, [selectedRow]);
+    console.log("SelectedRow in modal:", selectedId);
+  }, [selectedId]);
   const handleFilter = () => setShowFilter((prev) => !prev);
 
   const handleGlobalSearch = (text: string) => {
@@ -104,12 +104,13 @@ const FirstSection = () => {
   };
 
   const handleActionClick = (row: any) => {
-    getListById(row._id);
+    setSelectedId(row._id);
+    setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
-    setSelectedRow(null);
+    setSelectedId(null);
   };
   const handleDateFilterChange = (e: any) => {
     const value = e.target.value;
@@ -249,40 +250,6 @@ const FirstSection = () => {
       ),
     },
   ];
-  const sentAmount =
-    selectedRow?.receipient && selectedRow?.conversionAmount
-      ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`
-      : !selectedRow?.receipient && selectedRow?.conversionAmount
-        ? (() => {
-          if (selectedRow?.tr_type === "Stripe") {
-            return `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.amount}`;
-          } else if (selectedRow?.tr_type === "UPI") {
-            return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
-          } else if (selectedRow?.trans_type === "Exchange") {
-            return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
-          } else {
-            return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
-          }
-        })()
-        : "--";
-
-  // Define Received Amount
-  const receivedAmount =
-    selectedRow?.receipient && selectedRow?.conversionAmount
-      ? `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`
-      : !selectedRow?.receipient && selectedRow?.conversionAmount
-        ? (() => {
-          if (selectedRow?.tr_type === "Stripe") {
-            return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount}`;
-          } else if (selectedRow?.tr_type === "UPI") {
-            return `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
-          } else if (selectedRow?.trans_type === "Exchange") {
-            return `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
-          } else {
-            return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount}`;
-          }
-        })()
-        : "--";
   return (
     <Box>
       {/* Action buttons */}
@@ -345,22 +312,22 @@ const FirstSection = () => {
             </MenuItem>
             <MenuItem value="PDF">
               <Button
-                  startIcon={<FileText size={20} />}
-                  sx={{ color: theme.palette.navbar.text }}
-                  onClick={handleDownloadPDF}
-                  disabled={currentData.length === 0}
-                >
-                  Download PDF
-                </Button>
+                startIcon={<FileText size={20} />}
+                sx={{ color: theme.palette.navbar.text }}
+                onClick={handleDownloadPDF}
+                disabled={currentData.length === 0}
+              >
+                Download PDF
+              </Button>
             </MenuItem>
           </Select>
         </FormControl>
         <Button
-            startIcon={<Filter size={20} />}
-            sx={{ color: theme.palette.navbar.text }}
-            onClick={handleFilter}
-          >
-            Filter
+          startIcon={<Filter size={20} />}
+          sx={{ color: theme.palette.navbar.text }}
+          onClick={handleFilter}
+        >
+          Filter
         </Button>
       </Box>
 
@@ -377,146 +344,15 @@ const FirstSection = () => {
         <GenericTable columns={columns} data={currentData} />
       ) : (
         <Typography variant="body1" sx={{ mt: 2 }}>
-          No data found.
+          No Data Found.
         </Typography>
       )}
 
 
-      <TransactionDetailModal
+      <TransactionDetailModalContainer
         open={open}
         onClose={handleClose}
-        title="Transaction Details"
-        transactionData={{
-          // ✅ Transaction Info
-          transactionInfo: selectedRow && {
-            "Trx": selectedRow?.trx,
-            "Requested Date": selectedRow?.createdAt
-              ? moment(selectedRow?.createdAt).local().format("YYYY-MM-DD hh:mm:ss A")
-              : "-",
-            "Fee":
-              selectedRow?.extraType === "debit"
-                ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`
-                : selectedRow?.tr_type === "Stripe"
-                  ? `${getSymbolFromCurrency(selectedRow?.to_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`
-                  : selectedRow?.trans_type === "Exchange"
-                    ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`
-                    : `${getSymbolFromCurrency(selectedRow?.from_currency)}${parseFloat(selectedRow?.fee).toFixed(2)}`,
-            "Bill Amount":
-              selectedRow?.extraType === "debit"
-                ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`
-                : selectedRow?.tr_type === "Stripe"
-                  ? `${getSymbolFromCurrency(selectedRow?.to_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`
-                  : selectedRow?.trans_type === "Exchange"
-                    ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`
-                    : `${getSymbolFromCurrency(selectedRow?.from_currency)}${(parseFloat(selectedRow?.amount) + parseFloat(selectedRow?.fee)).toFixed(2)}`,
-            "Transaction Type": selectedRow?.receipient
-              ? "Transfer Money"
-              : `${selectedRow?.extraType} - ${selectedRow?.trans_type}`,
-            "Conversion Info": selectedRow?.receipient && selectedRow?.conversionAmount
-              ? `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount})`
-              : !selectedRow?.receipient && selectedRow?.conversionAmount
-                ? (() => {
-                  if (selectedRow?.tr_type === "Stripe") {
-                    return `(Convert ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount})`;
-                  } else if (selectedRow?.tr_type === "UPI") {
-                    return `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount})`;
-                  } else if (selectedRow?.trans_type === "Exchange") {
-                    return `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount})`;
-                  } else {
-                    return `(Convert ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount} to ${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount})`;
-                  }
-                })()
-                : "--",
-            "Transaction Status":
-              ["succeeded", "success", "Success", "Complete", "Completed"].includes(selectedRow?.status)
-                ? "Success"
-                : selectedRow?.status,
-
-            "Settlement Date":
-              selectedRow?.status &&
-                ["Complete", "Success", "succeeded"].includes(selectedRow?.status)
-                ? moment(selectedRow?.updatedAt).local().format("YYYY-MM-DD hh:mm:ss A")
-                : "--",
-            "Trans Amt":
-              (selectedRow?.receipient
-                ? getSymbolFromCurrency(selectedRow?.from_currency)
-                : selectedRow?.extraType === "debit"
-                  ? getSymbolFromCurrency(selectedRow?.from_currency)
-                  : selectedRow?.tr_type === "Stripe"
-                    ? getSymbolFromCurrency(selectedRow?.to_currency)
-                    : selectedRow?.trans_type === "Exchange"
-                      ? getSymbolFromCurrency(selectedRow?.from_currency)
-                      : getSymbolFromCurrency(selectedRow?.from_currency)) + (selectedRow?.amount || ""),
-          },
-          customerInfo: {
-            "Sender Name":
-              selectedRow?.tr_type === "UPI"
-                ? selectedRow?.upi_email
-                : selectedRow?.tr_type === "bank-transfer"
-                  ? selectedRow?.receipient
-                    ? selectedRow?.senderAccountDetails?.[0]?.name
-                    : selectedRow?.senderAccountDetails?.[0]?.name
-                  : selectedRow?.extraType === "credit"
-                    ? selectedRow?.transferAccountDetails?.[0]?.name
-                    : selectedRow?.senderAccountDetails?.[0]?.name,
-
-            "Sender Account":
-              selectedRow?.tr_type === "UPI"
-                ? selectedRow?.upi_id
-                : selectedRow?.tr_type === "bank-transfer"
-                  ? selectedRow?.receipient
-                    ? selectedRow?.senderAccountDetails?.[0]?.iban
-                    : selectedRow?.senderAccountDetails?.[0]?.iban
-                  : selectedRow?.extraType === "credit"
-                    ? selectedRow?.transferAccountDetails?.[0]?.iban
-                    : selectedRow?.senderAccountDetails?.[0]?.iban,
-
-            "Sender Address":
-              selectedRow?.tr_type === "UPI"
-                ? selectedRow?.upi_contact
-                : selectedRow?.tr_type === "bank-transfer"
-                  ? selectedRow?.receipient
-                    ? selectedRow?.senderAccountDetails?.[0]?.address
-                    : selectedRow?.senderAccountDetails?.[0]?.address
-                  : selectedRow?.extraType === "credit"
-                    ? selectedRow?.transferAccountDetails?.[0]?.address
-                    : selectedRow?.senderAccountDetails?.[0]?.address,
-
-            "Receiver Name":
-              selectedRow?.extraType === "credit"
-                ? selectedRow?.senderAccountDetails?.[0]?.name
-                : selectedRow?.receipient
-                  ? selectedRow?.recAccountDetails?.[0]?.name
-                  : selectedRow?.transferAccountDetails?.[0]?.name,
-
-            "Receiver Account":
-              selectedRow?.extraType === "credit"
-                ? selectedRow?.senderAccountDetails?.[0]?.iban
-                : selectedRow?.receipient
-                  ? selectedRow?.recAccountDetails?.[0]?.iban
-                  : selectedRow?.transferAccountDetails?.[0]?.iban,
-
-            "Receiver Address":
-              selectedRow?.extraType === "credit"
-                ? selectedRow?.senderAccountDetails?.[0]?.address
-                : selectedRow?.receipient
-                  ? selectedRow?.recAccountDetails?.[0]?.address
-                  : selectedRow?.transferAccountDetails?.[0]?.address,
-
-            "Sent Amount": sentAmount,
-            "Received Amount": receivedAmount
-          }
-        }}
-        dialogContentSx={{
-          backgroundColor: theme.palette.background.default,
-          color: theme.palette.text.primary,
-        }}
-        cardSx={{
-          boxShadow: "none",
-          border: "1px solid #ddd",
-          backgroundColor: theme.palette.background.default,
-        }}
-        buttonSx={{ color: "white", borderColor: "white" }}
+        transactionId={selectedId}
       />
 
     </Box>

@@ -12,7 +12,7 @@ const CryptoSection = () => {
   return (
     <Box sx={{ mb: 4 }}>
       <Typography sx={{ fontWeight: 'bold',  mb: 2 }}>
-        Crypto exchange rate overview
+        Crypto Exchange Rate Overview
       </Typography>
 
       <Box className='crypto-section' >
