@@ -205,13 +205,28 @@ const LoadCardForm = ({
     typeof value === 'object' && '$numberDecimal' in value
       ? parseFloat(value.$numberDecimal).toFixed(2)
       : parseFloat(value).toFixed(2);
+  const toTitleCase = (str: string = '') =>
+    str
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
 
-  console.log("Render: acctDetails", acctDetails, "card currency", loadCardDetails?.currency, "amount", amount, "convValue", convValue);
   return (
     <Box className="load-card-modal">
       {loadCardDetails?.cardNumber && (
         <Box className="form-group" sx={{ mb: 2 }}>
-          <label style={{ fontWeight: 500, fontSize: '14px' }}>Card ({loadCardDetails.cardNumber.replace(/(.{4})/g, '$1 ').trim()})</label>
+
+          {/* Show card currency and user */}
+          <Box sx={{ fontSize: '13px', color: 'gray', mt: 0.5 }}>
+            <label>Card Number: {loadCardDetails.cardNumber.replace(/(.{4})/g, '$1 ').trim()}</label>
+            {'| Currency:'} <b>{loadCardDetails.currency}</b>
+            {loadCardDetails.name || loadCardDetails.user || loadCardDetails.email ? (
+              <>
+                {' | User: '}<b>{toTitleCase(loadCardDetails.name || loadCardDetails.user || loadCardDetails.email)}</b>
+              </>
+            ) : null}
+          </Box>
         </Box>
       )}
       <Box className="form-row">
