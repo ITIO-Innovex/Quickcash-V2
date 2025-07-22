@@ -20,6 +20,9 @@ import { CreditCard, Building2, Globe, MapPin } from 'lucide-react';
 import CustomButton from '@/components/CustomButton';
 import './TransferMethodStep.css';
 import CustomTextField from '@/components/CustomTextField';
+import api from '@/helpers/apiHelper';
+import axios from 'axios';
+import CustomSelect from '@/components/CustomDropdown';
 
 interface TransferMethodStepProps {
   formData: any;
@@ -57,7 +60,6 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
     purpose: '',
     remittanceInfo: '',
     executionDate: '',
-
     // SWIFT fields
     beneficiaryAddress: '',
     accountNumber: '',
@@ -67,7 +69,6 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
     currency: '',
     transferMessage: '',
     intermediaryBank: '',
-
     // ACH fields
     routingNumber: '',
     achAccountNumber: '',
@@ -77,7 +78,31 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
     transactionCode: 'credit',
     entryClassCode: 'PPD',
     paymentDescription: '',
+    // Common new fields
+    email: '',
+    mobile: '',
+    address: '',
+    country: '',
   });
+
+  const [countries, setCountries] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const countryRes = await api.get(`/api/v1/user/getCountryList`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        let countryList = countryRes.data.data?.country || [];
+        // Filter to only European countries (assuming region property)
+        countryList = countryList.filter((c: any) => c.region === 'Europe');
+        setCountries(countryList);
+      } catch (error) {
+        console.error('Error loading country data:', error);
+      }
+    };
+    fetchCountries();
+  }, []);
 
   // Update converted amount when amount or currency changes
   React.useEffect(() => {
@@ -145,9 +170,51 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
   };
 
   const handleContinue = () => {
+    let beneficiaryData = {};
+    if (selectedMethod === 'sepa') {
+      beneficiaryData = {
+        name: formFields.beneficiaryName,
+        email: formFields.email,
+        mobile: formFields.mobile,
+        bankName: formFields.bankName,
+        iban: formFields.iban,
+        bic_code: formFields.bicSwift,
+        country: formFields.country || 'EUR', // Should be selected by user
+        currency: 'EUR',
+        address: formFields.address,
+        amount: formData.convertedAmount || '',
+      };
+    } else if (selectedMethod === 'swift') {
+      beneficiaryData = {
+        name: formFields.beneficiaryName,
+        email: formFields.email,
+        mobile: formFields.mobile,
+        bankName: formFields.bankName,
+        iban: formFields.accountNumber,
+        bic_code: formFields.swiftCode,
+        country: formFields.country,
+        currency: formData.selectedCurrency || formData.toCurrency || '',
+        address: formFields.beneficiaryAddress,
+        amount: formData.convertedAmount || '',
+      };
+    } else if (selectedMethod === 'ach') {
+      beneficiaryData = {
+        name: formFields.achBeneficiaryName,
+        email: formFields.email,
+        mobile: formFields.mobile,
+        bankName: formFields.bankName,
+        iban: formFields.achAccountNumber,
+        bic_code: formFields.routingNumber,
+        country: 'US',
+        currency: 'USD',
+        address: formFields.address,
+        amount: formData.convertedAmount || '',
+      };
+    }
     updateFormData({
       transferMethod: selectedMethod,
       transferFormData: formFields,
+      beneficiaryData,
       info: formFields.purpose || formFields.paymentDescription || '',
     });
     onNext();
@@ -247,6 +314,54 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('remittanceInfo', e.target.value)}
           />
         </Grid>
+        <Grid item xs={12} md={6}>
+          <CustomTextField
+            fullWidth
+            label="Email"
+            placeholder="Beneficiary Email"
+            value={formFields.email}
+            onChange={(e) => handleFieldChange('email', e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <CustomTextField
+            fullWidth
+            label="Mobile"
+            placeholder="Beneficiary Mobile"
+            value={formFields.mobile}
+            onChange={(e) => handleFieldChange('mobile', e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <CustomTextField
+            fullWidth
+            label="Bank Name"
+            placeholder="Bank Name"
+            value={formFields.bankName}
+            onChange={(e) => handleFieldChange('bankName', e.target.value)}
+          />
+        </Grid>
+        {/* <Grid item xs={12} md={6}>
+          <FormControl fullWidth>
+            <CustomSelect
+              label="Country"
+              value={formFields.country}
+              options={countries.map(c => ({ label: c.name, value: c.id }))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('country', e.target.value)}
+            >
+            </CustomSelect>
+          </FormControl>
+        </Grid> */}
+        <Grid item xs={12}>
+          <CustomTextField
+            fullWidth
+            label="Beneficiary Address"
+            placeholder="Beneficiary Address"
+            value={formFields.address}
+            onChange={(e) => handleFieldChange('address', e.target.value)}
+          />
+        </Grid>
+
       </Grid>
     </Box>
   );
@@ -271,7 +386,24 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('beneficiaryName', e.target.value)}
           />
         </Grid>
-
+  <Grid item xs={12} md={6}>
+          <CustomTextField
+            fullWidth
+            label="Email"
+            placeholder="Beneficiary Email"
+            value={formFields.email}
+            onChange={(e) => handleFieldChange('email', e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <CustomTextField
+            fullWidth
+            label="Mobile"
+            placeholder="Beneficiary Mobile"
+            value={formFields.mobile}
+            onChange={(e) => handleFieldChange('mobile', e.target.value)}
+          />
+        </Grid>
         <Grid item xs={12} md={6}>
           <CustomTextField
             fullWidth
@@ -282,7 +414,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
           />
         </Grid>
 
-        <Grid item xs={12}>          
+        <Grid item xs={12}>
           <CustomTextField
             fullWidth
             multiline
@@ -368,6 +500,16 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('transferMessage', e.target.value)}
           />
         </Grid>
+      
+        {/* <Grid item xs={12} md={6}>
+          <CustomSelect
+              label="Country"
+              value={formFields.country}
+              options={countries.map(c => ({ label: c.name, value: c.id }))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('country', e.target.value)}
+            >
+            </CustomSelect>
+        </Grid> */}
       </Grid>
     </Box>
   );
@@ -388,7 +530,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             fullWidth
             label="Routing Number (ABA) *"
             placeholder="021000021"
-            value={formFields.routingNumber}
+            value={formFields.routingNumber || formFields.bicSwift}
             onChange={(e) => handleFieldChange('routingNumber', e.target.value)}
           // helperText="9-digit bank routing number"
           />
@@ -426,7 +568,24 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('achBeneficiaryName', e.target.value)}
           />
         </Grid>
-
+        <Grid item xs={12} md={6}>
+          <CustomTextField
+            fullWidth
+            label="Email"
+            placeholder="Beneficiary Email"
+            value={formFields.email}
+            onChange={(e) => handleFieldChange('email', e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <CustomTextField
+            fullWidth
+            label="Mobile"
+            placeholder="Beneficiary Mobile"
+            value={formFields.mobile}
+            onChange={(e) => handleFieldChange('mobile', e.target.value)}
+          />
+        </Grid>
         <Grid item xs={12} md={6}>
           <CustomTextField
             fullWidth
@@ -472,6 +631,25 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
             onChange={(e) => handleFieldChange('paymentDescription', e.target.value)}
           />
         </Grid>
+
+        <Grid item xs={12} md={6}>
+          <CustomTextField
+            fullWidth
+            label="Bank Name"
+            placeholder="Bank Name"
+            value={formFields.bankName}
+            onChange={(e) => handleFieldChange('bankName', e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <CustomTextField
+            fullWidth
+            label="Beneficiary Address"
+            placeholder="Beneficiary Address"
+            value={formFields.address || formFields.beneficiaryAddress}
+            onChange={(e) => handleFieldChange('address', e.target.value)}
+          />
+        </Grid>
       </Grid>
     </Box>
   );
@@ -481,14 +659,16 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
   // Pre-fill form fields from beneficiary when beneficiary changes
   React.useEffect(() => {
     if (beneficiary && Object.keys(beneficiary).length > 0) {
-        console.log('Setting beneficiaryAddress from:', beneficiary.address);
-  
+      console.log('Setting beneficiaryAddress from:', beneficiary.address);
+
       setFormFields(prev => ({
         ...prev,
         // SEPA
         iban: beneficiary.iban || prev.iban,
         bicSwift: beneficiary.bic_code || prev.bicSwift,
         beneficiaryName: beneficiary.name || prev.beneficiaryName,
+         mobile: beneficiary.mobile,
+         email: beneficiary.email,
         // SWIFT
         accountNumber: beneficiary.iban || prev.accountNumber,
         swiftCode: beneficiary.bic_code || prev.swiftCode,

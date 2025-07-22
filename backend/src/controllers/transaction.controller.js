@@ -702,7 +702,7 @@ module.exports = {
     {
      $lookup: {
       "from": "receipients",
-      "localField": "transfer_account",
+      "localField": "receipient",
       "foreignField": "_id",
       "as": "recAccountDetails"
      }
@@ -862,7 +862,7 @@ module.exports = {
     {
      $lookup: {
       "from": "receipients",
-      "localField": "transfer_account",
+      "localField": "receipient",
       "foreignField": "_id",
       "as": "recAccountDetails"
      }
@@ -1290,7 +1290,7 @@ module.exports = {
   sendTransaction: async(req,res) => {
     // Only use the required fields for a simple send-money transaction
     try {
-      const { user, source_account, info, country, from_currency, to_currency, amount, amountText } = req.body;
+      const { user, source_account, info, country, from_currency, to_currency, amount, amountText, receipient: beneficiaryId, transferMethod, transferFormData,feeCharge:fee } = req.body;
       
       // Basic validation (optional, can be removed if not needed)
       if (!user || !source_account || !from_currency || !to_currency || !amount) {
@@ -1300,6 +1300,27 @@ module.exports = {
           data: null
         });
       }
+
+      let finalBeneficiaryId = beneficiaryId;
+      if (!finalBeneficiaryId && transferMethod && transferFormData) {
+        // Create a new beneficiary if one isn't provided
+        const newBeneficiary = await Receipient.create({
+          user,
+          name: transferFormData.beneficiaryName || transferFormData.achBeneficiaryName ||'-',
+          email: transferFormData.email || '', // Assuming email might be in transferFormData
+          mobile: transferFormData.mobile || '',
+          address: transferFormData.beneficiaryAddress ||  transferFormData.address || '-',
+          iban: transferFormData.iban || transferFormData.accountNumber || transferFormData.achAccountNumber ||'-',
+          bic_code: transferFormData.bicSwift || transferFormData.swiftCode || transferFormData.routingNumber ||'-',
+          bankName: transferFormData.bankName || '-',
+          currency: to_currency,
+          country,
+          amount: transferFormData.amount || transferFormData.convertedAmount || 0,
+          status: true, // Auto-approve new beneficiaries from transfers
+        });
+        finalBeneficiaryId = newBeneficiary._id;
+      }
+
 
       // Fetch the source account to get the current balance
       const sourceAccount = await Account.findById(source_account);
@@ -1314,6 +1335,10 @@ module.exports = {
         to_currency,
         amount,
         amountText,
+        receipient: finalBeneficiaryId, // Storing beneficiary ID
+        transferMethod, // Storing transfer method
+        transferFormData,
+        fee,
         trans_type: "Send Money",
         trx: Math.floor(Math.random() * 999999999999),
         status: "pending",
@@ -1329,6 +1354,8 @@ module.exports = {
         to_currency,
         amount,
         amountText,
+        receipient: finalBeneficiaryId,
+        fee,
         trans_type: "Send Money",
         trx: Math.floor(Math.random() * 999999999999),
         status: "pending",

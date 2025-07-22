@@ -161,19 +161,21 @@ export default function TransactionDetailModalContainer({
   // Build customerInfo
   const customerInfo = selectedRow?.trans_type === "Add Money"
     ? {
-        Note: `Self transfer Stripe to ${selectedRow?.senderAccountDetails?.[0]?.name || ""}`,
-      }
+     Note: `Stripe to ${selectedRow?.senderAccountDetails?.[0]?.name || ''} (${selectedRow?.senderAccountDetails?.[0]?.iban || ''})`
+  .replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1)),
+
+    }
     : selectedRow?.trans_type === "Exchange"
       ? {
-          "Sender Name": selectedRow?.userDetails?.[0]?.name,
-          "Sender Account": selectedRow?.senderAccountDetails?.[0]?.iban,
-          "Receiver Name": selectedRow?.userDetails?.[0]?.name,
-          "Receiver Account": selectedRow?.transferAccountDetails?.[0]?.iban,
-          "Sent Amount": sentAmount,
-          "Received Amount": receivedAmount
-        }
-    : isCryptoView
-      ? {
+        "Sender Name": selectedRow?.userDetails?.[0]?.name,
+        "Sender Account": selectedRow?.senderAccountDetails?.[0]?.iban,
+        "Receiver Name": selectedRow?.userDetails?.[0]?.name,
+        "Receiver Account": selectedRow?.transferAccountDetails?.[0]?.iban,
+        "Sent Amount": sentAmount,
+        "Received Amount": receivedAmount
+      }
+      : isCryptoView
+        ? {
           "User Name": selectedRow?.userDetails?.[0]?.name,
           "User Email": selectedRow?.userDetails?.[0]?.email,
           "User Mobile": selectedRow?.userDetails?.[0]?.mobile,
@@ -183,7 +185,7 @@ export default function TransactionDetailModalContainer({
           "Default Currency": selectedRow?.userDetails?.[0]?.defaultCurrency,
           "User Status": selectedRow?.userDetails?.[0]?.status ? "Active" : "Inactive",
         }
-      : {
+        : {
           "Sender Name":
             selectedRow?.tr_type === "UPI"
               ? selectedRow?.upi_email
