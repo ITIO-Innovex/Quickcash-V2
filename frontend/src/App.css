@@ -253,6 +253,7 @@ body {
   height: 40px;
   width: auto;
   object-fit: contain;
+  margin-left: 6px;
 }
 
 /* RESPONSIVE STYLES */
