@@ -174,6 +174,15 @@ export default function TransactionDetailModalContainer({
         "Sent Amount": sentAmount,
         "Received Amount": receivedAmount
       }
+       : selectedRow?.trans_type === "Send Money"
+      ? {
+        "Sender Name": selectedRow?.userDetails?.[0]?.name,
+        "Sender Account": selectedRow?.senderAccountDetails?.[0]?.iban,
+        "Receiver Name": selectedRow?.recAccountDetails?.[0]?.name,
+        "Receiver Account": selectedRow?.recAccountDetails?.[0]?.iban,
+        "Sent Amount": sentAmount,
+        "Received Amount": receivedAmount
+      }
       : isCryptoView
         ? {
           "User Name": selectedRow?.userDetails?.[0]?.name,
