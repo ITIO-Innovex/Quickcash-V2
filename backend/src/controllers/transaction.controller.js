@@ -31,6 +31,8 @@ module.exports = {
       if(trans_type == "Exchange") {
         const remainingBalanceto = await Account.findOne({_id: transfer_account});
         const transaction = await Transaction.create({
+          conversionAmount:req?.body?.amount, 
+          conversionAmountText: req?.body?.amountText, 
           user,source_account,receipient,info,iban,bic,trans_type,tr_type,country,from_currency,status,
           transfer_account,to_currency,addedBy,ttNumber:"",trx:Math.floor(Math.random() * 999999999999)
         })  

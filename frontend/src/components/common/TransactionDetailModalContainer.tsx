@@ -41,31 +41,39 @@ export default function TransactionDetailModalContainer({
     }
   };
 
-  // Calculate sentAmount and receivedAmount
-  let sentAmount = "--";
-  let receivedAmount = "--";
+  // Calculate sentAmount
+  const sentAmount = selectedRow?.receipient && selectedRow?.conversionAmount
+    ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`
+    : !selectedRow?.receipient && selectedRow?.conversionAmount
+      ? (() => {
+        if (selectedRow?.tr_type === "Stripe") {
+          return `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.amount}`;
+        } else if (selectedRow?.tr_type === "UPI") {
+          return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
+        } else if (selectedRow?.trans_type === "Exchange") {
+          return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
+        } else {
+          return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
+        }
+      })()
+      : "--";
 
-  if (selectedRow?.trans_type === "Exchange") {
-    sentAmount = `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
-    receivedAmount = `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
-  } else if (selectedRow?.receipient && selectedRow?.conversionAmount) {
-    sentAmount = `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
-    receivedAmount = `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
-  } else if (!selectedRow?.receipient && selectedRow?.conversionAmount) {
-    if (selectedRow?.tr_type === "Stripe") {
-      sentAmount = `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.amount}`;
-      receivedAmount = `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount}`;
-    } else if (selectedRow?.tr_type === "UPI") {
-      sentAmount = `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
-      receivedAmount = `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
-    } else if (selectedRow?.trans_type === "Exchange") {
-      sentAmount = `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
-      receivedAmount = `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
-    } else {
-      sentAmount = `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
-      receivedAmount = `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount}`;
-    }
-  }
+  // Calculate receivedAmount
+  const receivedAmount = selectedRow?.receipient && selectedRow?.conversionAmount
+    ? `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`
+    : !selectedRow?.receipient && selectedRow?.conversionAmount
+      ? (() => {
+        if (selectedRow?.tr_type === "Stripe") {
+          return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount}`;
+        } else if (selectedRow?.tr_type === "UPI") {
+          return `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
+        } else if (selectedRow?.trans_type === "Exchange") {
+          return `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
+        } else {
+          return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount}`;
+        }
+      })()
+      : "--";
 
   // Calculate conversionInfo
   let conversionInfo = "";
@@ -153,7 +161,7 @@ export default function TransactionDetailModalContainer({
   // Build customerInfo
   const customerInfo = selectedRow?.trans_type === "Add Money"
     ? {
-        Note: `Self transfer Stripe to ${selectedRow?.transferAccountDetails?.[0]?.name || ""}`,
+        Note: `Self transfer Stripe to ${selectedRow?.senderAccountDetails?.[0]?.name || ""}`,
       }
     : selectedRow?.trans_type === "Exchange"
       ? {
