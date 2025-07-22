@@ -69,15 +69,32 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     });
     onClose();
   };
+  const toTitleCase = (str: string = '') =>
+    str
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
 
   return (
     <Box className="load-card-modal"  >
       {transactionCardDetails?.cardNumber && (
         <Box className="form-group" sx={{ mb: 2 }}>
-          <label style={{ fontWeight: 500, fontSize: '14px' }}>Card ({transactionCardDetails.cardNumber.replace(/(.{4})/g, '$1 ').trim()})</label>
 
+          {/* Show card currency and user */}
+          <Box sx={{ fontSize: '13px', color: 'gray', mt: 0.5 }}>
+            <label>Card Number: {transactionCardDetails.cardNumber.replace(/(.{4})/g, '$1 ').trim()}</label>
+            {'| Currency:'} <b>{transactionCardDetails.currency}</b>
+            {transactionCardDetails.name || transactionCardDetails.user || transactionCardDetails.email ? (
+              <>
+                {' | User: '}
+                <b>{toTitleCase(transactionCardDetails.name || transactionCardDetails.user || transactionCardDetails.email)}</b>
+              </>
+            ) : null}
+          </Box>
         </Box>
       )}
+
       <Box className="form-row-column">
         <Box className="form-group full-width">
           <label>Daily Transaction Limit</label>

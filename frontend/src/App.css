@@ -7289,6 +7289,7 @@ body {
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
+  cursor: pointer;
 }
 
 .info-card-link:hover {
