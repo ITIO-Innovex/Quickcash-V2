@@ -341,7 +341,7 @@ const Documents = () => {
                 onClick={SaveUserDocuments}
                 className="documents-button"
               >
-                UPDATE
+                Update
               </CustomButton>
             </Box>
           </Grid>

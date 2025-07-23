@@ -10,7 +10,7 @@ import { useTheme } from '@mui/material/styles';
 import { Edit } from 'lucide-react';
 import CustomButton from '@/components/CustomButton';
 import api from '@/helpers/apiHelper';
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import useValidation from '@/helpers/userValidation';
 import { useAppToast } from '@/utils/toast';
 const url = import.meta.env.VITE_NODE_ENV === "production" ? "api" : "api";
@@ -68,12 +68,12 @@ const UserInformation: React.FC = () => {
       const result = await api.post(
         `/${url}/v1/user/auth`,
         {},
-       
+
       );
       if (result?.data?.status === 201) {
         const data = result.data.data;
         setUser({
-          firstName: data.name|| '',
+          firstName: data.name || '',
           email: data.email || '',
           mobile: "+" + (data.mobile || ''),
           address: data.address || '',
@@ -160,11 +160,18 @@ const UserInformation: React.FC = () => {
   };
 
   const userDetails = [
-    { label: 'USER NAME:', value: user.firstName || '-' },
-    { label: 'EMAIL:', value: user.email || '-' },
-    { label: 'MOBILE:', value: user.mobile || '-' },
-    { label: 'ADDRESS:', value: user.address || '-' },
-    { label: 'DEFAULT CURRENCY:', value: user.defaultCurrency || '-' },
+    { label: 'Username', value: user.firstName? user.firstName.toLowerCase().replace(/\b\w/g, char => char.toUpperCase())
+        : '-' },
+    { label: 'Email', value: user.email || '-' },
+    { label: 'Mobile', value: user.mobile || '-' },
+    {
+      label: 'Address',
+      value: user.address
+        ? user.address.toLowerCase().replace(/\b\w/g, char => char.toUpperCase())
+        : '-'
+    },
+
+    { label: 'Default Currency', value: user.defaultCurrency || '-' },
   ];
 
   if (loader) return <div>Loading...</div>;
@@ -248,7 +255,7 @@ const UserInformation: React.FC = () => {
               size="small"
               onClick={handleUpdateClick}
             >
-              UPDATE
+              Update
             </CustomButton>
 
             <IconButton

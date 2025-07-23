@@ -13,7 +13,7 @@ import {
   maxTitleLength,
 } from "../constant/const";
 import { API_ROUTES } from "../constant/apiRoutes";
-import { useAppToast } from '@/utils/toast'; 
+import { useAppToast } from '@/utils/toast';
 import Title from '../../../components/common/Title';
 import Loader from '../../../components/common/loader';
 import AddContactModal from './AddContactModal';
@@ -308,20 +308,23 @@ const RequestSignatureForm = () => {
         Note: documentNote || "Please review and sign this document",
         file: "template-generated" // Set a dummy file value to enable the button
       }));
-      
+
       // Set the uploaded file URL
       setFileUpload(templateUrl);
       setUploadedFileName(documentTitle);
       setUploadSuccess(true);
-      
+
       // Show success message
       toast.success("Template loaded successfully! 🎉");
-      
+
       // Clear the URL parameters to avoid re-population on refresh
       navigate('/digital-signature/request-signature', { replace: true });
     }
   }, [location.search, navigate]);
-const toast = useAppToast(); 
+  const toast = useAppToast();
+  const handleNavigate = () => {
+    navigate("/digital-signature/templates");
+  }
   return (
     <Fade in={true} timeout={500}>
       <Paper
@@ -343,11 +346,19 @@ const toast = useAppToast();
           </Box>
         ) : (
           <form onSubmit={handleSubmit}>
-            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CloudUploadIcon sx={{ color: 'green', fontSize: 28 }} />
-              Upload Document (PDF only)
-              <span style={{ color: 'red', marginLeft: 4 }}>*</span>
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CloudUploadIcon sx={{ color: 'green', fontSize: 28 }} />
+                Upload Document (PDF only)
+                <span style={{ color: 'red', marginLeft: 4 }}>*</span>
+              </Typography>
+
+              {/* Navigation Button */}
+              <Button className="action-button" onClick={handleNavigate}>
+                Choose Templates
+              </Button>
+            </Box>
+
             <Box
               sx={{
                 border: '2px dashed #16a34a',
@@ -358,7 +369,7 @@ const toast = useAppToast();
                 cursor: 'pointer',
                 background: uploadSuccess ? '#f0fdf4' : '#fff',
                 transition: 'all 0.3s',
-                '&:hover': { 
+                '&:hover': {
                   background: uploadSuccess ? '#f0fdf4' : '#f6fef9',
                   borderColor: uploadSuccess ? '#16a34a' : '#a78bfa'
                 },
@@ -372,10 +383,10 @@ const toast = useAppToast();
             >
               {uploadSuccess ? (
                 <>
-                  <Box sx={{ 
-                    position: 'absolute', 
-                    top: 8, 
-                    right: 8, 
+                  <Box sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
                     cursor: 'pointer',
                     '&:hover': { opacity: 0.8 }
                   }} onClick={(e) => {

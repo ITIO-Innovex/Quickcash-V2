@@ -176,7 +176,7 @@ const SecurityForm = () => {
         )}
 
         <CustomButton type="submit">
-          {!otpStatus ? 'SEND OTP' : !otpVerified ? 'VERIFY OTP' : 'CHANGE PASSWORD'}
+          {!otpStatus ? 'Send OTP' : !otpVerified ? 'Verify OTP' : 'Change Password'}
         </CustomButton>
       </Box>
     </Box>

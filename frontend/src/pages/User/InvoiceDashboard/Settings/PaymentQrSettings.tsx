@@ -116,9 +116,9 @@ const PaymentQrSettings = () => {
           height="60"
           alt={`paymentqrcode${row?.title}`}
           style={{ objectFit: 'contain', borderRadius: 4 }}
-          onError={(e) => {
-            e.currentTarget.src = '/default-qr.png';
-          }}
+          // onError={(e) => {
+          //   e.currentTarget.src = '/default-qr.png';
+          // }}
         />
         );
       },
