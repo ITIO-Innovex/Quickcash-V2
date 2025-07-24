@@ -342,7 +342,7 @@ const AddQuote = () => {
             <Box><label>Terms:</label><ReactQuill theme="snow" value={terms} onChange={setTerms} /></Box>
           </>
         ) : (
-          <Box><button onClick={() => setnoteandTerms(true)} className="toggle-button add-btn">+ ADD NOTE & TERMS</button></Box>
+          <Box><button onClick={() => setnoteandTerms(true)} className="toggle-button add-btn mb-2">+ ADD NOTE & TERMS</button></Box>
         )}
       </Box>
 

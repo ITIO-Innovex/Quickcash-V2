@@ -41,6 +41,7 @@ const TransferDetailsStep: React.FC<TransferDetailsStepProps> = ({
     setPendingMessage('Submitting your transfer...');
     try {
       const payload = {
+        ...formData,
         user: formData.user || userId,
         source_account: formData.source_account || (accountList[0]?._id),
         info: formData.info,
@@ -49,6 +50,7 @@ const TransferDetailsStep: React.FC<TransferDetailsStepProps> = ({
         to_currency: formData.toCurrency,
         amount: formData.sendAmount,
         amountText: formData.receiveAmount,
+        receipient: selectedBeneficiary?._id, // Pass beneficiary ID if available
       };
       // Debug log for critical fields
       console.log('DEBUG: user:', payload.user, 'source_account:', payload.source_account);
@@ -76,6 +78,7 @@ const TransferDetailsStep: React.FC<TransferDetailsStepProps> = ({
           'Content-Type': 'application/json',
           ...authHeader,
         },
+
         body: JSON.stringify(payload),
       });
       if (response.ok) {
@@ -167,6 +170,22 @@ const TransferDetailsStep: React.FC<TransferDetailsStepProps> = ({
                 <Typography>{formData.transferFormData.beneficiaryName || '-'}</Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}>
+                <Typography>Beneficiary Email:</Typography>
+                <Typography>{formData.transferFormData.email || '-'}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}>
+                <Typography>Beneficiary Mobile:</Typography>
+                <Typography>{formData.transferFormData.mobile || '-'}</Typography>
+              </Box>
+               <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}>
+                <Typography>Bank Name:</Typography>
+                <Typography>{formData.transferFormData.bankName || '-'}</Typography>
+              </Box>
+               <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}>
+                <Typography>Beneficiary Address:</Typography>
+                <Typography>{formData.transferFormData.address || '-'}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}>
                 <Typography>Purpose/Reference:</Typography>
                 <Typography>{formData.transferFormData.purpose || '-'}</Typography>
               </Box>
@@ -192,7 +211,7 @@ const TransferDetailsStep: React.FC<TransferDetailsStepProps> = ({
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}>
                 <Typography>Beneficiary Address:</Typography>
-                <Typography>{formData.transferFormData.beneficiaryAddress || '-'}</Typography>
+                <Typography>{formData.transferFormData.address || '-'}</Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}>
                 <Typography>SWIFT/BIC Code:</Typography>

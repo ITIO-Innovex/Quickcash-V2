@@ -21,7 +21,8 @@ const transactionSchema = new mongoose.Schema({
     default: ''
   },
   receipient: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref: "Receipient",
     required:false,
     default:null
   },

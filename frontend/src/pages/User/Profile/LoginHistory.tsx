@@ -47,10 +47,10 @@ const LoginHistory = () => {
   }, [accountId]);
 
   const columns = [
-    { field: 'date', headerName: 'DATE & TIME' },
-    { field: 'browser', headerName: 'BROWSER' },
-    { field: 'os', headerName: 'OPERATING SYSTEM' },
-    { field: 'ip', headerName: 'IP ADDRESS' }
+    { field: 'date', headerName: 'Date & Time' },
+    { field: 'browser', headerName: 'Browser' },
+    { field: 'os', headerName: 'Operating System' },
+    { field: 'ip', headerName: 'IP Address' }
   ];
 
   return (

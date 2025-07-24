@@ -305,7 +305,7 @@ const UpdateDetails = () => {
           </Grid>
           <Grid item xs={12}>
             <CustomButton type="submit" className="update-details-button">
-              UPDATE
+              Update
             </CustomButton>
           </Grid>
         </Grid>

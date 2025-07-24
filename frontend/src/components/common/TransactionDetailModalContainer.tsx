@@ -41,31 +41,39 @@ export default function TransactionDetailModalContainer({
     }
   };
 
-  // Calculate sentAmount and receivedAmount
-  let sentAmount = "--";
-  let receivedAmount = "--";
+  // Calculate sentAmount
+  const sentAmount = selectedRow?.receipient && selectedRow?.conversionAmount
+    ? `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`
+    : !selectedRow?.receipient && selectedRow?.conversionAmount
+      ? (() => {
+        if (selectedRow?.tr_type === "Stripe") {
+          return `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.amount}`;
+        } else if (selectedRow?.tr_type === "UPI") {
+          return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
+        } else if (selectedRow?.trans_type === "Exchange") {
+          return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
+        } else {
+          return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
+        }
+      })()
+      : "--";
 
-  if (selectedRow?.trans_type === "Exchange") {
-    sentAmount = `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
-    receivedAmount = `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
-  } else if (selectedRow?.receipient && selectedRow?.conversionAmount) {
-    sentAmount = `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
-    receivedAmount = `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
-  } else if (!selectedRow?.receipient && selectedRow?.conversionAmount) {
-    if (selectedRow?.tr_type === "Stripe") {
-      sentAmount = `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.amount}`;
-      receivedAmount = `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount}`;
-    } else if (selectedRow?.tr_type === "UPI") {
-      sentAmount = `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
-      receivedAmount = `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
-    } else if (selectedRow?.trans_type === "Exchange") {
-      sentAmount = `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
-      receivedAmount = `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
-    } else {
-      sentAmount = `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.amount}`;
-      receivedAmount = `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount}`;
-    }
-  }
+  // Calculate receivedAmount
+  const receivedAmount = selectedRow?.receipient && selectedRow?.conversionAmount
+    ? `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`
+    : !selectedRow?.receipient && selectedRow?.conversionAmount
+      ? (() => {
+        if (selectedRow?.tr_type === "Stripe") {
+          return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount}`;
+        } else if (selectedRow?.tr_type === "UPI") {
+          return `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
+        } else if (selectedRow?.trans_type === "Exchange") {
+          return `${getSymbolFromCurrency(selectedRow?.to_currency)}${selectedRow?.conversionAmount}`;
+        } else {
+          return `${getSymbolFromCurrency(selectedRow?.from_currency)}${selectedRow?.conversionAmount}`;
+        }
+      })()
+      : "--";
 
   // Calculate conversionInfo
   let conversionInfo = "";
@@ -153,67 +161,86 @@ export default function TransactionDetailModalContainer({
   // Build customerInfo
   const customerInfo = selectedRow?.trans_type === "Add Money"
     ? {
-        Note: `Self transfer Stripe to ${selectedRow?.transferAccountDetails?.[0]?.name || ""}`,
-      }
+      Note: `Stripe to ${selectedRow?.senderAccountDetails?.[0]?.name || ''} (${selectedRow?.senderAccountDetails?.[0]?.iban || ''})`
+        .replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1)),
+
+    }
     : selectedRow?.trans_type === "Exchange"
       ? {
-          "Sender Name": selectedRow?.userDetails?.[0]?.name,
+        "Sender Name": selectedRow?.userDetails?.[0]?.name
+          ?.toLowerCase()
+          .replace(/\b\w/g, char => char.toUpperCase()),
+
+        "Sender Account": selectedRow?.senderAccountDetails?.[0]?.iban,
+        "Receiver Name": selectedRow?.userDetails?.[0]?.name?.toLowerCase()
+          .replace(/\b\w/g, char => char.toUpperCase()),
+        "Receiver Account": selectedRow?.transferAccountDetails?.[0]?.iban,
+        "Sent Amount": sentAmount,
+        "Received Amount": receivedAmount
+      }
+      : selectedRow?.trans_type === "Send Money"
+        ? {
+          "Sender Name": selectedRow?.userDetails?.[0]?.name
+            ?.toLowerCase()
+            .replace(/\b\w/g, char => char.toUpperCase()),
+
           "Sender Account": selectedRow?.senderAccountDetails?.[0]?.iban,
-          "Receiver Name": selectedRow?.userDetails?.[0]?.name,
-          "Receiver Account": selectedRow?.transferAccountDetails?.[0]?.iban,
+          "Receiver Name": selectedRow?.recAccountDetails?.[0]?.name?.toLowerCase()
+            .replace(/\b\w/g, char => char.toUpperCase()),
+          "Receiver Account": selectedRow?.recAccountDetails?.[0]?.iban,
           "Sent Amount": sentAmount,
           "Received Amount": receivedAmount
         }
-    : isCryptoView
-      ? {
-          "User Name": selectedRow?.userDetails?.[0]?.name,
-          "User Email": selectedRow?.userDetails?.[0]?.email,
-          "User Mobile": selectedRow?.userDetails?.[0]?.mobile,
-          "User Address": selectedRow?.userDetails?.[0]?.address,
-          "User City": selectedRow?.userDetails?.[0]?.city,
-          "User Country": selectedRow?.userDetails?.[0]?.country,
-          "Default Currency": selectedRow?.userDetails?.[0]?.defaultCurrency,
-          "User Status": selectedRow?.userDetails?.[0]?.status ? "Active" : "Inactive",
-        }
-      : {
-          "Sender Name":
-            selectedRow?.tr_type === "UPI"
-              ? selectedRow?.upi_email
-              : selectedRow?.tr_type === "bank-transfer"
-                ? selectedRow?.receipient
-                  ? selectedRow?.senderAccountDetails?.[0]?.name
-                  : selectedRow?.senderAccountDetails?.[0]?.name
-                : selectedRow?.extraType === "credit"
-                  ? selectedRow?.transferAccountDetails?.[0]?.name
-                  : selectedRow?.senderAccountDetails?.[0]?.name,
+        : isCryptoView
+          ? {
+            "User Name": selectedRow?.userDetails?.[0]?.name,
+            "User Email": selectedRow?.userDetails?.[0]?.email,
+            "User Mobile": selectedRow?.userDetails?.[0]?.mobile,
+            "User Address": selectedRow?.userDetails?.[0]?.address,
+            "User City": selectedRow?.userDetails?.[0]?.city,
+            "User Country": selectedRow?.userDetails?.[0]?.country,
+            "Default Currency": selectedRow?.userDetails?.[0]?.defaultCurrency,
+            "User Status": selectedRow?.userDetails?.[0]?.status ? "Active" : "Inactive",
+          }
+          : {
+            "Sender Name":
+              selectedRow?.tr_type === "UPI"
+                ? selectedRow?.upi_email
+                : selectedRow?.tr_type === "bank-transfer"
+                  ? selectedRow?.receipient
+                    ? selectedRow?.senderAccountDetails?.[0]?.name
+                    : selectedRow?.senderAccountDetails?.[0]?.name
+                  : selectedRow?.extraType === "credit"
+                    ? selectedRow?.transferAccountDetails?.[0]?.name
+                    : selectedRow?.senderAccountDetails?.[0]?.name,
 
-          "Sender Account":
-            selectedRow?.tr_type === "UPI"
-              ? selectedRow?.upi_id
-              : selectedRow?.tr_type === "bank-transfer"
-                ? selectedRow?.receipient
-                  ? selectedRow?.senderAccountDetails?.[0]?.iban
-                  : selectedRow?.senderAccountDetails?.[0]?.iban
-                : selectedRow?.extraType === "credit"
-                  ? selectedRow?.transferAccountDetails?.[0]?.iban
-                  : selectedRow?.senderAccountDetails?.[0]?.iban,
+            "Sender Account":
+              selectedRow?.tr_type === "UPI"
+                ? selectedRow?.upi_id
+                : selectedRow?.tr_type === "bank-transfer"
+                  ? selectedRow?.receipient
+                    ? selectedRow?.senderAccountDetails?.[0]?.iban
+                    : selectedRow?.senderAccountDetails?.[0]?.iban
+                  : selectedRow?.extraType === "credit"
+                    ? selectedRow?.transferAccountDetails?.[0]?.iban
+                    : selectedRow?.senderAccountDetails?.[0]?.iban,
 
-          "Receiver Name":
-            selectedRow?.extraType === "credit"
-              ? selectedRow?.senderAccountDetails?.[0]?.name
-              : selectedRow?.receipient
-                ? selectedRow?.recAccountDetails?.[0]?.name
-                : selectedRow?.transferAccountDetails?.[0]?.name,
+            "Receiver Name":
+              selectedRow?.extraType === "credit"
+                ? selectedRow?.senderAccountDetails?.[0]?.name
+                : selectedRow?.receipient
+                  ? selectedRow?.recAccountDetails?.[0]?.name
+                  : selectedRow?.transferAccountDetails?.[0]?.name,
 
-          "Receiver Account":
-            selectedRow?.extraType === "credit"
-              ? selectedRow?.senderAccountDetails?.[0]?.iban
-              : selectedRow?.receipient
-                ? selectedRow?.recAccountDetails?.[0]?.iban
-                : selectedRow?.transferAccountDetails?.[0]?.iban,
-          "Sent Amount": sentAmount,
-          "Received Amount": receivedAmount
-        };
+            "Receiver Account":
+              selectedRow?.extraType === "credit"
+                ? selectedRow?.senderAccountDetails?.[0]?.iban
+                : selectedRow?.receipient
+                  ? selectedRow?.recAccountDetails?.[0]?.iban
+                  : selectedRow?.transferAccountDetails?.[0]?.iban,
+            "Sent Amount": sentAmount,
+            "Received Amount": receivedAmount
+          };
 
   return (
     <TransactionDetailModal

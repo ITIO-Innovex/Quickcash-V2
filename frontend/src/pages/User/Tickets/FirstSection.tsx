@@ -67,7 +67,7 @@ const FirstSection = forwardRef<any, FirstSectionProps>(({ refreshSignal }, ref)
         return <span>{formattedDateTime}</span>;
       }
     },
-    { field: 'ticketId', headerName: 'Ticket Id' },
+    { field: 'ticketId', headerName: 'Ticket ID' },
     { field: 'subject', headerName: 'Subject' },
     { field: 'message', headerName: 'Message' },
     {

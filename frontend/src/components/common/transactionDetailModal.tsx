@@ -38,12 +38,26 @@ const TransactionDetailModal = ({
         <Box className="transaction-card-separator" />
         {data && Object.keys(data).length > 0 ? (
           <Grid container spacing={2}>
-            {Object.entries(data).map(([key, value]) => (
-              <Grid item xs={6} key={key}>
-                <Typography className="transaction-card-key">{key}</Typography>
-                <Typography>{String(value ?? "N/A")}</Typography>
-              </Grid>
-            ))}
+            {Object.entries(data).map(([key, value]) => {
+              if (key === "Note") {
+                return (
+                  <Grid item xs={12} key={key}>
+                    <Typography component="span" sx={{ fontWeight: "normal" }}>
+                      {key}:
+                    </Typography>
+                    <Typography component="span" sx={{ fontWeight: "bold", color: "green" }}>
+                      {' '}{String(value ?? "N/A")}
+                    </Typography>
+                  </Grid>
+                );
+              }
+              return (
+                <Grid item xs={6} key={key}>
+                  <Typography className="transaction-card-key">{key}</Typography>
+                  <Typography>{String(value ?? "N/A")}</Typography>
+                </Grid>
+              );
+            })}
           </Grid>
         ) : (
           <Typography color="text.secondary">No data found</Typography>

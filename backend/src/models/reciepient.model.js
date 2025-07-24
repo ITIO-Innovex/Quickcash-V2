@@ -44,7 +44,7 @@ const receipientSchema = new mongoose.Schema({
   },
   amount: {
     type: Number,
-    default:0.00
+    // default:0.00
   },
   bankName: {
     type: String,
