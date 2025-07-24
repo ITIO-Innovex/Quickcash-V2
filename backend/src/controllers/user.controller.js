@@ -1271,6 +1271,31 @@ module.exports = {
     }
 
   },
+  updateEmailStatement: async (req, res) => {
+    try {
+       const { emailStatement } = req.body;
+         if (typeof emailStatement !== "boolean") {
+          return res.status(400).json({ message: "emailStatement must be true or false" });
+        }
+        console.log("Email Statement:", emailStatement);
+        try {
+              const updated = await User.findByIdAndUpdate(
+                req.userId,
+                { emailStatement },
+                { new: true }
+              );
+              if (!updated) return res.status(404).json({ message: "User not found" });
+                return res.status(200).json({ success: true, updated });
+            } catch (err) {
+                console.error("Update failed:", err);
+                res.status(500).json({ success: false, error: "Internal server error" });
+            }
+      console.log(req.userId);
+
+    } catch (error) {
+      console.log("Error", error);
+    }
+  },
 
   generateAccessTokenUser: generateAccessTokenUser
 }

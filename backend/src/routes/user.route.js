@@ -50,6 +50,7 @@ const {
   getLiveMarketCryptoCoinData,
   forgetPasswordMobile,
   deleteAccountRequest,
+  updateEmailStatement
  } = require('../controllers/user.controller');
 const { verifyToken } = require('../middlewares/auth.middleware');
 const { verifySecondaryToken } = require('../middlewares/admin.middleware');
@@ -77,6 +78,7 @@ router.route('/getRecentTrades').get(verifyToken,getRecentTrades);
 router.route('/getLiveMarketCryptoData').get(getLiveMarketCryptoCoinData);
 router.route('/account-delete-request').post(verifyToken,deleteAccountRequest)
 router.route('/get-user-details').get(verifyToken, currentuser);
+router.route('/update-email-statement').patch(verifyToken, updateEmailStatement);
 router.route('/update-profile').patch(verifyToken, upload.fields([
  { name: 'ownerbrd', maxCount: 1},
  { name: 'ownerProfile', maxCount: 1}

@@ -11,6 +11,7 @@ import LoginHistory from './LoginHistory';
 import SecurityForm from './SecurityForm';
 import UpdateDetails from './UpdateDetails';
 import Documents from './Documents';
+import Settings from './Settings';
 
 const UserProfile = () => {
   const theme = useTheme();
@@ -23,7 +24,8 @@ const UserProfile = () => {
     'Login History',
     'Security',
     'Update Details',
-    'Documents'
+    'Documents',
+    'Settings'
   ];
 
   const subTabs = ['Additional Information', 'Accounts List', 'Beneficiary Accounts List'];
@@ -69,6 +71,8 @@ const UserProfile = () => {
         return <UpdateDetails />;
       case 'Documents':
         return <Documents />;
+      case 'Settings':
+        return <Settings/>;
       default:
         return (
           <Box sx={{ p: 3, textAlign: 'center', color: theme.palette.text.secondary }}>
