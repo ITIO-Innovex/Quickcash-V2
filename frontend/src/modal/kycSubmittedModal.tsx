@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 import { useAuth } from '@/contexts/authContext';
 import CustomModal from '@/components/CustomModal';
+import CustomButton from '@/components/CustomButton';
 
 const KYCSubmittedModal = ({ open }: { open: boolean }) => {
   const { logout } = useAuth();
@@ -16,7 +17,7 @@ const KYCSubmittedModal = ({ open }: { open: boolean }) => {
   };
 
   return (
-    <CustomModal open={open} onClose={handleClose} title="" maxWidth="sm">
+    <CustomModal open={open} onClose={() => {}} title="" maxWidth="sm" hideCloseIcon={true} disableBackdropClick={true}>
       <Box className="kyc-submitted-container">
         <Box className="kyc-submitted-icon">
           <Box className="check-icon">✓</Box>
@@ -31,6 +32,8 @@ const KYCSubmittedModal = ({ open }: { open: boolean }) => {
           Please allow some time for the approval process. You will receive an
           email notification once your verification has been completed.
         </Typography>
+
+         <CustomButton className="kyc-start-button" sx={{mt:4}} onClick={handleClose} fullWidth> Logout </CustomButton>
       </Box>
     </CustomModal>
   );

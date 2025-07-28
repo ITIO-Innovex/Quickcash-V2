@@ -2,8 +2,10 @@
 import axios from 'axios';
 import {jwtDecode} from 'jwt-decode';
 import React, { useState } from 'react';
+import DatePicker from 'react-datepicker';
 import 'react-phone-input-2/lib/style.css'; 
 import PhoneInput from 'react-phone-input-2';
+import 'react-datepicker/dist/react-datepicker.css';
 import { loadAndStoreKycData } from '@/api/kyc.api';
 import CustomButton from '@/components/CustomButton';
 import EmailVerifyModal from '@/modal/emailVerifyModal';
@@ -19,6 +21,8 @@ interface ContactDetailsProps {
 const ContactDetails: React.FC<ContactDetailsProps> = ({ onNext }) => {
   const theme = useTheme();
   const toast = useAppToast();
+  const [dob, setDob] = useState<Date | null>(null);
+  const [gender, setGender] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [primaryPhone, setPrimaryPhone] = useState('');
@@ -106,6 +110,14 @@ React.useEffect(() => {
   if (kycLocal) {
     try {
       const parsed = JSON.parse(kycLocal);
+      if (parsed.dob) {
+        // Convert ddmmyyyy to Date object
+        const d = parsed.dob;
+        if (d.length === 8) {
+          setDob(new Date(`${d.slice(4,8)}-${d.slice(2,4)}-${d.slice(0,2)}`));
+        }
+      }
+      if (parsed.gender) setGender(parsed.gender);
       if (parsed.email) setEmail(parsed.email);
       if (parsed.phone) {
         setPrimaryCountryCode(parsed.phone.slice(0, 3));
@@ -131,10 +143,29 @@ React.useEffect(() => {
     email,
     phone: `${primaryCountryCode}${primaryPhone}`,
     additionalPhone: `${additionalCountryCode}${additionalPhone}`,
+    dob: formatStorageDate(dob),
+    gender,
   };
   localStorage.setItem('KycData', JSON.stringify(updated));
-}, [email, primaryPhone, additionalPhone, primaryCountryCode, additionalCountryCode]);
+}, [email, primaryPhone, additionalPhone, primaryCountryCode, additionalCountryCode, dob, gender]);
+  
+// For display in input
+const formatDisplayDate = (date: Date | null) => {
+  if (!date) return '';
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yyyy = date.getFullYear();
+  return `${dd}-${mm}-${yyyy}`;
+};
 
+// For saving in localStorage
+const formatStorageDate = (date: Date | null) => {
+  if (!date) return '';
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yyyy = date.getFullYear();
+  return `${dd}${mm}${yyyy}`;
+};
 
 const handleOtpVerifySuccess = async () => {
   const existing = JSON.parse(localStorage.getItem('KycData') || '{}');
@@ -212,6 +243,7 @@ const handleEmailVerifySuccess = async () => {
       phoneSVerified: existing.phoneSVerified,
       primaryPhoneNumber: existing.phone || '',
       secondaryPhoneNumber: existing.additionalPhone || '',
+      
     }, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -240,11 +272,20 @@ const handleEmailVerifySuccess = async () => {
 
 
 
+  // Validation: all required fields must be filled and verified
+  const isNextDisabled =
+    !email.trim() ||
+    !primaryPhone.trim() ||
+    !dob ||
+    !gender ||
+    !isEmailVerified ||
+    !isPrimaryPhoneVerified;
+
   return (
     <Box className="contact-details-container">
       <Box className="step-indicator">
         <Typography className="step-text">STEP 1 OF 3</Typography>
-        <Typography variant="h5" className="step-title">Contact Details</Typography>
+        <Typography variant="h5" className="step-title">Personal Details</Typography>
         <Box className="step-progress">
           <Box className="progress-bar active" />
           <Box className="progress-bar" />
@@ -386,11 +427,86 @@ const handleEmailVerifySuccess = async () => {
             </span>
           </Box>
         </Grid>
+        {/* D.O.B */}
+       <Grid item xs={12}>
+        <Typography className="input-label">Date of Birth</Typography>
+        <DatePicker
+          selected={dob}
+          onChange={(date: Date | null) => setDob(date)}
+          dateFormat="dd-MM-yyyy"
+          placeholderText="DD-MM-YYYY"
+          maxDate={new Date()}
+          showMonthDropdown
+          showYearDropdown
+          dropdownMode="select"
+          customInput={
+            <input
+              className="dob-input"
+              style={{
+                width: '100%',
+                height: '55px',
+                borderRadius: '6px',
+                border: '1px solid #ccc',
+                padding: '0 12px',
+              }}
+            />
+          }
+        />
+      </Grid>
 
+        {/* Gender */}
+        <Grid item xs={12}>
+          <Typography className="input-label">Gender</Typography>
+          <Box sx={{ display: 'flex', gap: 3, alignItems: 'center', mt: 1 }}>
+            <label>
+              <input
+                type="radio"
+                name="gender"
+                value="Male"
+                checked={gender === 'Male'}
+                onChange={() => setGender('Male')}
+              /> Male
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="gender"
+                value="Female"
+                checked={gender === 'Female'}
+                onChange={() => setGender('Female')}
+              /> Female
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="gender"
+                value="Other"
+                checked={gender === 'Other'}
+                onChange={() => setGender('Other')}
+              /> Other
+            </label>
+          </Box>
+        </Grid>
         {/* Next Button */}
         <Grid item xs={12}>
           <Box className="next-button-container">
-            <CustomButton className="update-button" onClick={onNext} fullWidth>
+            <CustomButton
+              className="update-button"
+              onClick={onNext}
+              fullWidth
+              disabled={isNextDisabled}
+              sx={isNextDisabled ? {
+                backgroundColor: '#e0e0e0', // light gray
+                color: '#bdbdbd', // medium gray text
+                border: 'none',
+                cursor: 'not-allowed',
+                boxShadow: 'none',
+                '&:hover': {
+                  backgroundColor: '#e0e0e0',
+                  color: '#bdbdbd',
+                },
+              } : {}}
+            >
               Next
             </CustomButton>
           </Box>

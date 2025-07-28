@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Box, useTheme } from '@mui/material';
 import Header from './Header';
-import ContactDetails from './ContactDetails';
+import PersonalDetals from './ContactDetails';
 import DocumentDetails from './DocumentDetails';
 import ResidentialAddress from './ResidentialAddress';
 import KYCPendingModal from '@/modal/kycPendingModal';
@@ -23,14 +23,14 @@ const KYCMain = () => {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <ContactDetails onNext={() => setCurrentStep(2)} />;
+        return <PersonalDetals onNext={() => setCurrentStep(2)} />;
       case 2:
         return  <DocumentDetails onNext={() => setCurrentStep(3)}  onBack={() => setCurrentStep(1)} setFrontDocument={setFrontDocument} setBackDocument={setBackDocument}/>
       case 3:
         return <ResidentialAddress onBack={() => setCurrentStep(2)} frontDocument={frontDocument}
       backDocument={backDocument}/>;
       default:
-        return <ContactDetails onNext={() => setCurrentStep(2)} />;
+        return <PersonalDetals onNext={() => setCurrentStep(2)} />;
     }
   };
 

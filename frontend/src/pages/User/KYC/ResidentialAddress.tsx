@@ -96,6 +96,8 @@ const handleUpdate = async (skipFileUpload = false) => {
   formData.append('primaryPhoneNumber', kycData.phone.replace(/\D/g, ''));
   formData.append('secondaryPhoneNumber', kycData.additionalPhone.replace(/\D/g, ''));
   formData.append('addressDocumentType', documentType);
+  formData.append('dob', kycData.dob);      // Add this line
+  formData.append('gender', kycData.gender); // Add this line
   formData.append('status', 'Pending');
 
   // 🔁 Attach file only if it's new and required

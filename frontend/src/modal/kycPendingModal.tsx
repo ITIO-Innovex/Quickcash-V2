@@ -7,6 +7,8 @@ import CustomButton from '@/components/CustomButton';
 interface KYCPendingModalProps {
   open: boolean;
   onStartVerification: () => void;
+  hideCloseIcon?: boolean;
+disableBackdropClick?: boolean;
 }
 
 const KYCPendingModal: React.FC<KYCPendingModalProps> = ({
@@ -14,12 +16,9 @@ const KYCPendingModal: React.FC<KYCPendingModalProps> = ({
   onStartVerification,
 }) => {
   return (
-    <CustomModal
-      open={open}
-      onClose={onStartVerification}
-      title=""
-      maxWidth="sm"
-    >
+  <CustomModal open={open} onClose={() => {}} title="" maxWidth="sm" hideCloseIcon={true} disableBackdropClick={true}>
+  {/* ...modal content... */}
+
       <Box className="kyc-pending-container">
         <Box className="kyc-pending-icon">
           <Box className="check-icon">✓</Box>
