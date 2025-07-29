@@ -75,6 +75,8 @@ module.exports = {
         documentPhotoFront: '',
         documentPhotoBack: '',
         addressProofPhoto: '',
+        dob:'',
+        gender:'',
         status: "Pending"
       });
 

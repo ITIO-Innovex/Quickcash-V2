@@ -103,7 +103,7 @@ const AddMoneyStripe = ({...props}) => {
       <CustomButton onClick={(e) => handleSubmit(e)} disabled={!stripe || !elements}>
        Pay
       </CustomButton> &nbsp;
-      <CustomButton onClick={() => navigate('/')}>Cancel</CustomButton>
+      <CustomButton onClick={() => navigate('/dashboard')}>Cancel</CustomButton>
       {errorMessage && <div>{errorMessage}</div>}
       </form>
     </>

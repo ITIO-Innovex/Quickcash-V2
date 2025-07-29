@@ -16,6 +16,8 @@ interface CustomModalProps {
   children: React.ReactNode;
   maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   sx?: SxProps<Theme>;
+  hideCloseIcon?: boolean; // NEW
+  disableBackdropClick?: boolean; // NEW
 }
 
 const CustomModal: React.FC<CustomModalProps> = ({
@@ -25,13 +27,24 @@ const CustomModal: React.FC<CustomModalProps> = ({
   children,
   maxWidth = 'sm',
   sx = {},
+  hideCloseIcon = false, // NEW
+  disableBackdropClick = false,
 }) => {
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={
+        disableBackdropClick
+          ? (event, reason) => {
+              if (reason !== 'backdropClick') {
+                onClose();
+              }
+            }
+          : onClose
+      }
       aria-labelledby="modal-title"
       aria-describedby="modal-description"
+      disableEscapeKeyDown={disableBackdropClick}
     >
       <Box
         sx={{
@@ -62,24 +75,25 @@ const CustomModal: React.FC<CustomModalProps> = ({
           ...sx, 
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography id="modal-title" variant="h6" component="h2">
             {title}
           </Typography>
-          <IconButton
-            aria-label="close"
-            onClick={onClose}
-            sx={{
-              color: (theme) => theme.palette.grey[500],
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
+          {!hideCloseIcon && (
+            <IconButton
+              aria-label="close"
+              onClick={onClose}
+              sx={{
+                color: (theme) => theme.palette.grey[500],
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          )}
         </Box>
         <Box id="modal-description">{children}</Box>
       </Box>
     </Modal>
   );
 };
-
 export default CustomModal;

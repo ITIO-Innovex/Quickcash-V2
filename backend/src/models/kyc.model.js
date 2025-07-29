@@ -20,6 +20,16 @@ const kycSchema = new mongoose.Schema({
     required: false,
     default:0,
   },
+  dob: {
+    type: Date,
+    required: false,
+    default: '',
+  },
+  gender: {
+    type: String,
+    required: false,
+    default: '',
+  },
   documentType: {
     type: String,
     required: false,

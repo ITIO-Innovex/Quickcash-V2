@@ -17,7 +17,8 @@ let fireblocks = new FireblocksSDK(apiSecret, process.env.FIREBLOCKS_API_KEY, ba
 module.exports = {
   // This function is used for add/insert/save kyc data
   addKyc: async(req,res) => {
-    const {user,email,primaryPhoneNumber,secondaryPhoneNumber,documentType,documentNumber,addressDocumentType,status} = req.body;
+    console.log("Add KYC Data :", req.body);
+    const {user,email,primaryPhoneNumber,secondaryPhoneNumber,documentType,documentNumber,addressDocumentType,status, dob, gender} = req.body;
       try {
         if(user == "" || email == "" || primaryPhoneNumber == "" || documentType == "") {
           return res.status(401).json({
@@ -52,6 +53,8 @@ module.exports = {
           documentPhotoFront:Image1,
           documentPhotoBack:Image2,
           addressProofPhoto:Image3,
+           dob,         
+          gender,
           status: "pending"
         });
         
@@ -180,7 +183,8 @@ module.exports = {
   },
   // This function is used for update kyc data
   updateKycData: async(req,res) => {
-    const {user,email,primaryPhoneNumber,secondaryPhoneNumber,documentType,documentNumber,addressDocumentType,status} = req.body;
+    // console.log("Update KYC Data Request:", req.body);
+    const {user,email,primaryPhoneNumber,secondaryPhoneNumber,documentType,documentNumber,addressDocumentType,status,dob, gender} = req.body;
       try {
         if(user == "" || email == "" || primaryPhoneNumber == "" || documentType == "") {
           return res.status(401).json({
@@ -255,7 +259,7 @@ module.exports = {
             new: true,
           })
         }
-
+        
         const Updatekyc = await Kyc.findByIdAndUpdate(
         {
           _id:req.params.id
@@ -268,6 +272,8 @@ module.exports = {
           documentType,
           documentNumber,
           addressDocumentType,
+          dob,
+          gender,
           status
         },
         {
