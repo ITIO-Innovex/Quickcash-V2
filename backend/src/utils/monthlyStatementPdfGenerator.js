@@ -20,12 +20,13 @@ function maskEmail(email) {
 function formatDobToDDMMYYYY(dobString) {
   const date = new Date(dobString);
 
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-based
-  const year = date.getUTCFullYear();
+  const day = String(date.getDate()).padStart(2, '0');         // Local
+  const month = String(date.getMonth() + 1).padStart(2, '0');  // Local
+  const year = date.getFullYear();                             // Local
 
   return `${day}${month}${year}`; // ddmmyyyy
 }
+
 function getSalutation(user) {
   const gender = (user.gender || '').toLowerCase();
 
