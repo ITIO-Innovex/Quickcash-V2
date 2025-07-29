@@ -44,7 +44,8 @@ const io = socketIo(server, {
 //   },
 //   allowEIO4: true
 // });
-
+// Start cron
+require("../src/cron/monthlyStatement.js");
 app.use(bodyParser.json({limit: "50mb"}));
 app.use(bodyParser.urlencoded({limit: "50mb", extended: true, parameterLimit:50000}));
 
@@ -119,7 +120,7 @@ const templateSettingRoute   =   require('./routes/templatesetting.route');
 const WalletAddressRequest   =   require('./routes/walletaddressrequest.route');
 const invoiceCategoryRoute   =   require('./routes/category.route');
 const invoiceProductRoute    =   require('./routes/product.route');
-const contactRoute           =   require('./routes/contact.route.js')
+const contactRoute           =   require('./routes/contact.route.js');
 const invoiceUserClientRoute =   require('./routes/client.route');
 const ManualPaymentRoute     =   require('./routes/manualPayment.route');
 const QuoteRoute             =   require('./routes/quote.route');

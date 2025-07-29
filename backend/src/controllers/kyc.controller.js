@@ -20,7 +20,7 @@ module.exports = {
     console.log("Add KYC Data :", req.body);
     const {user,email,primaryPhoneNumber,secondaryPhoneNumber,documentType,documentNumber,addressDocumentType,status, dob, gender} = req.body;
       try {
-        if(user == "" || email == "" || primaryPhoneNumber == "" || documentType == "") {
+        if(user == "" || email == "" || primaryPhoneNumber == "" || documentType == "" || dob =="" || gender == "") {
           return res.status(401).json({
             status: 401,
             message: "All fields are mandatory",
@@ -53,8 +53,6 @@ module.exports = {
           documentPhotoFront:Image1,
           documentPhotoBack:Image2,
           addressProofPhoto:Image3,
-           dob,         
-          gender,
           status: "pending"
         });
         
@@ -65,6 +63,8 @@ module.exports = {
           _id: new ObjectId(user)
         },
         {
+          dob,
+          gender,
           ownerbrd:Image1,
           owneridofindividual:documentType,
           ownertaxid: documentNumber,
@@ -272,8 +272,6 @@ module.exports = {
           documentType,
           documentNumber,
           addressDocumentType,
-          dob,
-          gender,
           status
         },
         {
@@ -285,6 +283,8 @@ module.exports = {
           _id: new ObjectId(user)
         },
         {
+          dob,
+          gender,
           owneridofindividual:documentType,
           ownertaxid: documentNumber,
           mobile: primaryPhoneNumber

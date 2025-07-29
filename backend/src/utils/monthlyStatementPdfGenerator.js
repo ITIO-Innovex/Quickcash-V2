@@ -17,8 +17,40 @@ function maskEmail(email) {
   if (!local || !domain) return emailStr;
   return `${local[0]}*****@${domain}`;
 }
+function formatDobToDDMMYYYY(dobString) {
+  const date = new Date(dobString);
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-based
+  const year = date.getUTCFullYear();
+
+  return `${day}${month}${year}`; // ddmmyyyy
+}
+function getSalutation(user) {
+  const gender = (user.gender || '').toLowerCase();
+
+  switch (gender) {
+    case 'male':
+      return 'Mr.';
+    case 'female':
+      return 'Ms.'; // or 'Mrs.' based on your application's tone
+    case 'other':
+    case 'non-binary':
+    case 'prefer_not_to_say':
+      return 'Mx.';
+    default:
+      return ''; // fallback if gender is missing
+  }
+}
 
 async function generatePasswordProtectedSatementPDF({ user, dob, accounts, outputPath }) {
+  if (dob && !isNaN(new Date(dob).getTime())) {
+    dob = formatDobToDDMMYYYY(dob);
+    console.log("Formatted DOB:", dob);
+  }else{
+    dob = "00000000"; // Default to 00000000 if dob is invalid
+  }
+
   const fontPath = path.resolve(__dirname, "../../public/fonts/DejaVuSans.ttf");
   const fontBytes = fs.readFileSync(path.join(fontPath));
   const pdfDoc = await PDFDocument.create();
@@ -83,19 +115,50 @@ async function generatePasswordProtectedSatementPDF({ user, dob, accounts, outpu
   y -= 20;
 
   // User Info
-  page.drawText(`Mr. ${user.name}`, { x: marginLeft, y, size: 12, color: textColor, font: boldFont });
+  const salutation = getSalutation(user);
+  page.drawText(`${salutation} ${user.name}`, { x: marginLeft, y, size: 12, color: textColor, font: boldFont });
   y -= 15;
-  const addressLines = user?.address.replace(/\r/g, "").replace(/,+/g, ",").split("\n");
-  for (const line of addressLines) {
-    page.drawText(line.trim(), { x: marginLeft, y, size: 12, font, color: textColor });
+// Handle address lines
+    if (user?.address) {
+      const addressLines = user.address
+        .replace(/\r/g, "")       // remove carriage returns
+        .replace(/,+/g, ",")      // collapse multiple commas
+        .split("\n");
+
+      for (const line of addressLines) {
+        if (line.trim()) {
+          page.drawText(line.trim(), {
+            x: marginLeft,
+            y,
+            size: 12,
+            font,
+            color: textColor
+          });
+          y -= 15;
+        }
+      }
+    }
+  if (user?.city?.trim()) {
+    page.drawText(user.city.trim(), { x: marginLeft, y, size: 12, font, color: textColor });
     y -= 15;
   }
-  page.drawText(`${user.city}`, { x: marginLeft, y, size: 12, font, color: textColor }); y -= 15;
-  page.drawText(`${user.state}`, { x: marginLeft, y, size: 12, font, color: textColor }); y -= 15;
-  page.drawText(`${user.country}`, { x: marginLeft, y, size: 12, font, color: textColor }); y -= 15;
-  page.drawText(`Mobile: ${maskMobile(user.mobile)}`, { x: marginLeft, y, size: 12, font, color: textColor }); y -= 15;
-  page.drawText(`E-mail: ${maskEmail(user.email)}`, { x: marginLeft, y, size: 12, font, color: textColor }); y -= 20;
-  y -= 20;
+  if (user?.state?.trim()) {
+    page.drawText(user.state.trim(), { x: marginLeft, y, size: 12, font, color: textColor });
+    y -= 15;
+  }
+  if (user?.country?.trim()) {
+    page.drawText(user.country.trim(), { x: marginLeft, y, size: 12, font, color: textColor });
+    y -= 15;
+  }
+  if (user?.mobile && String(user.mobile).trim()) {
+    page.drawText(`Mobile: ${maskMobile(user.mobile)}`, { x: marginLeft, y, size: 12, font, color: textColor });
+    y -= 15;
+  }
+  if (user?.email?.trim()) {
+    page.drawText(`E-mail: ${maskEmail(user.email)}`, { x: marginLeft, y, size: 12, font, color: textColor });
+    y -= 20;
+  }
+  y -= 20;// Add some space before the account summary
   // Account Summary Table
 
   const tableX = marginLeft;

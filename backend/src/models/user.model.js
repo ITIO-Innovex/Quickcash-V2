@@ -35,7 +35,12 @@ const userSchema = new mongoose.Schema({
   gender: {
     type: String,
     required:false,
-    default:null
+    default:''
+  },
+  dob: {
+    type: Date,
+    required: false,
+    default: null, // or remove default altogether
   },
   city: {
     type: String,

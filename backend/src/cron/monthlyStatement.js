@@ -29,7 +29,7 @@ cron.schedule("* * * * *", async () => {
         const pdfPath = path.join(__dirname, `../temp/${user._id}_statement.pdf`);
         await generatePDF({
           user: user,
-          dob: 12345,
+          dob: user?.dob,
           accounts,
           outputPath: pdfPath,
         });
