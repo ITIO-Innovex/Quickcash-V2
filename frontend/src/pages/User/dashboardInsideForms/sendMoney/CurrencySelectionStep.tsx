@@ -82,6 +82,7 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
   const [feeCharge, setFeeCharge] = useState<any>(0);
   const [transferMethod, setTransferMethod] = useState('Bank transfer');
   const [editingTransferMethod, setEditingTransferMethod] = useState(false);
+  const [fromCurrency, setFromCurrency] = useState(formData.fromCurrency || 'USD');
 
   const HandleSendCurrency = (val: any) => {
     var valChn = val.split('-');
@@ -92,6 +93,7 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
     setRecieveCurrency('');
     setFeeCharge(0);
     setSendCurrencyCountry(valChn[2]);
+    setFromCurrency(valChn[0]);
     ValidateSendAmountToCurrentAccountBalance(valChn[1]);
   }
 
@@ -120,9 +122,6 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
     }
   }
 
-  const [fromCurrency, setFromCurrency] = useState(
-    formData.fromCurrency || 'USD'
-  );
   const [sendAmount, setSendAmount] = useState(formData.sendAmount || '1000');
   const [receiveAmount, setReceiveAmount] = useState(formData.receiveAmount || '1250.00');
   const [isEditingSend, setIsEditingSend] = useState(true);
@@ -148,7 +147,7 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
   // Sync local state with formData on mount and when formData changes
   useEffect(() => {
     setFromAmount(formData.sendAmount || 0);
-    setSendCurrency(formData.fromCurrency || '');
+    setSendCurrency(`${formData.selectedCurrency}-${formData.source_account}-${formData.country}` || '');
     setToCurrency(formData.toCurrency || '');
   }, [formData]);
 
@@ -183,6 +182,7 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
   const handleContinue = () => {
     if (sendCurrencyCountry && sendCurrency && toCurrency && fromAmount && toCurrencyCountry && convertedValue) {
       updateFormData({
+        source_account: sendCurrAccountId,
         fromCurrency,
         toCurrency,
         sendAmount: fromAmount,
@@ -195,6 +195,7 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
       toast.error('Please fill all required fields and ensure conversion is complete.');
       // For debugging, still advance to next step:
       updateFormData({
+        source_account: sendCurrAccountId,
         fromCurrency,
         toCurrency,
         sendAmount: fromAmount,
@@ -512,7 +513,7 @@ const CurrencySelectionStep: React.FC<CurrencySelectionStepProps> = ({
               Net amount recipient gets
             </Typography>
             <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
-              {(convertedValue - (chargesPaidBy === 'BEN' ? feeCharge : 0)).toFixed(2)} {toCurrency.split('-')[0]}
+              {(convertedValue - feeCharge).toFixed(2)} {toCurrency.split('-')[0]}
             </Typography>
           </Box>
         </Paper>

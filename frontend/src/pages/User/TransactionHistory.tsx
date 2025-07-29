@@ -105,7 +105,7 @@ const TransactionHistory = () => {
             };
             return mappedCryptoTransaction;
           } else {
-            const isDebit = transaction?.extraType === "debit";
+            const isDebit = transaction?.extraType === "debit" || transaction?.trans_type === "Send Money";
 
             const mappedTransaction = {
               _id: transaction._id,
@@ -113,10 +113,12 @@ const TransactionHistory = () => {
               trx: transaction.trx,
               type: transaction.trans_type,
               amount: `${isDebit ? '-' : '+'}${isDebit
-                ? getSymbolFromCurrency(transaction?.from_currency)
-                : transaction?.trans_type == "Exchange"
+                ? getSymbolFromCurrency(transaction?.from_currency)   // Is debit currency will be from_currency
+                : transaction?.trans_type == "Exchange"               // Is exchange and not debit, currency will be from_currency
                   ? getSymbolFromCurrency(transaction?.from_currency)
-                  : getSymbolFromCurrency(transaction?.to_currency)
+                : transaction?.trans_type == "Add Money"            // Is not exchange not debit Is add money, currency will be to_currency
+                  ? getSymbolFromCurrency(transaction?.to_currency)
+                  : getSymbolFromCurrency(transaction?.from_currency)
                 }${parseFloat(transaction?.amount || 0).toFixed(2)}`,
               balance: `${isDebit
                 ? getSymbolFromCurrency(transaction?.from_currency)

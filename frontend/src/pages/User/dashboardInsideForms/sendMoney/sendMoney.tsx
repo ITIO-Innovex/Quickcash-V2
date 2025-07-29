@@ -44,7 +44,7 @@ const SendMoney = () => {
   const [selectedBeneficiary, setSelectedBeneficiary] = useState<Beneficiary | null>(null);
   const [formData, setFormData] = useState({
     selectedCountry: '',
-    fromCurrency: 'USD',
+    fromCurrency: '',
     toCurrency: '',
     sendAmount: '',
     receiveAmount: '',
@@ -113,11 +113,12 @@ const SendMoney = () => {
       // Clear the state to prevent re-triggering
       navigate(location.pathname, { replace: true });
     }
-  }, [location.state]);
+  }, [location.state]); 
 
   // Set source_account as soon as accounts are loaded and not set
   useEffect(() => {
     if (list && list.length > 0 && !formData.source_account) {
+      console.log('Setting source_account to first account:', list[0]._id);
       setFormData(prev => ({ ...prev, source_account: list[0]._id }));
     }
   }, [list]);
@@ -155,7 +156,6 @@ const SendMoney = () => {
             onPrevious={handlePrevious}
             selectedBeneficiary={selectedBeneficiary}
             currencyList={list}
-            accountList={list}
           />
         );
       case 2:
@@ -167,7 +167,6 @@ const SendMoney = () => {
             updateFormData={updateFormData}
             onNext={handleNext}
             onPrevious={handlePrevious}
-            accountList={list}
           />
         );
       case 3:
@@ -177,7 +176,6 @@ const SendMoney = () => {
             formData={formData}
             updateFormData={updateFormData}
             onPrevious={handlePrevious}
-            accountList={list}
           />
         );
       default:

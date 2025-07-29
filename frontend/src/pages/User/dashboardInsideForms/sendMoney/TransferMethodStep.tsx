@@ -742,7 +742,7 @@ const TransferMethodStep: React.FC<TransferMethodStepProps> = ({
       {/* Tab Navigation and Forms */}
       <Box className="transfer-forms-section">
         <Tabs
-          value={activeTab}
+          value={Number(activeTab)}
           onChange={staticMethod ? undefined : handleTabChange}
           className="transfer-tabs"
           centered

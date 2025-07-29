@@ -43,7 +43,7 @@ const TransferDetailsStep: React.FC<TransferDetailsStepProps> = ({
       const payload = {
         ...formData,
         user: formData.user || userId,
-        source_account: formData.source_account || (accountList[0]?._id),
+        source_account: formData.source_account,
         info: formData.info,
         country: formData.country,
         from_currency: formData.fromCurrency,

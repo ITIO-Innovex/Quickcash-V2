@@ -85,7 +85,7 @@ async function generatePasswordProtectedSatementPDF({ user, dob, accounts, outpu
   // User Info
   page.drawText(`Mr. ${user.name}`, { x: marginLeft, y, size: 12, color: textColor, font: boldFont });
   y -= 15;
-  const addressLines = user.address.replace(/\r/g, "").replace(/,+/g, ",").split("\n");
+  const addressLines = user?.address.replace(/\r/g, "").replace(/,+/g, ",").split("\n");
   for (const line of addressLines) {
     page.drawText(line.trim(), { x: marginLeft, y, size: 12, font, color: textColor });
     y -= 15;
@@ -208,43 +208,37 @@ async function generatePasswordProtectedSatementPDF({ user, dob, accounts, outpu
         } else {
           status = txn.status.charAt(0).toUpperCase() + txn.status.slice(1).toLowerCase();
         }
-        const isDebit = txn?.extraType === "debit";
-
-        // Initialize both
-        let txnAmountCurrency;
-        let txnBalanceCurrency;
-
-        if (isDebit) {
-          txnAmountCurrency = getSymbolFromCurrency(txn.from_currency);
-          txnBalanceCurrency = txn.trans_type === "Exchange"
-            ? getSymbolFromCurrency(txn.from_currency)
-            : getSymbolFromCurrency(txn.from_currency);
-        } else {
-          if (txn.trans_type === "Exchange") {
-            txnAmountCurrency = getSymbolFromCurrency(txn.from_currency);
-            txnBalanceCurrency = getSymbolFromCurrency(txn.from_currency);
-          } else {
-            txnAmountCurrency = getSymbolFromCurrency(txn.to_currency);
-            txnBalanceCurrency = getSymbolFromCurrency(txn.from_currency);
-          }
-        }
+        const isDebit = txn?.extraType === "debit" || txn?.trans_type === "Send Money";
+        const txnAmount = `${isDebit ? '↓ ' : '↑ '}${isDebit
+                ? getSymbolFromCurrency(txn?.from_currency)   // Is debit currency will be from_currency
+                : txn?.trans_type == "Exchange"               // Is exchange and not debit, currency will be from_currency
+                  ? getSymbolFromCurrency(txn?.from_currency)
+                : txn?.trans_type == "Add Money"            // Is not exchange not debit Is add money, currency will be to_currency
+                  ? getSymbolFromCurrency(txn?.to_currency)
+                  : getSymbolFromCurrency(txn?.from_currency)
+                }${parseFloat(txn?.amount || 0).toFixed(2)}`;
+        const txnBalance= `${isDebit
+                ? getSymbolFromCurrency(txn?.from_currency)
+                : txn?.trans_type === "Exchange"
+                  ? getSymbolFromCurrency(txn?.to_currency)
+                  : getSymbolFromCurrency(txn?.from_currency)
+                }${parseFloat(txn?.postBalance ?? 0).toFixed(2)}`
 
         // Set arrow and color based on extraType
         let amountColor = textColor;
-        let amountPrefix = "";
         if (txn.extraType === "credit") {
           amountColor = rgb(0, 128 / 255, 0); // green
-          amountPrefix = "↑ ";
         } else if (txn.extraType === "debit") {
           amountColor = rgb(220 / 255, 20 / 255, 60 / 255); // red
-          amountPrefix = "↓ ";
+        } else if(txn?.trans_type === "Send Money"){
+          amountColor = rgb(220 / 255, 20 / 255, 60 / 255); // red
         }
 
         const values = [
           dateStr,
           txn.trans_type,
-          amountPrefix + txnAmountCurrency + txn.amount.toFixed(2),
-          txnBalanceCurrency + txn.postBalance.toFixed(2),
+          txnAmount,
+          txnBalance,
           status
         ];
 

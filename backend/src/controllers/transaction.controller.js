@@ -1303,25 +1303,29 @@ module.exports = {
 
       let finalBeneficiaryId = beneficiaryId;
       if (!finalBeneficiaryId && transferMethod && transferFormData) {
-        // Create a new beneficiary if one isn't provided
-        const newBeneficiary = await Receipient.create({
-          user,
-          name: transferFormData.beneficiaryName || transferFormData.achBeneficiaryName || '-',
-          email: transferFormData.email || '', // Assuming email might be in transferFormData
-          mobile: transferFormData.mobile || '',
-          address: transferFormData.beneficiaryAddress || transferFormData.address || '-',
-          iban: transferFormData.iban || transferFormData.accountNumber || transferFormData.achAccountNumber || '-',
-          bic_code: transferFormData.bicSwift || transferFormData.swiftCode || transferFormData.routingNumber || '-',
-          bankName: transferFormData.bankName || '-',
-          currency: to_currency,
-          country,
-          amount: transferFormData.amount || transferFormData.convertedAmount || 0,
-          status: true, // Auto-approve new beneficiaries from transfers
-        });
-        finalBeneficiaryId = newBeneficiary._id;
+        // find the beneficiary by email or mobile
+        const existingBeneficiary = await Receipient.findOne({ email: transferFormData.email });
+        if (existingBeneficiary) {
+          finalBeneficiaryId = existingBeneficiary._id; // Use existing beneficiary ID
+        }else{
+                // If no existing beneficiary, create a new one
+                const newBeneficiary = await Receipient.create({
+                user,
+                name: transferFormData.beneficiaryName || transferFormData.achBeneficiaryName || '-',
+                email: transferFormData.email || '', // Assuming email might be in transferFormData
+                mobile: transferFormData.mobile || '',
+                address: transferFormData.beneficiaryAddress || transferFormData.address || '-',
+                iban: transferFormData.iban || transferFormData.accountNumber || transferFormData.achAccountNumber || '-',
+                bic_code: transferFormData.bicSwift || transferFormData.swiftCode || transferFormData.routingNumber || '-',
+                bankName: transferFormData.bankName || '-',
+                currency: to_currency,
+                country,
+                amount: transferFormData.amount || transferFormData.convertedAmount || 0,
+                status: true, // Auto-approve new beneficiaries from transfers
+              });
+              finalBeneficiaryId = newBeneficiary._id;
+            }
       }
-
-
       // Fetch the source account to get the current balance
       const sourceAccount = await Account.findById(source_account);
       const postBalance = sourceAccount ? sourceAccount.amount : 0;

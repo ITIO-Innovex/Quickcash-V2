@@ -78,6 +78,7 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
   );
 
   const handleCountrySelect = (currency: string, id: any, country: any) => {
+    console.log(`Selected Currency: ${currency}, Account ID: ${id}, Country: ${country}`)
     const val = `${currency}-${id}-${country}`;
     setSelectedCurrencyVal(val);
     setSelectedCurrency(currency);
@@ -88,9 +89,9 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
       sendCurrencyData: val,
       selectedCurrencyObj: selectedObj,
       user: userId,
-      source_account: accountList?.[0]?._id,
+      source_account: id,
       addedBy: userId,
-      country: selectedObj?.country,
+      country: country,
     });
   };
 
@@ -105,15 +106,15 @@ const SelectDestinationStep: React.FC<SelectDestinationStepProps> = ({
 
   const handleContinue = () => {
     if (selectedCurrency) {
-      updateFormData({
-        selectedCurrency,
-        toCurrency: selectedCurrency,
-        sendCurrencyData: selectedCurrencyVal,
-        user: userId,
-        source_account: accountList?.[0]?._id,
-        addedBy: userId,
-        country: mappedCurrencyList.find(c => c.currency === selectedCurrency)?.country,
-      });
+      // updateFormData({
+      //   selectedCurrency,
+      //   toCurrency: selectedCurrency,
+      //   sendCurrencyData: selectedCurrencyVal,
+      //   user: userId,
+      //   source_account: accountList?.[0]?._id,
+      //   addedBy: userId,
+      //   country: mappedCurrencyList.find(c => c.currency === selectedCurrency)?.country,
+      // });
       onNext();
     }
   };

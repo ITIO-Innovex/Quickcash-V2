@@ -33,25 +33,24 @@ cron.schedule("* * * * *", async () => {
           accounts,
           outputPath: pdfPath,
         });
+        // Send email with PDF attachment
+        const html = await ejs.renderFile(
+          path.join(__dirname, "../views/statementEmail.ejs"),
+          { name: user.name }
+        );
+        const attachment = pdfPath.replace(".pdf", "_protected.pdf");
+        await sendMailWithAttachment(
+          user.email,
+          `Your Account Statement - ${start.toLocaleString('default', { month: 'long' })} ${year}`,
+          html,
+          attachment,
+          "Account_Statement.pdf"
+        );
+
+        fs.unlinkSync(attachment); // optional cleanup
+              console.log("✅ Monthly statements sent to"+ user.name);
       }
-
-      //   const html = await ejs.renderFile(
-      //     path.join(__dirname, "../views/email-template.ejs"),
-      //     { name: user.name }
-      //   );
-
-      //   await sendMailWithAttachment(
-      //     user.email,
-      //     `Your Account Statement - ${start.toLocaleString('default', { month: 'long' })} ${year}`,
-      //     html,
-      //     pdfPath,
-      //     "Account_Statement.pdf"
-      //   );
-
-      //   fs.unlinkSync(pdfPath); // optional cleanup
-      // }
-
-      console.log("✅ Monthly statements sent.");
+            console.log("✅ All monthly statements processed successfully");
   }catch (error) {
     console.error("❌ Error in monthly statement cron job:", error);
   }

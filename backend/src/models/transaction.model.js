@@ -24,7 +24,9 @@ const transactionSchema = new mongoose.Schema({
     type: Schema.Types.ObjectId,
     ref: "Receipient",
     required:false,
-    default:null
+    default:null,
+    set: (v) => (v === '' ? null : v)
+
   },
   info: {
     type: String,
