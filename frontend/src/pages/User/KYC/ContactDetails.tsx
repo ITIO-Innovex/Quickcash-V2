@@ -111,7 +111,6 @@ React.useEffect(() => {
     try {
       const parsed = JSON.parse(kycLocal);
       if (parsed.dob) {
-        console.log('Parsed DOB:', parsed.dob);
         // Convert ddmmyyyy to Date object
         const d = parsed.dob;
         if (d.length === 8) {
@@ -144,7 +143,7 @@ React.useEffect(() => {
     email,
     phone: `${primaryCountryCode}${primaryPhone}`,
     additionalPhone: `${additionalCountryCode}${additionalPhone}`,
-    dob: dob,
+    dob: formatStorageDate(dob),
     gender,
   };
   localStorage.setItem('KycData', JSON.stringify(updated));
@@ -270,19 +269,6 @@ const handleEmailVerifySuccess = async () => {
       ? `${primaryCountryCode} ${primaryPhone}`
       : `${additionalCountryCode} ${additionalPhone}`;
   };
-  const handleDobChange = (date: Date | null) => {
-  if (!date || isNaN(date.getTime())) {
-    console.warn("Invalid date selected");
-    setDob(null);
-    return;
-  }
-
-  // Optional: Clear time part (if needed)
-  const cleanDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  console.log('Selected DOB:', cleanDate);
-  setDob(cleanDate);
-};
-
 
 
 
@@ -446,7 +432,7 @@ const handleEmailVerifySuccess = async () => {
         <Typography className="input-label">Date of Birth</Typography>
         <DatePicker
           selected={dob}
-          onChange={handleDobChange}
+          onChange={(date: Date | null) => setDob(date)}
           dateFormat="dd-MM-yyyy"
           placeholderText="DD-MM-YYYY"
           maxDate={new Date()}

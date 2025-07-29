@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema({
     default:''
   },
   dob: {
-    type: Date,
+    type: String,
     required: false,
     default: null, // or remove default altogether
   },

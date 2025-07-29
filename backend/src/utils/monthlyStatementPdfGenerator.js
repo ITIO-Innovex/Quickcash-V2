@@ -17,16 +17,6 @@ function maskEmail(email) {
   if (!local || !domain) return emailStr;
   return `${local[0]}*****@${domain}`;
 }
-function formatDobToDDMMYYYY(dobString) {
-  const date = new Date(dobString);
-
-  const day = String(date.getDate()).padStart(2, '0');         // Local
-  const month = String(date.getMonth() + 1).padStart(2, '0');  // Local
-  const year = date.getFullYear();                             // Local
-
-  return `${day}${month}${year}`; // ddmmyyyy
-}
-
 function getSalutation(user) {
   const gender = (user.gender || '').toLowerCase();
 
@@ -45,11 +35,11 @@ function getSalutation(user) {
 }
 
 async function generatePasswordProtectedSatementPDF({ user, dob, accounts, outputPath }) {
-  if (dob && !isNaN(new Date(dob).getTime())) {
-    dob = formatDobToDDMMYYYY(dob);
+  if (dob == null || dob == undefined || dob == "") {
+    dob = "00000000"; // Default to 00000000 if dob is invalid
     console.log("Formatted DOB:", dob);
   }else{
-    dob = "00000000"; // Default to 00000000 if dob is invalid
+    console.log("Formatted DOB:", dob);
   }
 
   const fontPath = path.resolve(__dirname, "../../public/fonts/DejaVuSans.ttf");
